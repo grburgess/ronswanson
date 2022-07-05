@@ -1,0 +1,41 @@
+{
+    "include": [
+        "ronswanson"
+    ],
+
+    "exclude": [
+        "ronswanson/test",
+        "ronswanson/data",
+        "**/__pycache__",
+        "build",
+	"docs",
+	"examples",
+	".eggs",
+	".git",
+	".github",
+	"versioneer.py"
+
+    ],
+    "ignore": [
+        "ronswanson/test",
+        "ronswanson/data",
+        "**/__pycache__",
+        "build",
+	"docs",
+	"examples",
+	".eggs",
+	".git",
+	".github",
+	"versioneer.py"
+
+    ],
+
+
+    "venvPath": "/Users/jburgess/.environs",
+    "venv": "ronswanson",
+
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+
+
+}
