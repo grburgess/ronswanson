@@ -1,0 +1,2 @@
+include versioneer.py
+include ronswanson/_version.py
