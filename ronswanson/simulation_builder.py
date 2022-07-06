@@ -1,9 +1,12 @@
+import itertools
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import yaml
 
+from .script_generator import PythonGenerator, SLURMGenerator
 from .simulation import Simulation
 from .utils.logging import setup_logger
 
@@ -108,7 +111,7 @@ class Parameter:
 
         if self.custom:
 
-            out["values"] = self.values
+            out["values"] = self.values.tolist()
 
         else:
 
@@ -134,6 +137,11 @@ class ParameterGrid:
             n *= len(param.grid)
 
         return n
+
+    @property
+    def n_parameters(self) -> int:
+
+        return len(self.parameter_list)
 
     @classmethod
     def from_dict(cls, d: Dict[str, Dict[str, Any]]) -> "ParameterGrid":
@@ -180,25 +188,70 @@ class ParameterGrid:
                 Dumper=yaml.SafeDumper,
             )
 
+    def at_index(self, i: int) -> Tuple[float]:
+        """
+        return the ith set of parameters
+
+        :param i:
+        :type i: int
+        :returns:
+
+        """
+        idx = 0
+
+        for result in itertools.product(*[p.grid for p in self.parameter_list]):
+
+            if i == idx:
+
+                return result
+
+            else:
+
+                idx += 1
+
 
 class SimulationBuilder:
     def __init__(
         self,
         parameter_grid: ParameterGrid,
-        simulation_class: Simulation,
+        out_file: str,
+        import_line: str,
         n_cores: int = 1,
         n_nodes: Optional[int] = None,
     ):
 
-        self._simulation_class: Simulation = simulation_class
+        self._import_line: str = import_line
 
         self._n_cores: int = n_cores
 
         self._n_nodes: Optional[int] = n_nodes
 
+        self._out_file: str = out_file
+
+        self._base_dir: Path = Path(out_file).parent.absolute()
+
+        # write out the parameter file
+
+        self._parameter_file: Path = self._base_dir / "parameters.yml"
+
+        parameter_grid.write(str(self._parameter_file))
+
+        self._generate_python_script()
+
+
     def _generate_python_script(self) -> None:
 
-        pass
+        py_gen: PythonGenerator = PythonGenerator(
+            "run_simulation.py",
+            self._out_file,
+            str(self._parameter_file),
+            self._import_line,
+            self._n_cores,
+            self._n_nodes,
+        )
+
+        py_gen.write(str(self._base_dir))
+
 
     def _generate_slurm_script(self) -> None:
 
