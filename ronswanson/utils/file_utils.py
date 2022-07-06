@@ -1,6 +1,4 @@
 import os
-import shutil
-import tempfile
 from builtins import str
 from contextlib import contextmanager
 from pathlib import Path
@@ -65,33 +63,6 @@ def if_directory_not_existing_then_make(directory) -> None:
         # should add logging here!
 
         pass
-
-
-@contextmanager
-def temporary_directory(prefix="", within_directory=None):
-    """
-    This context manager creates a temporary directory in the most secure possible way (with no race condition), and
-    removes it at the end.
-
-    :param prefix: the directory name will start with this prefix, if specified
-    :param within_directory: create within a specific directory (assumed to exist). Otherwise, it will be created in the
-    default system temp directory (/tmp in unix)
-    :return: the absolute pathname of the provided directory
-    """
-
-    directory = tempfile.mkdtemp(prefix=prefix, dir=within_directory)
-
-    yield directory
-
-    try:
-
-        shutil.rmtree(directory)
-
-    except:
-
-        custom_warnings.warn(
-            "Couldn't remove temporary directory %s" % directory
-        )
 
 
 @contextmanager

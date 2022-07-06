@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from shutil import copyfile
 
@@ -93,5 +92,4 @@ __all__ = [
     "get_path_of_data_file",
     "get_path_of_data_dir",
     "get_path_of_user_config",
-    "copy",
 ]
