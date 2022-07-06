@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from ronswanson.simulation_builder import Parameter
+from ronswanson.simulation_builder import Parameter, ParameterGrid
+from ronswanson.utils.package_data import get_path_of_data_file
 
 
 def test_constructor():
@@ -29,3 +30,17 @@ def test_constructor():
     with pytest.raises(AssertionError):
 
         p = Parameter("p", custom=True)
+
+
+def test_parameter_grid():
+
+    file_name = get_path_of_data_file("test_params.yml")
+
+    pg = ParameterGrid.from_yaml(file_name)
+
+    assert len(pg.parameter_list) == 3
+    assert len(pg.parameter_list[0].grid) == 3
+    assert len(pg.parameter_list[1].grid) == 3
+    assert len(pg.parameter_list[2].grid) == 3
+
+    assert pg.n_points == 3 * 3 * 3

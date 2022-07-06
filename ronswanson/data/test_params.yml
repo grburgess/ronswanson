@@ -1,0 +1,15 @@
+alpha:
+  custom: no
+  vmin: -1
+  vmax: 0
+  scale: "linear"
+  n_points: 3
+beta:
+  custom: no
+  vmin: -3
+  vmax: -2
+  scale: "linear"
+  n_points: 3
+epeak:
+  custom: yes
+  values: [100,500,1000]
