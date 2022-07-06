@@ -238,7 +238,6 @@ class SimulationBuilder:
 
         self._generate_python_script()
 
-
     def _generate_python_script(self) -> None:
 
         py_gen: PythonGenerator = PythonGenerator(
@@ -251,7 +250,6 @@ class SimulationBuilder:
         )
 
         py_gen.write(str(self._base_dir))
-
 
     def _generate_slurm_script(self) -> None:
 

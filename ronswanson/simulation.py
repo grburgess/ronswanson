@@ -76,7 +76,6 @@ class Simulation(metaclass=ABCMeta):
     @abstractmethod
     def _run_call(self) -> np.ndarray:
 
-
         log.error("Attempting to use base class")
 
         raise RuntimeError()
