@@ -9,11 +9,10 @@ def get_path_of_data_dir() -> Path:
     """
     get the path of the package data directory
 
-    :returns: 
+    :returns:
 
     """
-    file_path: str = pkg_resources.resource_filename(
-        "ronswanson", "data")
+    file_path: str = pkg_resources.resource_filename("ronswanson", "data")
 
     return Path(file_path)
 
@@ -24,7 +23,7 @@ def get_path_of_data_file(data_file: str) -> Path:
 
     :param data_file: name of the data file
     :type data_file: str
-    :returns: 
+    :returns:
 
     """
     file_path: Path = get_path_of_data_dir() / data_file
@@ -39,7 +38,7 @@ def copy_package_data(data_file: str) -> None:
 
     :param data_file: the name of the file
     :type data_file: str
-    :returns: 
+    :returns:
 
     """
     data_file_path: Path = get_path_of_data_file(data_file)
@@ -50,7 +49,7 @@ def get_path_of_log_dir() -> Path:
     """
     return the path of the logging directory
 
-    :returns: 
+    :returns:
 
     """
     p: Path = Path("~/.log/ronswanson").expanduser()
@@ -68,7 +67,7 @@ def get_path_of_log_file(log_file: str) -> Path:
 
     :param log_file: the name of the log file
     :type log_file: str
-    :returns: 
+    :returns:
 
     """
     return get_path_of_log_dir() / log_file
@@ -78,11 +77,10 @@ def get_path_of_user_config() -> Path:
     """
     get the path to the user configuration
 
-    :returns: 
+    :returns:
 
     """
-    config_path: Path = Path().home() / ".config" / \
-        "ronswanson"
+    config_path: Path = Path().home() / ".config" / "ronswanson"
 
     if not config_path.exists():
 
@@ -91,8 +89,9 @@ def get_path_of_user_config() -> Path:
     return config_path
 
 
-__all__ = ["get_path_of_data_file",
-           "get_path_of_data_dir",
-           "get_path_of_user_config",
-           "copy"
-           ]
+__all__ = [
+    "get_path_of_data_file",
+    "get_path_of_data_dir",
+    "get_path_of_user_config",
+    "copy",
+]

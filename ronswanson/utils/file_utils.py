@@ -90,7 +90,8 @@ def temporary_directory(prefix="", within_directory=None):
     except:
 
         custom_warnings.warn(
-            "Couldn't remove temporary directory %s" % directory)
+            "Couldn't remove temporary directory %s" % directory
+        )
 
 
 @contextmanager

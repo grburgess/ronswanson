@@ -16,37 +16,66 @@ _log_file_names = ["usr.log", "dev.log"]
 
 ATTRIBUTES = dict(
     list(
-        zip([
-            'bold', 'dark', '', 'underline', 'blink', '', 'reverse',
-            'concealed'
-        ], list(range(1, 9)))))
+        zip(
+            [
+                'bold',
+                'dark',
+                '',
+                'underline',
+                'blink',
+                '',
+                'reverse',
+                'concealed',
+            ],
+            list(range(1, 9)),
+        )
+    )
+)
 del ATTRIBUTES['']
 
-ATTRIBUTES_RE = r'\033\[(?:%s)m' % '|'  \
-                .join(['%d' % v for v in ATTRIBUTES.values()])
+ATTRIBUTES_RE = r'\033\[(?:%s)m' % '|'.join(
+    ['%d' % v for v in ATTRIBUTES.values()]
+)
 
 HIGHLIGHTS = dict(
     list(
-        zip([
-            'on_grey', 'on_red', 'on_green', 'on_yellow', 'on_blue',
-            'on_magenta', 'on_cyan', 'on_white'
-        ], list(range(40, 48)))))
+        zip(
+            [
+                'on_grey',
+                'on_red',
+                'on_green',
+                'on_yellow',
+                'on_blue',
+                'on_magenta',
+                'on_cyan',
+                'on_white',
+            ],
+            list(range(40, 48)),
+        )
+    )
+)
 
-HIGHLIGHTS_RE = r'\033\[(?:%s)m' % '|'  \
-                .join(['%d' % v for v in HIGHLIGHTS.values()])
+HIGHLIGHTS_RE = r'\033\[(?:%s)m' % '|'.join(
+    ['%d' % v for v in HIGHLIGHTS.values()]
+)
 
 COLORS = dict(
     list(
-        zip([
-            'grey',
-            'red',
-            'green',
-            'yellow',
-            'blue',
-            'magenta',
-            'cyan',
-            'white',
-        ], list(range(30, 38)))))
+        zip(
+            [
+                'grey',
+                'red',
+                'green',
+                'yellow',
+                'blue',
+                'magenta',
+                'cyan',
+                'white',
+            ],
+            list(range(30, 38)),
+        )
+    )
+)
 
 COLORS_RE = r'\033\[(?:%s)m' % '|'.join(['%d' % v for v in COLORS.values()])
 
@@ -127,7 +156,6 @@ DEFAULT_LOG_COLORS = {
     'WARNING': 'purple',
     'ERROR': 'red',
     'CRITICAL': 'bold_red',
-
 }
 
 
@@ -149,12 +177,10 @@ PREFIXES = [
     ('3', ''),
     ('01;3', 'bold_'),
     ('02;3', 'thin_'),
-
     # Foreground with fg_ prefix
     ('3', 'fg_'),
     ('01;3', 'fg_bold_'),
     ('02;3', 'fg_thin_'),
-
     # Background with bg_ prefix - bold/light works differently
     ('4', 'bg_'),
     ('10', 'bg_bold_'),
@@ -194,13 +220,15 @@ class ColoredFormatter(logging.Formatter):
     Based on https://github.com/borntyping/python-colorlog
     """
 
-    def __init__(self,
-                 fmt,
-                 datefmt=None,
-                 style='%',
-                 log_colors=None,
-                 reset=True,
-                 secondary_log_colors=None):
+    def __init__(
+        self,
+        fmt,
+        datefmt=None,
+        style='%',
+        log_colors=None,
+        reset=True,
+        secondary_log_colors=None,
+    ):
         """
         Set the format and colors the ColouredFormatter will use.
         The ``fmt``, ``datefmt`` and ``style`` args are passed on to the
@@ -223,8 +251,9 @@ class ColoredFormatter(logging.Formatter):
         """
         super(ColoredFormatter, self).__init__(fmt, datefmt, style)
 
-        self.log_colors = (log_colors
-                           if log_colors is not None else DEFAULT_LOG_COLORS)
+        self.log_colors = (
+            log_colors if log_colors is not None else DEFAULT_LOG_COLORS
+        )
         self.secondary_log_colors = secondary_log_colors
         self.reset = reset
 
@@ -312,11 +341,10 @@ else:
 
 date_str = ''
 
-_console_formatter = ColoredFormatter('[%(log_color)s%(levelname)-8s%(reset)s]'
-                                      '%(log_color)s %(message)s',
-                                      datefmt="%H:%M:%S",
-
-                                      )
+_console_formatter = ColoredFormatter(
+    '[%(log_color)s%(levelname)-8s%(reset)s]' '%(log_color)s %(message)s',
+    datefmt="%H:%M:%S",
+)
 
 ronswanson_console_log_handler = logging.StreamHandler(sys.stdout)
 ronswanson_console_log_handler.setFormatter(_console_formatter)
