@@ -18,7 +18,7 @@ def file_is_open(file_name: str):
 
     except OSError:
 
-        return True, _
+        return True, None
 
 
 class Simulation(metaclass=ABCMeta):
