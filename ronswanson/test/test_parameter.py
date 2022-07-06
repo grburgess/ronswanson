@@ -4,8 +4,6 @@ import pytest
 from ronswanson.simulation_builder import Parameter
 
 
-
-
 def test_constructor():
 
     p = Parameter("p", vmin=1, vmax=10, scale="linear", n_points=10)
@@ -15,7 +13,6 @@ def test_constructor():
     p = Parameter("p", values=np.linspace(1, 10, 10), custom=True)
 
     assert len(p.grid) == 10
-
 
     with pytest.raises(AssertionError):
 
@@ -28,7 +25,6 @@ def test_constructor():
     with pytest.raises(AssertionError):
 
         p = Parameter("p", vmin=1, vmax=10, scale="wrong", n_points=10)
-
 
     with pytest.raises(AssertionError):
 
