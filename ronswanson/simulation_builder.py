@@ -1,16 +1,127 @@
 import itertools
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import h5py
 import numpy as np
 import yaml
 
 from .script_generator import PythonGenerator, SLURMGenerator
 from .simulation import Simulation
+from .utils.hdf5_utils import recursively_save_dict_contents_to_group
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
+
+
+@dataclass(frozen=True)
+class EnergyGrid:
+
+    vmin: Optional[float] = None
+    vmax: Optional[float] = None
+    scale: Optional[str] = None
+    n_points: Optional[int] = None
+    values: Optional[np.ndarray] = None
+    custom: bool = False
+
+    def __post_init__(self):
+
+        if not self.custom:
+
+            # we will build a grid
+
+            if (self.vmin is None) or (self.vmax is None):
+
+                log.error("non-custom grids must include vmin and vmax")
+
+                raise AssertionError
+
+            if self.scale is None:
+
+                log.error(
+                    "non-custom grids must include scale 'log' or 'linear'"
+                )
+
+                raise AssertionError
+
+            else:
+
+                if self.scale not in ['log', 'linear']:
+
+                    log.error(
+                        "non-custom grids must include scale 'log' or 'linear'"
+                    )
+
+                    raise AssertionError
+
+            if self.n_points is None:
+
+                log.error("non-custom grids must include n_points")
+
+                raise AssertionError
+
+        else:
+
+            if self.values is None:
+
+                log.error("custom grids must include values")
+
+                raise AssertionError
+
+    @property
+    def grid(self) -> np.ndarray:
+
+        if self.custom:
+
+            return self.values
+
+        else:
+
+            if self.scale.lower() == 'log':
+
+                return np.geomspace(self.vmin, self.vmax, self.n_points)
+
+            else:
+
+                return np.linspace(self.vmin, self.vmax, self.n_points)
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "Parameter":
+
+        inputs = {}
+        inputs["custom"] = d["custom"]
+
+        if d["custom"]:
+
+            inputs["values"] = np.array(d["values"])
+
+        else:
+
+            inputs["vmin"] = d["vmin"]
+            inputs["vmax"] = d["vmax"]
+            inputs["scale"] = d["scale"]
+            inputs["n_points"] = d["n_points"]
+
+        return cls(**inputs)
+
+    def to_dict(self) -> Dict[str, Any]:
+
+        out = dict(custom=self.custom)
+
+        if self.custom:
+
+            out["values"] = self.values.tolist()
+
+        else:
+
+            out["vmin"] = self.vmin
+            out["vmax"] = self.vmax
+            out["scale"] = self.scale
+            out["n_points"] = self.n_points
+
+        return out
 
 
 @dataclass(frozen=True)
@@ -127,6 +238,7 @@ class Parameter:
 class ParameterGrid:
 
     parameter_list: List[Parameter]
+    energy_grid: EnergyGrid
 
     @property
     def n_points(self) -> int:
@@ -148,6 +260,9 @@ class ParameterGrid:
 
         # make sure to sort so that we always have the same parameter
         # ordering
+
+        energy_grid = EnergyGrid.from_dict(d.pop("energy_grid"))
+
         pars = list(d.keys())
 
         pars.sort()
@@ -156,7 +271,7 @@ class ParameterGrid:
             Parameter.from_dict(par_name, d[par_name]) for par_name in pars
         ]
 
-        return cls(par_list)
+        return cls(par_list, energy_grid)
 
     @classmethod
     def from_yaml(cls, file_name: str) -> "ParameterGrid":
@@ -167,6 +282,11 @@ class ParameterGrid:
 
         return cls.from_dict(inputs)
 
+    @property
+    def parameter_names(self) -> List[str]:
+
+        return [p.name for p in self.parameter_list]
+
     def to_dict(self) -> Dict[str, Dict[str, Any]]:
 
         out = {}
@@ -174,6 +294,8 @@ class ParameterGrid:
         for p in self.parameter_list:
 
             out[p.name] = p.to_dict()
+
+        out['energy_grid'] = self.energy_grid.to_dict()
 
         return out
 
@@ -188,7 +310,13 @@ class ParameterGrid:
                 Dumper=yaml.SafeDumper,
             )
 
-    def at_index(self, i: int) -> Tuple[float]:
+    def to_hdf5_group(self, f: h5py.File) -> None:
+
+        recursively_save_dict_contents_to_group(
+            f, "parameter_grid", self.to_dict()
+        )
+
+    def at_index(self, i: int) -> Dict[str, float]:
         """
         return the ith set of parameters
 
@@ -203,7 +331,13 @@ class ParameterGrid:
 
             if i == idx:
 
-                return result
+                d = OrderedDict()
+
+                for k, v in zip(self.parameter_names, result):
+
+                    d[k] = v
+
+                return d
 
             else:
 
@@ -218,6 +352,7 @@ class SimulationBuilder:
         import_line: str,
         n_cores: int = 1,
         n_nodes: Optional[int] = None,
+        linear_execution: bool = False
     ):
 
         self._import_line: str = import_line
@@ -229,6 +364,8 @@ class SimulationBuilder:
         self._out_file: str = out_file
 
         self._base_dir: Path = Path(out_file).parent.absolute()
+
+        self._linear_execution: bool = linear_execution
 
         # write out the parameter file
 
@@ -247,6 +384,7 @@ class SimulationBuilder:
             self._import_line,
             self._n_cores,
             self._n_nodes,
+            self._linear_execution
         )
 
         py_gen.write(str(self._base_dir))

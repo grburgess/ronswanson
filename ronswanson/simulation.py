@@ -1,5 +1,6 @@
 import time
 from abc import ABCMeta, abstractmethod
+from typing import Dict
 
 import h5py
 import numpy as np
@@ -12,7 +13,7 @@ log = setup_logger(__name__)
 def file_is_open(file_name: str):
 
     try:
-        tmp = h5py.File(file_name, "w")
+        tmp = h5py.File(file_name, "a")
 
         return False, tmp
 
@@ -23,12 +24,17 @@ def file_is_open(file_name: str):
 
 class Simulation(metaclass=ABCMeta):
     def __init__(
-        self, simulation_id: int, parameter_set: np.ndarray, out_file: str
+        self,
+        simulation_id: int,
+        parameter_set: Dict[str, float],
+        energy_grid: np.ndarray,
+        out_file: str,
     ) -> None:
 
         self._out_file: str = out_file
-        self._parameter_set: np.ndarray = parameter_set
+        self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id
+        self._energy_grid: np.ndarray = energy_grid
 
     def run(self) -> None:
 
@@ -51,19 +57,29 @@ class Simulation(metaclass=ABCMeta):
                     f"simulation {self._simulation_id} is waiting on file to be closed"
                 )
 
-                time.sleep(3)
+                time.sleep(np.random.randint(3, 5))
 
             else:
 
-                param_group: h5py.Group = f["paramaters"]
+                if "parameters" not in f.keys():
+
+                    f.create_group("parameters")
+
+                param_group: h5py.Group = f["parameters"]
 
                 number_of_entries: int = len(param_group.keys())
 
                 new_key: int = number_of_entries + 1
 
+                params = np.array(list(self._parameter_set.values()))
+
                 param_group.create_dataset(
-                    f"{new_key}", data=self._parameter_set, compression="gzip"
+                    f"{new_key}", data=params, compression="gzip"
                 )
+
+                if "values" not in f.keys():
+
+                    f.create_group("values")
 
                 values_group: h5py.Group = f["values"]
 
@@ -72,6 +88,8 @@ class Simulation(metaclass=ABCMeta):
                 )
 
                 f.close()
+
+                break
 
     @abstractmethod
     def _run_call(self) -> np.ndarray:

@@ -13,3 +13,10 @@ beta:
 epeak:
   custom: yes
   values: [100,500,1000]
+
+energy_grid:
+  custom: no
+  vmin: 10
+  vmax: 1000
+  scale: "log"
+  n_points: 50
