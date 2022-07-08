@@ -1,6 +1,7 @@
+import os
 import subprocess
 from pathlib import Path
-import os
+
 import numpy as np
 import pytest
 
@@ -35,10 +36,6 @@ def test_script_gen_linear():
 
     os.system("python3 run_simulation.py")
 
-
-
-#    exec(open("run_simulation.py").read())
-
     database_file = Path("database.h5")
 
     assert database_file.exists()
@@ -66,10 +63,6 @@ def test_script_gen_parallel():
     )
 
     os.system("python3 run_simulation.py")
-
-
-
-#    exec(open("run_simulation.py").read())
 
     database_file = Path("database.h5")
 
