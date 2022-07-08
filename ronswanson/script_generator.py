@@ -98,8 +98,8 @@ class PythonGenerator(ScriptGenerator):
             # use joblib
 
             self._add_line(
-            f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in iteration)"
-        )
+                f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in iteration)"
+            )
 
 
 class SLURMGenerator(ScriptGenerator):
