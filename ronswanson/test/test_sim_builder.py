@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-# from ronswanson import database
+from ronswanson.database import Database
 from ronswanson.simulation_builder import (
     Parameter,
     ParameterGrid,
@@ -65,6 +65,15 @@ def test_script_gen_parallel():
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
+
+    db = Database.from_file(str(database_file))
+
+    assert db.n_entries == 3 * 3 * 3
+    assert db.n_parameters == 3
+    for k,v in db.parameter_ranges.items():
+
+        assert len(v) == 3
+
 
     assert database_file.exists()
     database_file.unlink()

@@ -61,6 +61,26 @@ class Simulation(metaclass=ABCMeta):
 
             else:
 
+                # store the parameter names
+
+                if "parameter_names" not in f.keys():
+
+                    p_name_group = f.create_group("parameter_names")
+
+                    for i, name in enumerate(list(self._parameter_set.keys())):
+
+                        p_name_group.attrs[f"par{i}"] = name
+
+                # store the energy grid
+
+                if "energy_grid" not in f.keys():
+
+                    f.create_dataset(
+                        "energy_grid",
+                        data=self._energy_grid,
+                        compression="gzip",
+                    )
+
                 if "parameters" not in f.keys():
 
                     f.create_group("parameters")
@@ -69,7 +89,7 @@ class Simulation(metaclass=ABCMeta):
 
                 number_of_entries: int = len(param_group.keys())
 
-                new_key: int = number_of_entries + 1
+                new_key: int = number_of_entries
 
                 params = np.array(list(self._parameter_set.values()))
 
