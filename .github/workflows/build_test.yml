@@ -24,8 +24,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python pip install setuptools wheel --upgrade
-        python pip install --upgrade flake8 coverage pytest pytest-cov cython codecov numpy numba
+        python -m pip install setuptools wheel --upgrade
+        python -m pip install --upgrade flake8 coverage pytest pytest-cov cython codecov numpy numba
         python setup.py install
     - name: Lint with flake8
       
