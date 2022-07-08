@@ -70,10 +70,9 @@ def test_script_gen_parallel():
 
     assert db.n_entries == 3 * 3 * 3
     assert db.n_parameters == 3
-    for k,v in db.parameter_ranges.items():
+    for k, v in db.parameter_ranges.items():
 
         assert len(v) == 3
-
 
     assert database_file.exists()
     database_file.unlink()

@@ -30,7 +30,6 @@ class Database:
 
         """
 
-
         self._n_entries = len(values)
 
         self._n_parameters: int = len(parameter_names)
@@ -63,8 +62,6 @@ class Database:
     @property
     def parameter_ranges(self) -> Dict[str, np.ndarray]:
         return self._parameter_ranges
-
-
 
     def _extract_parameter_values(self, values, grid_points):
 
