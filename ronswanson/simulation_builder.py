@@ -10,7 +10,8 @@ import yaml
 
 from .script_generator import PythonGenerator, SLURMGenerator
 from .simulation import Simulation
-from .utils.hdf5_utils import recursively_save_dict_contents_to_group
+
+# from .utils.hdf5_utils import recursively_save_dict_contents_to_group
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -310,11 +311,11 @@ class ParameterGrid:
                 Dumper=yaml.SafeDumper,
             )
 
-    def to_hdf5_group(self, f: h5py.File) -> None:
+    # def to_hdf5_group(self, f: h5py.File) -> None:
 
-        recursively_save_dict_contents_to_group(
-            f, "parameter_grid", self.to_dict()
-        )
+    #     recursively_save_dict_contents_to_group(
+    #         f, "parameter_grid", self.to_dict()
+    #     )
 
     def at_index(self, i: int) -> Dict[str, float]:
         """
@@ -352,7 +353,7 @@ class SimulationBuilder:
         import_line: str,
         n_cores: int = 1,
         n_nodes: Optional[int] = None,
-        linear_execution: bool = False
+        linear_execution: bool = False,
     ):
 
         self._import_line: str = import_line
@@ -384,7 +385,7 @@ class SimulationBuilder:
             self._import_line,
             self._n_cores,
             self._n_nodes,
-            self._linear_execution
+            self._linear_execution,
         )
 
         py_gen.write(str(self._base_dir))
