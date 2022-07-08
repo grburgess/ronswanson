@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ronswanson import database
+# from ronswanson import database
 from ronswanson.simulation_builder import (
     Parameter,
     ParameterGrid,
