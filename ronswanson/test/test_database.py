@@ -21,35 +21,32 @@ def test_database(database: Database):
     tm = database.to_3ml("ron", "ron", **selections)
 
 
-
-
 def test_table_model(database: Database):
 
     tm = database.to_3ml("ron", "ron")
 
     b = Band()
 
-    b.alpha = -.6
+    b.alpha = -0.6
     b.beta = -2.5
     b.xp = 250
-    b.K=1.00
+    b.K = 1.00
 
-    tm.alpha=-.6
+    tm.alpha = -0.6
     tm.beta = -2.5
     tm.epeak = 250
 
-    ene = np.geomspace(10,1000,25)
+    ene = np.geomspace(10, 1000, 25)
 
-    np.testing.assert_allclose(b(ene), tm(ene),rtol=1e-1)
-
+    np.testing.assert_allclose(b(ene), tm(ene), rtol=1e-1)
 
     b.alpha = -1
-    b.beta = -2.
+    b.beta = -2.0
     b.xp = 300
-    b.K=1.00
+    b.K = 1.00
 
-    tm.alpha=-1
+    tm.alpha = -1
     tm.beta = -2
     tm.epeak = 300
 
-    np.testing.assert_allclose(b(ene), tm(ene),rtol=1e-1)
+    np.testing.assert_allclose(b(ene), tm(ene), rtol=1e-1)
