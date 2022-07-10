@@ -5,8 +5,10 @@ import h5py
 import numpy as np
 from astromodels import TemplateModel, TemplateModelFactory
 
-
 from .simulation_builder import Parameter, ParameterGrid
+from .utils.logging import setup_logger
+
+log = setup_logger(__name__)
 
 
 class Database:
