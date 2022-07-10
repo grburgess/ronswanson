@@ -181,6 +181,22 @@ class Database:
         self, name: str, desc: str, overwrite: bool = False, **kwargs
     ) -> TemplateModel:
 
+        """
+        construct a table model from the database.
+        parameter sub-selections are passed as kwargs of
+        dictionaries:
+
+        selections = dict(param1=dict(vmin=1, vmax=2))
+
+        :param name:
+        :type name: str
+        :param desc:
+        :type desc: str
+        :param overwrite:
+        :type overwrite: bool
+        :returns:
+
+        """
         selection = np.ones(self._n_entries, dtype=bool)
 
         parameter_selection = {}

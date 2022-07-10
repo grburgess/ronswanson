@@ -31,6 +31,20 @@ class Simulation(metaclass=ABCMeta):
         out_file: str,
     ) -> None:
 
+        """
+        Generic simulation class
+
+        :param simulation_id:
+        :type simulation_id: int
+        :param parameter_set:
+        :type parameter_set: Dict[str, float]
+        :param energy_grid:
+        :type energy_grid: np.ndarray
+        :param out_file:
+        :type out_file: str
+        :returns:
+
+        """
         self._out_file: str = out_file
         self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id

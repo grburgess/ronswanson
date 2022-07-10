@@ -356,6 +356,25 @@ class SimulationBuilder:
         linear_execution: bool = False,
     ):
 
+        """
+        The simulation builder class constructs the scripts
+        needed for building the table model database
+
+        :param parameter_grid:
+        :type parameter_grid: ParameterGrid
+        :param out_file:
+        :type out_file: str
+        :param import_line:
+        :type import_line: str
+        :param n_cores:
+        :type n_cores: int
+        :param n_nodes:
+        :type n_nodes: Optional[int]
+        :param linear_execution:
+        :type linear_execution: bool
+        :returns:
+
+        """
         self._import_line: str = import_line
 
         self._n_cores: int = n_cores
