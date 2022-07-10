@@ -18,7 +18,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel
           pip install black
-          pip install --upgrade numpy ipython jupyter cython astropy
+          pip install --upgrade numpy ipython jupyter cython astropy numpy numba
           pip install jupytext jupyterthemes
           #pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
           #pip3 install git+https://github.com/threeML/threeML.git@dev#egg=threeML
