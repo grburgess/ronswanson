@@ -103,3 +103,6 @@ ENV/
 /run_simulation.py
 /.dir_locals.el
 /parameters.yml
+/docs/md/parameters.yml
+/docs/md/run_simulation.py
+/docs/md/.virtual_documents/
