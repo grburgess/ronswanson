@@ -8,9 +8,9 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.14.0
   kernelspec:
-    display_name: Python3
+    display_name: Python 3 (ipykernel)
     language: python
-    name: Python3
+    name: python3
 ---
 
 # Intro
@@ -100,6 +100,8 @@ class BandSimulation(dukesilver.Simulation):
 
 Now we need to tell the simulation builder a few things so it can construct our files for us. We have stored this YAML file in the repo itself. You should use your own!
 
+The `SimulationBuilder` class takes a parameter grid, the name of the file that will be created, the import line for the custom simulation class, the number of cores and nodes to execute on. 
+
 ```python
 from ronswanson.utils.package_data import get_path_of_data_file
 
@@ -112,11 +114,11 @@ pg = dukesilver.ParameterGrid.from_yaml(file_name)
 
 # create a simulation builder
 sb = dukesilver.SimulationBuilder(
-    pg, # the parameter grid
-    "database.h5", # name of the databse to save to 
-    "from ronswanson.band_simulation import BandSimulation as Simulation", # the import line for our custom simulation (this could be a local file)
-    n_cores=8, # the number of cores
-    n_nodes=None # if iterations should also be divided over cluster nodes
+    pg,
+    "database.h5",
+    "from ronswanson.band_simulation import BandSimulation as Simulation",
+    n_cores=8,
+    n_nodes=None
 )
 ```
 
