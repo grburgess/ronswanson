@@ -5,5 +5,6 @@ Welcome to ronswanson's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   notebooks/ronswanson
    api/API.rst
 	     
