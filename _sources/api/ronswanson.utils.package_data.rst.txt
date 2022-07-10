@@ -1,0 +1,7 @@
+ronswanson.utils.package_data module
+====================================
+
+.. automodule:: ronswanson.utils.package_data
+    :members:
+    :undoc-members:
+    :show-inheritance:

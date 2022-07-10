@@ -1,0 +1,7 @@
+ronswanson.band_simulation module
+=================================
+
+.. automodule:: ronswanson.band_simulation
+    :members:
+    :undoc-members:
+    :show-inheritance:

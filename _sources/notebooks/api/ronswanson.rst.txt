@@ -1,0 +1,71 @@
+ronswanson package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ronswanson.data
+   ronswanson.io
+   ronswanson.utils
+
+Submodules
+----------
+
+ronswanson.band\_simulation module
+----------------------------------
+
+.. automodule:: ronswanson.band_simulation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.database module
+--------------------------
+
+.. automodule:: ronswanson.database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.ronswanson module
+----------------------------
+
+.. automodule:: ronswanson.ronswanson
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.script\_generator module
+-----------------------------------
+
+.. automodule:: ronswanson.script_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.simulation module
+----------------------------
+
+.. automodule:: ronswanson.simulation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.simulation\_builder module
+-------------------------------------
+
+.. automodule:: ronswanson.simulation_builder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: ronswanson
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,31 @@
+ronswanson package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    ronswanson.data
+    ronswanson.io
+    ronswanson.utils
+
+Submodules
+----------
+
+.. toctree::
+
+   ronswanson.band_simulation
+   ronswanson.database
+   ronswanson.ronswanson
+   ronswanson.script_generator
+   ronswanson.simulation
+   ronswanson.simulation_builder
+
+Module contents
+---------------
+
+.. automodule:: ronswanson
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,10 @@
+ronswanson.data package
+=======================
+
+Module contents
+---------------
+
+.. automodule:: ronswanson.data
+   :members:
+   :undoc-members:
+   :show-inheritance:
