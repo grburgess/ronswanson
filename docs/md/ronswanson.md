@@ -124,7 +124,7 @@ sb = dukesilver.SimulationBuilder(
 
 Now a python file will be written to the disk which you can run to create your simulation runs. we can have a look at the file.
 
-```python
+```
 from ronswanson.band_simulation import BandSimulation as Simulation
 from joblib import Parallel, delayed
 from ronswanson import ParameterGrid
