@@ -39,8 +39,8 @@ def test_parameter_grid():
     pg = ParameterGrid.from_yaml(file_name)
 
     assert len(pg.parameter_list) == 3
-    assert len(pg.parameter_list[0].grid) == 3
-    assert len(pg.parameter_list[1].grid) == 3
-    assert len(pg.parameter_list[2].grid) == 3
+    assert len(pg.parameter_list[0].grid) == 10
+    assert len(pg.parameter_list[1].grid) == 10
+    assert len(pg.parameter_list[2].grid) == 10
 
-    assert pg.n_points == 3 * 3 * 3
+    assert pg.n_points == 10 * 10 * 10
