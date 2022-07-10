@@ -43,6 +43,63 @@ class Simulation(metaclass=ABCMeta):
         :returns:
 
         """
+
+        # check if this already exists
+
+        params = np.array(list(self._parameter_set.values()))
+
+        run_flag: bool = True
+
+        while True:
+
+            test, f = file_is_open(self._out_file)
+
+            if test:
+
+                # the file is already open so wait
+
+                log.debug(
+                    f"simulation {self._simulation_id} is waiting on file to be closed"
+                )
+
+                time.sleep(np.random.randint(3, 5))
+
+            else:
+
+                if "parameters" not in f.keys():
+
+                    # ok, this is a brand new file
+                    log.info("New database file")
+                    break
+
+                else:
+
+                    for k, v in f["parameters"].items():
+
+                        if np.alltrue(v[()] == params):
+
+                            # this parameter set exists
+
+                            run_flag = False
+
+                            log.info(f"parameters {v[()]} already exist!")
+
+                            break
+
+                f.close()
+
+                break
+
+        if not run_flag:
+
+            log.info(f"simulation {self._simulation_id} not running")
+
+            return
+
+        # run the simulation
+
+        log.info(f"simulation {self._simulation_id} is now running")
+
         output: np.ndarray = self._run_call()
 
         while True:
@@ -60,6 +117,8 @@ class Simulation(metaclass=ABCMeta):
                 time.sleep(np.random.randint(3, 5))
 
             else:
+
+                log.info(f"simulation {self._simulation_id} is storing")
 
                 # store the parameter names
 

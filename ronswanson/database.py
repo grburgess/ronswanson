@@ -177,7 +177,9 @@ class Database:
 
         return cls(parameters, parameter_names, energy_grid, values)
 
-    def to_3ml(self, name: str, desc: str, **kwargs) -> TemplateModel:
+    def to_3ml(
+        self, name: str, desc: str, overwrite: bool = False, **kwargs
+    ) -> TemplateModel:
 
         selection = np.ones(self._n_entries, dtype=bool)
 

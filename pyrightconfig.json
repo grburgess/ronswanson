@@ -32,7 +32,7 @@
 
 
     "venvPath": "/Users/jburgess/.environs",
-    "venv": "ronswanson",
+    "venv": "ron",
 
     "reportMissingImports": true,
     "reportMissingTypeStubs": false,
