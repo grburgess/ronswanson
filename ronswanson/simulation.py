@@ -69,7 +69,7 @@ class Simulation(metaclass=ABCMeta):
                 if "parameters" not in f.keys():
 
                     # ok, this is a brand new file
-                    log.info("New database file")
+                    log.debug("New database file")
                     break
 
                 else:
@@ -82,7 +82,7 @@ class Simulation(metaclass=ABCMeta):
 
                             run_flag = False
 
-                            log.info(f"parameters {v[()]} already exist!")
+                            log.debug(f"parameters {v[()]} already exist!")
 
                             break
 
@@ -92,13 +92,13 @@ class Simulation(metaclass=ABCMeta):
 
         if not run_flag:
 
-            log.info(f"simulation {self._simulation_id} not running")
+            log.debug(f"simulation {self._simulation_id} not running")
 
             return
 
         # run the simulation
 
-        log.info(f"simulation {self._simulation_id} is now running")
+        log.debug(f"simulation {self._simulation_id} is now running")
 
         output: np.ndarray = self._run_call()
 
@@ -118,7 +118,7 @@ class Simulation(metaclass=ABCMeta):
 
             else:
 
-                log.info(f"simulation {self._simulation_id} is storing")
+                log.debug(f"simulation {self._simulation_id} is storing")
 
                 # store the parameter names
 
