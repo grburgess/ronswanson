@@ -346,40 +346,30 @@ class ParameterGrid:
 
 
 class SimulationBuilder:
+    """
+    The simulation builder class constructs the scripts
+    needed for building the table model database
+
+    """
+
     def __init__(
         self,
         parameter_grid: ParameterGrid,
         out_file: str,
         import_line: str,
         n_cores: int = 1,
-        n_nodes: Optional[int] = None,
+        use_nodes: bool = False,
         linear_execution: bool = False,
+        hrs: Optional[int] = None,
+        min: Optional[int] = None,
+        sec: Optional[int] = None,
     ):
 
-        """
-        The simulation builder class constructs the scripts
-        needed for building the table model database
-
-        :param parameter_grid:
-        :type parameter_grid: ParameterGrid
-        :param out_file:
-        :type out_file: str
-        :param import_line:
-        :type import_line: str
-        :param n_cores:
-        :type n_cores: int
-        :param n_nodes:
-        :type n_nodes: Optional[int]
-        :param linear_execution:
-        :type linear_execution: bool
-        :returns:
-
-        """
         self._import_line: str = import_line
 
         self._n_cores: int = n_cores
 
-        self._n_nodes: Optional[int] = n_nodes
+        self._use_nodes: bool = use_nodes
 
         self._out_file: str = out_file
 
@@ -387,13 +377,60 @@ class SimulationBuilder:
 
         self._linear_execution: bool = linear_execution
 
+        self._hrs: Optional[int] = hrs
+
+        self._min: Optional[int] = min
+
+        self._sec: Optional[int] = sec
+
         # write out the parameter file
 
         self._parameter_file: Path = self._base_dir / "parameters.yml"
 
         parameter_grid.write(str(self._parameter_file))
 
+        self._n_iterations: int = parameter_grid.n_points
+
+        if self._use_nodes:
+
+            self._compute_chunks()
+
+        else:
+
+            self._n_nodes = None
+
         self._generate_python_script()
+
+        if self._use_nodes:
+
+            self._generate_slurm_script()
+
+    def _compute_chunks(self) -> None:
+
+        n_nodes = np.ceil(self._n_iterations / self._n_cores)
+
+        if self._use_nodes:
+
+            self._n_nodes: int = int(n_nodes)
+
+        # now generate the key files
+        k = 0
+        for i in range(self._n_nodes):
+            output = []
+
+            for j in range(self._n_cores):
+
+                if (k + j) < self._n_iterations:
+
+                    output.append(k + j)
+
+            with open(self._base_dir / f"key_file{i}.txt", "w") as f:
+
+                for o in output:
+
+                    f.write(f"{o}\n")
+
+            k += self._n_cores
 
     def _generate_python_script(self) -> None:
 
@@ -401,6 +438,7 @@ class SimulationBuilder:
             "run_simulation.py",
             self._out_file,
             str(self._parameter_file),
+            self._base_dir,
             self._import_line,
             self._n_cores,
             self._n_nodes,
@@ -411,4 +449,13 @@ class SimulationBuilder:
 
     def _generate_slurm_script(self) -> None:
 
-        pass
+        slurm_gen: SLURMGenerator = SLURMGenerator(
+            "run_simulation.sh",
+            self._n_cores,
+            self._n_nodes,
+            self._hrs,
+            self._min,
+            self._sec,
+        )
+
+        slurm_gen.write(str(self._base_dir))

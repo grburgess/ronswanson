@@ -44,6 +44,7 @@ class PythonGenerator(ScriptGenerator):
         file_name: str,
         database_file: str,
         parameter_file: str,
+        base_dir: str,
         import_line: str,
         n_procs: int,
         n_nodes: Optional[int] = None,
@@ -55,6 +56,7 @@ class PythonGenerator(ScriptGenerator):
         self._n_nodes: Optional[int] = n_nodes
         self._parameter_file: str = parameter_file
         self._database_file: str = Path(database_file).absolute()
+        self._base_dir: str = base_dir
         self._linear_execution: bool = linear_exceution
 
         super().__init__(file_name)
@@ -64,6 +66,11 @@ class PythonGenerator(ScriptGenerator):
         self._add_line(self._import_line)
         self._add_line("from joblib import Parallel, delayed")
         self._add_line("from ronswanson import ParameterGrid")
+        if self._n_nodes is not None:
+            self._add_line("import sys")
+            self._end_line()
+            self._add_line("key_num = int(sys.argv[-1])")
+
         self._end_line()
 
         self._add_line(
@@ -84,6 +91,12 @@ class PythonGenerator(ScriptGenerator):
 
         else:
 
+            self._add_line(
+                f"with open(f'{self._base_dir}/key_file{{key_num}}.txt') as f:"
+            )
+
+            self._add_line("iteration = f.readlines()")
+
             pass
 
         if self._linear_execution:
@@ -103,5 +116,50 @@ class PythonGenerator(ScriptGenerator):
 
 
 class SLURMGenerator(ScriptGenerator):
-    def __init__(self, file_name: str) -> None:
+    def __init__(
+        self,
+        file_name: str,
+        n_procs: int,
+        n_nodes: int,
+        hrs: int,
+        min: int,
+        sec: int,
+    ) -> None:
+
+        self._n_procs: int = n_procs
+        self._n_nodes: int = n_nodes
+
+        self._hrs: int = hrs
+        self._min: int = min
+        self._sec: int = sec
+
         super().__init__(file_name)
+
+    def _build_script(self) -> None:
+
+        self._add_line("#!/bin/bash")
+        self._add_line("")
+        self._add_line(f"#SBATCH --array=0-{self._n_nodes} #generate array")
+        self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
+        self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
+        self._add_line("#SBATCH -D ./                      #working directory")
+        self._add_line("#SBATCH -J grid_mp                 #job name")
+        self._add_line("#SBATCH -N 1               ")
+        self._add_line("#SBATCH --ntasks-per-node=1")
+        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
+        self._add_line(f"#SBATCH --time={self._hrs}:{self._min}:{self._sec}")
+        self._add_line("#SBATCH --mail-type=ALL ")
+        self._add_line("#SBATCH --mail-user=eschoe@mpe.mpg.de")
+        self._add_line("")
+        self._add_line("module load gcc/11")
+        self._add_line("module load openmpi/4")
+        self._add_line("module load hdf5-serial/1.10.6")
+        self._add_line("")
+        self._add_line("module load anaconda/3/2021.05")
+        self._add_line("")
+        self._add_line("#add HDF5 library path to ld path")
+        self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
+        self._add_line("")
+        self._add_line(
+            "srun /u/eschoe/conda-envs/py_env/bin/python3 run_sim_mp_rav.py ${SLURM_ARRAY_TASK_ID}"
+        )

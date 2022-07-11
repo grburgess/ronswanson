@@ -106,3 +106,4 @@ ENV/
 /docs/md/parameters.yml
 /docs/md/run_simulation.py
 /docs/md/.virtual_documents/
+/run_simulation.sh
