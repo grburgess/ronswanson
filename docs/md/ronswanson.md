@@ -118,7 +118,7 @@ sb = dukesilver.SimulationBuilder(
     "database.h5",
     "from ronswanson.band_simulation import BandSimulation as Simulation",
     n_cores=8,
-    n_nodes=None
+    use_nodes=None
 )
 ```
 
