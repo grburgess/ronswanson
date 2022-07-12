@@ -9,6 +9,7 @@ from ._version import get_versions
 from .database import Database
 from .simulation import Simulation
 from .simulation_builder import ParameterGrid, SimulationBuilder
+from .utils import ronswanson_config
 from .utils.logging import update_logging_level
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     "SimulationBuilder",
     "Database",
     "update_logging_level",
+    "ronswanson_config",
 ]
 
 

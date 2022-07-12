@@ -4,6 +4,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 
+from .configuration import ronswanson_config
 from .package_data import get_path_of_data_file
 
 
@@ -25,7 +26,10 @@ mytheme = Theme().read(get_path_of_data_file("log_theme.ini"))
 console = Console(theme=mytheme)
 
 ronswanson_console_log_handler = RichHandler(
-    level="INFO", rich_tracebacks=True, markup=True, console=console
+    level=ronswanson_config.logging.level,
+    rich_tracebacks=True,
+    markup=True,
+    console=console,
 )
 ronswanson_console_log_handler.setFormatter(_console_formatter)
 

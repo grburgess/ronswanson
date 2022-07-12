@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
+from .utils import ronswanson_config
+
 
 class ScriptGenerator:
     def __init__(self, file_name: str) -> None:
@@ -51,6 +53,29 @@ class PythonGenerator(ScriptGenerator):
         linear_exceution: bool = False,
     ) -> None:
 
+        """
+        Generate the python script that will be run
+
+
+        :param file_name:
+        :type file_name: str
+        :param database_file:
+        :type database_file: str
+        :param parameter_file:
+        :type parameter_file: str
+        :param base_dir:
+        :type base_dir: str
+        :param import_line:
+        :type import_line: str
+        :param n_procs:
+        :type n_procs: int
+        :param n_nodes:
+        :type n_nodes: Optional[int]
+        :param linear_exceution:
+        :type linear_exceution: bool
+        :returns:
+
+        """
         self._import_line = import_line
         self._n_procs: int = n_procs
         self._n_nodes: Optional[int] = n_nodes
@@ -149,13 +174,22 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
         self._add_line(f"#SBATCH --time={self._hrs}:{self._min}:{self._sec}")
         self._add_line("#SBATCH --mail-type=ALL ")
-        self._add_line("#SBATCH --mail-user=eschoe@mpe.mpg.de")
+        self._add_line(f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}")
         self._add_line("")
-        self._add_line("module load gcc/11")
-        self._add_line("module load openmpi/4")
-        self._add_line("module load hdf5-serial/1.10.6")
+
+        if ronswanson_config.slurm.modules is not None:
+
+            for m in ronswanson_config.slurm.modules:
+
+                self._add_line(f"module load {m}")
+
         self._add_line("")
-        self._add_line("module load anaconda/3/2021.05")
+
+        # self._add_line("module load gcc/11")
+        # self._add_line("module load openmpi/4")
+        # self._add_line("module load hdf5-serial/1.10.6")
+        # self._add_line("module load anaconda/3/2021.05")
+
         self._add_line("")
         self._add_line("#add HDF5 library path to ld path")
         self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
