@@ -6,7 +6,7 @@ Submodules
 
 .. toctree::
 
-   ronswanson.utils.file_utils
+   ronswanson.utils.configuration
    ronswanson.utils.hdf5_utils
    ronswanson.utils.logging
    ronswanson.utils.package_data

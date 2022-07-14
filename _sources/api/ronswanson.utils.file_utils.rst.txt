@@ -1,7 +1,0 @@
-ronswanson.utils.file_utils module
-==================================
-
-.. automodule:: ronswanson.utils.file_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:

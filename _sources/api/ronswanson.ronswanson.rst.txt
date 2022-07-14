@@ -1,7 +1,0 @@
-ronswanson.ronswanson module
-============================
-
-.. automodule:: ronswanson.ronswanson
-    :members:
-    :undoc-members:
-    :show-inheritance:

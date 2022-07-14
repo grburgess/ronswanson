@@ -4,10 +4,10 @@ ronswanson.utils package
 Submodules
 ----------
 
-ronswanson.utils.file\_utils module
------------------------------------
+ronswanson.utils.configuration module
+-------------------------------------
 
-.. automodule:: ronswanson.utils.file_utils
+.. automodule:: ronswanson.utils.configuration
    :members:
    :undoc-members:
    :show-inheritance:

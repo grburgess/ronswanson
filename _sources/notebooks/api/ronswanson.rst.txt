@@ -30,14 +30,6 @@ ronswanson.database module
    :undoc-members:
    :show-inheritance:
 
-ronswanson.ronswanson module
-----------------------------
-
-.. automodule:: ronswanson.ronswanson
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 ronswanson.script\_generator module
 -----------------------------------
 

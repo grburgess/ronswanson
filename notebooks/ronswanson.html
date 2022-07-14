@@ -452,15 +452,29 @@ class BandSimulation(dukesilver.Simulation):
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">09:58:08 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The naima package is not available. Models that depend on it will not be         </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">functions.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py#50" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">50</span></a>
+<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">available                                                                         </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">               </span>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The GSL library or the pygsl wrapper cannot be loaded. Models that depend on it  </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">functions.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py#71" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">71</span></a>
+<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">will not be available.                                                            </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">               </span>
+</pre></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[<span class="ansi-magenta-fg">WARNING </span>]<span class="ansi-magenta-fg"> The naima package is not available. Models that depend on it will not be available</span>
-[<span class="ansi-magenta-fg">WARNING </span>]<span class="ansi-magenta-fg"> The GSL library or the pygsl wrapper cannot be loaded. Models that depend on it will not be available.</span>
-[<span class="ansi-magenta-fg">WARNING </span>]<span class="ansi-magenta-fg"> The ebltable package is not available. Models that depend on it will not be available</span>
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">09:58:09 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The ebltable package is not available. Models that depend on it will not be     </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/absorption.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">absorption.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/absorption.py#36" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">36</span></a>
+<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">available                                                                        </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                </span>
+</pre></div>
 </div>
 <p>Now we need to tell the simulation builder a few things so it can construct our files for us. We have stored this YAML file in the repo itself. You should use your own!</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">SimulationBuilder</span></code> class takes a parameter grid, the name of the file that will be created, the import line for the custom simulation class, the number of cores and nodes to execute on.</p>
@@ -483,7 +497,7 @@ sb = dukesilver.SimulationBuilder(
     &quot;database.h5&quot;,
     &quot;from ronswanson.band_simulation import BandSimulation as Simulation&quot;,
     n_cores=8,
-    n_nodes=None,
+    use_nodes=None,
 )
 </pre></div>
 </div>
@@ -558,10 +572,10 @@ table_model
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[<span class="ansi-magenta-fg">WARNING </span>]<span class="ansi-magenta-fg"> Energy unit is not a Quantity instance, so units has not been provided. Using keV.</span>
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">09:58:10 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> Energy unit is not a Quantity instance, so units has not been provided.    </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">template_model.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py#109" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">109</span></a>
+<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">Using keV.                                                                  </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                     </span>
+</pre></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -746,7 +760,7 @@ ax.legend()
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x7f906c8d9f70&gt;
+&lt;matplotlib.legend.Legend at 0x7f1e47bc65e0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -778,10 +792,10 @@ table_model_small
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[<span class="ansi-magenta-fg">WARNING </span>]<span class="ansi-magenta-fg"> Energy unit is not a Quantity instance, so units has not been provided. Using keV.</span>
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">09:58:15 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> Energy unit is not a Quantity instance, so units has not been provided.    </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">template_model.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py#109" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">109</span></a>
+<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">Using keV.                                                                  </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                     </span>
+</pre></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
