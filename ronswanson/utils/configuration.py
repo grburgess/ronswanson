@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 from omegaconf import OmegaConf
+from omegaconf.dictconfig import DictConfig
+from rich.tree import Tree
 
 # Path to configuration
 
@@ -56,3 +58,37 @@ else:
     with _config_file.open("w") as f:
 
         OmegaConf.save(config=ronswanson_config, f=f.name)
+
+
+def recurse_dict(d, tree) -> None:
+
+    for k, v in d.items():
+
+        if (type(v) == dict) or isinstance(v, DictConfig):
+
+            branch = tree.add(
+                k, guide_style="bold medium_orchid", style="bold medium_orchid"
+            )
+
+            recurse_dict(v, branch)
+
+        else:
+
+            tree.add(
+                f"{k}: [blink cornflower_blue]{v}",
+                guide_style="medium_spring_green",
+                style="medium_spring_green",
+            )
+
+    return
+
+
+def show_configuration() -> None:
+
+    tree = Tree(
+        "config", guide_style="bold medium_orchid", style="bold medium_orchid"
+    )
+
+    recurse_dict(ronswanson_config, tree)
+
+    return tree

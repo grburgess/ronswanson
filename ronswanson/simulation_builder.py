@@ -391,13 +391,17 @@ class SimulationBuilder:
 
         self._n_iterations: int = parameter_grid.n_points
 
+        # if we are using nodes
+        # we need to see how many
+        # we need
+
         if self._use_nodes:
 
             self._compute_chunks()
 
         else:
 
-            self._n_nodes = None
+            self._n_nodes: Optional[int] = None
 
         self._generate_python_script()
 
@@ -411,7 +415,9 @@ class SimulationBuilder:
 
         if self._use_nodes:
 
-            self._n_nodes: int = int(n_nodes)
+            self._n_nodes = int(n_nodes)
+
+            log.info(f"we will be using {self._n_nodes} nodes")
 
         # now generate the key files
         k = 0

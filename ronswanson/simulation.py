@@ -43,7 +43,6 @@ class Simulation(metaclass=ABCMeta):
         :param out_file:
         :type out_file: str
         :returns:
-
         """
         self._out_file: str = out_file
         self._parameter_set: Dict[str, float] = parameter_set

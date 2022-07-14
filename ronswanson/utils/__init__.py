@@ -1,1 +1,1 @@
-from .configuration import ronswanson_config
+from .configuration import ronswanson_config, show_configuration
