@@ -19,7 +19,7 @@ __all__ = [
     "Database",
     "update_logging_level",
     "ronswanson_config",
-    "show_configuration"
+    "show_configuration",
 ]
 
 

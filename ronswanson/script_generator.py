@@ -174,7 +174,9 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
         self._add_line(f"#SBATCH --time={self._hrs}:{self._min}:{self._sec}")
         self._add_line("#SBATCH --mail-type=ALL ")
-        self._add_line(f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}")
+        self._add_line(
+            f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
+        )
         self._add_line("")
 
         if ronswanson_config.slurm.modules is not None:
