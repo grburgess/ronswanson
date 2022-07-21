@@ -184,6 +184,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_import_line</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from joblib import Parallel, delayed&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from tqdm.auto import tqdm&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson import ParameterGrid&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;import sys&quot;</span><span class="p">)</span>
@@ -222,16 +223,24 @@
 
             <span class="c1"># just do a straight for loop</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;for i in iteration:&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;for i in tqdm(iteration):&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;func(i)&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
 
             <span class="c1"># use joblib</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in iteration)&quot;</span>
-            <span class="p">)</span></div>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in iteration)&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in tqdm(iteration))&quot;</span>
+                <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SLURMGenerator"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.SLURMGenerator">[docs]</a><span class="k">class</span> <span class="nc">SLURMGenerator</span><span class="p">(</span><span class="n">ScriptGenerator</span><span class="p">):</span>
