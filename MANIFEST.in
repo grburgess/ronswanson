@@ -1,2 +1,3 @@
 include versioneer.py
 include ronswanson/_version.py
+include ronswanson/data/log_theme.ini

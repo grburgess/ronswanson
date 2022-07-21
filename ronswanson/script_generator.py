@@ -90,6 +90,7 @@ class PythonGenerator(ScriptGenerator):
 
         self._add_line(self._import_line)
         self._add_line("from joblib import Parallel, delayed")
+        self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
         if self._n_nodes is not None:
             self._add_line("import sys")
@@ -128,16 +129,24 @@ class PythonGenerator(ScriptGenerator):
 
             # just do a straight for loop
 
-            self._add_line("for i in iteration:")
+            self._add_line("for i in tqdm(iteration):")
             self._add_line("func(i)", indent_level=1)
 
         else:
 
             # use joblib
 
-            self._add_line(
-                f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in iteration)"
-            )
+            if self._n_nodes is None:
+
+                self._add_line(
+                    f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in iteration)"
+                )
+
+            else:
+
+                self._add_line(
+                    f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration)"
+                )
 
 
 class SLURMGenerator(ScriptGenerator):
