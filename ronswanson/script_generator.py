@@ -136,7 +136,7 @@ class PythonGenerator(ScriptGenerator):
 
             # use joblib
 
-            if self._n_nodes is None:
+            if self._n_nodes is not None:
 
                 self._add_line(
                     f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in iteration)"
