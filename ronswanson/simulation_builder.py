@@ -322,7 +322,7 @@ class ParameterGrid:
 
         if len(self.energy_grid) == 1:
 
-            out['energy_grid'] = self.energy_grid.to_dict()
+            out['energy_grid'] = self.energy_grid[0].to_dict()
 
         else:
 
