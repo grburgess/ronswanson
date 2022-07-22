@@ -286,7 +286,8 @@ class ParameterGrid:
         else:
 
             energy_grid = [
-                d.pop(f"energy_grid_{i}") for i in range(n_energy_grids)
+                EnergyGrid.from_dict(d.pop(f"energy_grid_{i}"))
+                for i in range(n_energy_grids)
             ]
 
         pars = list(d.keys())
