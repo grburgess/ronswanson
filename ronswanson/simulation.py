@@ -5,7 +5,7 @@ from typing import Dict, List
 import h5py
 import numpy as np
 
-from ronswanson.simulation_builder import EnergyGrid
+import ronswanson.simulation_builder as sb
 
 from .utils.logging import setup_logger
 
@@ -29,7 +29,7 @@ class Simulation(metaclass=ABCMeta):
         self,
         simulation_id: int,
         parameter_set: Dict[str, float],
-        energy_grid: EnergyGrid,
+        energy_grid: sb.EnergyGrid,
         out_file: str,
         num_outputs: int = 1,
     ) -> None:
@@ -50,7 +50,7 @@ class Simulation(metaclass=ABCMeta):
         self._out_file: str = out_file
         self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id
-        self._energy_grid: List[EnergyGrid] = energy_grid
+        self._energy_grid: List[sb.EnergyGrid] = energy_grid
         self._num_outputs: int = num_outputs
 
         if not len(self._energy_grid) == self._num_outputs:
