@@ -2,14 +2,12 @@ import itertools
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import h5py
 import numpy as np
 import yaml
 
 from .script_generator import PythonGenerator, SLURMGenerator
-from .simulation import Simulation
 
 # from .utils.hdf5_utils import recursively_save_dict_contents_to_group
 from .utils.logging import setup_logger
