@@ -265,7 +265,6 @@ class ParameterGrid:
         is_multi_output: bool = False
         n_energy_grids = 1
 
-
         for k in d.keys():
 
             if "energy_grid" in k:
@@ -276,16 +275,19 @@ class ParameterGrid:
 
                         # we have already detected one
 
+                        n_energy_grids += 1
 
-                        n_energy_grids +=1
-
-                    
                     is_multi_output = True
 
-            
+        if not is_multi_output:
 
+            energy_grid = [EnergyGrid.from_dict(d.pop("energy_grid"))]
 
-        energy_grid = EnergyGrid.from_dict(d.pop("energy_grid"))
+        else:
+
+            energy_grid = [
+                d.pop(f"energy_grid_{i}") for i in range(n_energy_grids)
+            ]
 
         pars = list(d.keys())
 
@@ -319,7 +321,15 @@ class ParameterGrid:
 
             out[p.name] = p.to_dict()
 
-        out['energy_grid'] = self.energy_grid.to_dict()
+        if len(self.energy_grid) == 1:
+
+            out['energy_grid'] = self.energy_grid.to_dict()
+
+        else:
+
+            for i, eg in enumerate(self.energy_grid):
+
+                out[f"energy_grid_{i}"] = eg.to_dict()
 
         return out
 

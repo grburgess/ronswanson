@@ -163,7 +163,7 @@ class Database:
 
         with h5py.File(file_name, "r") as f:
 
-            energy_grid = f['energy_grid'][()]
+            energy_grid = f['energy_grid'][f'energy_grid_{output}']
 
             values_grp = f["values"][f"output_{output}"]
 

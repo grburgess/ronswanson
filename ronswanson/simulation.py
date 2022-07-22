@@ -1,6 +1,6 @@
 import time
 from abc import ABCMeta, abstractmethod
-from typing import Dict
+from typing import Dict, List
 
 import h5py
 import numpy as np
@@ -48,8 +48,15 @@ class Simulation(metaclass=ABCMeta):
         self._out_file: str = out_file
         self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id
-        self._energy_grid: np.ndarray = energy_grid
+        self._energy_grid: List[np.ndarray] = energy_grid
         self._num_outputs: int = num_outputs
+
+        if not len(self._energy_grid) == self._num_outputs:
+
+            log.error(f"reuested number of outputs {self._num_outputs}")
+            log.error(f"but only have {len(self._energy_grid)} energy grids")
+
+            raise RuntimeError()
 
     def run(self) -> None:
 
@@ -149,11 +156,15 @@ class Simulation(metaclass=ABCMeta):
 
                 if "energy_grid" not in f.keys():
 
-                    f.create_dataset(
-                        "energy_grid",
-                        data=self._energy_grid,
-                        compression="gzip",
-                    )
+                    ene_grp = f.create_group("energy_grid")
+
+                    for i, grid in enumerate(self._energy_grid):
+
+                        ene_grp.create_dataset(
+                            f"energy_grid_{i}",
+                            data=grid,
+                            compression="gzip",
+                        )
 
                 if "parameters" not in f.keys():
 
