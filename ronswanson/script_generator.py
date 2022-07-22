@@ -106,7 +106,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line("def func(i):")
         self._add_line("params = pg.at_index(i)", indent_level=1)
         self._add_line(
-            f"simulation = Simulation(i, params, pg.energy_grid.grid,'{self._database_file}')",
+            f"simulation = Simulation(i, params, pg.energy_grid,'{self._database_file}')",
             indent_level=1,
         )
         self._add_line("simulation.run()", indent_level=1)
