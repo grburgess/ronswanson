@@ -45,15 +45,11 @@ def test_script_gen_nodes():
 
         f.unlink()
 
-
-
     slurm_script = Path("run_simulation.sh")
 
     assert slurm_script.exists()
 
     slurm_script.unlink()
-
-
 
 
 def test_script_gen_linear():
