@@ -239,7 +239,7 @@ class Parameter:
 class ParameterGrid:
 
     parameter_list: List[Parameter]
-    energy_grid: EnergyGrid
+    energy_grid: List[EnergyGrid]
 
     @property
     def n_points(self) -> int:
@@ -261,6 +261,29 @@ class ParameterGrid:
 
         # make sure to sort so that we always have the same parameter
         # ordering
+
+        is_multi_output: bool = False
+        n_energy_grids = 1
+
+
+        for k in d.keys():
+
+            if "energy_grid" in k:
+
+                if len(k.split("_")) == 3:
+
+                    if is_multi_output:
+
+                        # we have already detected one
+
+
+                        n_energy_grids +=1
+
+                    
+                    is_multi_output = True
+
+            
+
 
         energy_grid = EnergyGrid.from_dict(d.pop("energy_grid"))
 

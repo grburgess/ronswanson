@@ -145,7 +145,7 @@ class PythonGenerator(ScriptGenerator):
             else:
 
                 self._add_line(
-                    f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration))"
+                    f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration, colour='#FC0A5A'))"
                 )
 
 

@@ -29,6 +29,7 @@ class Simulation(metaclass=ABCMeta):
         parameter_set: Dict[str, float],
         energy_grid: np.ndarray,
         out_file: str,
+        num_outputs: int = 1,
     ) -> None:
 
         """
@@ -48,6 +49,7 @@ class Simulation(metaclass=ABCMeta):
         self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id
         self._energy_grid: np.ndarray = energy_grid
+        self._num_outputs: int = num_outputs
 
     def run(self) -> None:
 
@@ -113,7 +115,7 @@ class Simulation(metaclass=ABCMeta):
 
         log.debug(f"simulation {self._simulation_id} is now running")
 
-        output: np.ndarray = self._run_call()
+        output: Dict[str, np.ndarray] = self._run_call()
 
         while True:
 
@@ -171,20 +173,30 @@ class Simulation(metaclass=ABCMeta):
 
                 if "values" not in f.keys():
 
-                    f.create_group("values")
+                    val_grp: h5py.Group = f.create_group("values")
+
+                    for i in range(self._num_outputs):
+
+                        val_grp.create_group(f"output_{i}")
 
                 values_group: h5py.Group = f["values"]
 
-                values_group.create_dataset(
-                    f"{new_key}", data=output, compression="gzip"
-                )
+                for i in range(self._num_outputs):
+
+                    out_group = values_group[f"output_{i}"]
+
+                    out_group.create_dataset(
+                        f"{new_key}",
+                        data=output[f"output_{i}"],
+                        compression="gzip",
+                    )
 
                 f.close()
 
                 break
 
     @abstractmethod
-    def _run_call(self) -> np.ndarray:
+    def _run_call(self) -> Dict[str, np.ndarray]:
 
         log.error("Attempting to use base class")
 

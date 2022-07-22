@@ -37,6 +37,24 @@ def test_script_gen_nodes():
         use_nodes=True,
     )
 
+    # delete crap
+
+    p = Path(".").glob("key_file*.txt")
+
+    for f in p:
+
+        f.unlink()
+
+
+
+    slurm_script = Path("run_simulation.sh")
+
+    assert slurm_script.exists()
+
+    slurm_script.unlink()
+
+
+
 
 def test_script_gen_linear():
 
@@ -96,6 +114,7 @@ def test_script_gen_parallel():
 
     assert db.n_entries == 10 * 10 * 10
     assert db.n_parameters == 3
+
     for k, v in db.parameter_ranges.items():
 
         if k == "epeak":

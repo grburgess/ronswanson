@@ -15,7 +15,11 @@ jupyter:
 
 # Intro
 
-So you need to build a table model? 3ML via astromodels provides you with nice facilities to accomplish this task. But often, we need to interface with computationally expensive simulations and require many runs of these simulations. This is a very generic task and Ron Swanson wants to make things as simple as possible for you. Making things complicated is annoying.
+So you need to build a table model? 3ML via astromodels provides you with nice
+facilities to accomplish this task. But often, we need to interface with
+computationally expensive simulations and require many runs of these
+simulations. This is a very generic task and Ron Swanson wants to make things as
+simple as possible for you. Making things complicated is annoying.
 
 ![alt text](https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/mad.jpg)
 
@@ -24,7 +28,8 @@ So you need to build a table model? 3ML via astromodels provides you with nice f
 
 Let's say we want to make a table model from a Band function.
 
-We pick a parameter grid and a grid of energies for our simulation. We can enter these in a YAML file:
+We pick a parameter grid and a grid of energies for our simulation. We can enter
+these in a YAML file:
 
 ```yaml
 alpha:
@@ -55,7 +60,14 @@ energy_grid:
 
 ```
 
-As can be seen, we can specify the parameter/energy grids ourselves, or we can specify their ranges and let it be done for us.
+As can be seen, we can specify the parameter/energy grids ourselves, or we can
+specify their ranges and let it be done for us.
+
+It is possible that a simulation outputs more than one type of array (photons,
+electrons, neutrinos, etc.). In this case, each output may have its own energy
+grid. These can be specified as ```energy_grid_0```,
+```energy_grid_1```...```energy_grid_n```. More on how to grab the output from
+these below.
 
 
 
@@ -63,7 +75,13 @@ As can be seen, we can specify the parameter/energy grids ourselves, or we can s
 
 ### The Simulation class
 
-Now we need to make a class for the simulation. We will inherit from the simulation class and specify a `_run_call` function that tells the program how to run the simulation for a given set of parameters. This function **must** return an array of photon fluxes for the given energies.
+Now we need to make a class for the simulation. We will inherit from the
+simulation class and specify a `_run_call` function that tells the program how
+to run the simulation for a given set of parameters. This function **must**
+return a dictionary of arrays of photon / particle fluxes for the given
+energies. The keys of the dictionary should be ```output_0```,
+```output_1```...```output_n``` for each type of output corresponding to the
+energy grids above.
 
 
 
@@ -94,13 +112,17 @@ class BandSimulation(dukesilver.Simulation):
             xp=self._parameter_set["epeak"],
         )
 
-        return b(self._energy_grid)
+        return dict(output_0=b(self._energy_grid))
 
 ```
 
-Now we need to tell the simulation builder a few things so it can construct our files for us. We have stored this YAML file in the repo itself. You should use your own!
+Now we need to tell the simulation builder a few things so it can construct our
+files for us. We have stored this YAML file in the repo itself. You should use
+your own!
 
-The `SimulationBuilder` class takes a parameter grid, the name of the file that will be created, the import line for the custom simulation class, the number of cores and nodes to execute on. 
+The `SimulationBuilder` class takes a parameter grid, the name of the file that
+will be created, the import line for the custom simulation class, the number of
+cores and nodes to execute on.
 
 ```python
 from ronswanson.utils.package_data import get_path_of_data_file
@@ -122,7 +144,8 @@ sb = dukesilver.SimulationBuilder(
 )
 ```
 
-Now a python file will be written to the disk which you can run to create your simulation runs. we can have a look at the file.
+Now a python file will be written to the disk which you can run to create your
+simulation runs. we can have a look at the file.
 
 ```
 from ronswanson.band_simulation import BandSimulation as Simulation
@@ -141,16 +164,18 @@ Parallel(n_jobs=8)(delayed(func)(i) for i in iteration)
 
 ```
 
-<!-- #region -->
-Now this simply uses `joblib` to farm out the iterations over the parameter combinations. If iterations are to also be divided across HPC nodes, the python script will be modified and an associated `SLURM` script will be generated.
+<!-- #region --> Now this simply uses `joblib` to farm out the iterations over
+the parameter combinations. If iterations are to also be divided across HPC
+nodes, the python script will be modified and an associated `SLURM` script will
+be generated.
 
 
 ### The Database
 
 
 
-Upon running the script, an HDF5 database of the runs is created which contains all the information needed to build a table model in `3ML`.
-<!-- #endregion -->
+Upon running the script, an HDF5 database of the runs is created which contains
+all the information needed to build a table model in `3ML`.  <!-- #endregion -->
 
 ```python
 from ronswanson.utils.package_data import get_path_of_data_file

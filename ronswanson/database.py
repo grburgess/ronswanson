@@ -151,8 +151,13 @@ class Database:
         return selection
 
     @classmethod
-    def from_file(cls, file_name: str) -> "Database":
-
+    def from_file(cls, file_name: str, output: int = 0) -> "Database":
+        """
+        open a database from a file.
+        The output argument specifies which value to collect.
+        For example, a simulation may save photon and electron
+        distributions from a solution.
+        """
         values = {}
         parameters = {}
 
@@ -160,7 +165,7 @@ class Database:
 
             energy_grid = f['energy_grid'][()]
 
-            values_grp = f["values"]
+            values_grp = f["values"][f"output_{output}"]
 
             parameters_grp = f["parameters"]
 
@@ -178,7 +183,11 @@ class Database:
         return cls(parameters, parameter_names, energy_grid, values)
 
     def to_3ml(
-        self, name: str, desc: str, overwrite: bool = False, **kwargs
+        self,
+        name: str,
+        desc: str,
+        overwrite: bool = False,
+        **kwargs,
     ) -> TemplateModel:
 
         """

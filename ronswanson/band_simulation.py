@@ -16,7 +16,7 @@ class BandSimulation(Simulation):
     ) -> None:
         super().__init__(simulation_id, parameter_set, energy_grid, out_file)
 
-    def _run_call(self) -> np.ndarray:
+    def _run_call(self) -> Dict[str, np.ndarray]:
 
         b = Band(
             K=1,
@@ -25,4 +25,4 @@ class BandSimulation(Simulation):
             xp=self._parameter_set["epeak"],
         )
 
-        return b(self._energy_grid)
+        return dict(output_0=b(self._energy_grid))
