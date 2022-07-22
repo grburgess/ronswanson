@@ -5,6 +5,8 @@ from typing import Dict, List
 import h5py
 import numpy as np
 
+from ronswanson.simulation_builder import EnergyGrid
+
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -27,7 +29,7 @@ class Simulation(metaclass=ABCMeta):
         self,
         simulation_id: int,
         parameter_set: Dict[str, float],
-        energy_grid: np.ndarray,
+        energy_grid: EnergyGrid,
         out_file: str,
         num_outputs: int = 1,
     ) -> None:
@@ -48,7 +50,7 @@ class Simulation(metaclass=ABCMeta):
         self._out_file: str = out_file
         self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id
-        self._energy_grid: List[np.ndarray] = energy_grid
+        self._energy_grid: List[EnergyGrid] = energy_grid
         self._num_outputs: int = num_outputs
 
         if not len(self._energy_grid) == self._num_outputs:
@@ -162,7 +164,7 @@ class Simulation(metaclass=ABCMeta):
 
                         ene_grp.create_dataset(
                             f"energy_grid_{i}",
-                            data=grid,
+                            data=grid.grid,
                             compression="gzip",
                         )
 
