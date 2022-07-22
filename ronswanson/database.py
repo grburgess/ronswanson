@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 import h5py
@@ -9,6 +10,12 @@ from .simulation_builder import Parameter, ParameterGrid
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
+
+
+@dataclass(frozen=True)
+class ValueContainer:
+    params: np.ndarray
+    values: np.ndarray
 
 
 class Database:
@@ -66,6 +73,24 @@ class Database:
     @property
     def parameter_ranges(self) -> Dict[str, np.ndarray]:
         return self._parameter_ranges
+
+    @property
+    def paramerter_names(self) -> List[str]:
+        return self._parameter_names
+
+    @property
+    def energy_grid(self) -> np.ndarray:
+        return self._energy_grid
+
+    def at(self, i: int) -> ValueContainer:
+        """
+        return the parameters and values
+        at an index
+        """
+
+        return ValueContainer(
+            params=self._grid_points[i, :], values=self._values[i, :]
+        )
 
     def _extract_parameter_values(self, values, grid_points):
 
@@ -163,7 +188,7 @@ class Database:
 
         with h5py.File(file_name, "r") as f:
 
-            energy_grid = f['energy_grid'][f'energy_grid_{output}']
+            energy_grid = f['energy_grid'][f'energy_grid_{output}'][()]
 
             values_grp = f["values"][f"output_{output}"]
 
