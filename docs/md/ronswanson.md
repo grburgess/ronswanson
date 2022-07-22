@@ -126,16 +126,16 @@ cores and nodes to execute on.
 
 ```python
 from ronswanson.utils.package_data import get_path_of_data_file
-
+import ronswanson
 
 file_name = get_path_of_data_file("test_params.yml")
 
 
 # create a parameter grid from our file
-pg = dukesilver.ParameterGrid.from_yaml(file_name)
+pg = ronswanson.ParameterGrid.from_yaml(file_name)
 
 # create a simulation builder
-sb = dukesilver.SimulationBuilder(
+sb = ronswanson.SimulationBuilder(
     pg,
     "database.h5",
     "from ronswanson.band_simulation import BandSimulation as Simulation",
