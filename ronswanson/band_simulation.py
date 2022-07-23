@@ -3,6 +3,8 @@ from typing import Dict
 import numpy as np
 from astromodels import Band
 
+from ronswanson.simulation_builder import EnergyGrid
+
 from .simulation import Simulation
 
 
@@ -11,7 +13,7 @@ class BandSimulation(Simulation):
         self,
         simulation_id: int,
         parameter_set: Dict[str, float],
-        energy_grid: np.ndarray,
+        energy_grid: EnergyGrid,
         out_file: str,
     ) -> None:
         super().__init__(simulation_id, parameter_set, energy_grid, out_file)
@@ -25,4 +27,4 @@ class BandSimulation(Simulation):
             xp=self._parameter_set["epeak"],
         )
 
-        return dict(output_0=b(self._energy_grid))
+        return dict(output_0=b(self._energy_grid[0]))
