@@ -290,7 +290,7 @@ class Database:
                 **{k: v for k, v in zip(self._parameter_names, sub_grid[i])},
             )
 
-        tmf.save_data(overwrite=True)
+        tmf.save_data(overwrite=overwrite)
 
         return TemplateModel(name)
 
