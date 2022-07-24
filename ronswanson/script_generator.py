@@ -1,16 +1,18 @@
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
 from .utils import ronswanson_config
 
 
-class ScriptGenerator:
+class ScriptGenerator(ABC):
     def __init__(self, file_name: str) -> None:
 
         self._file_name: str = file_name
         self._output: str = ""
         self._build_script()
 
+    @abstractmethod
     def _build_script(self) -> None:
         pass
 
@@ -26,6 +28,10 @@ class ScriptGenerator:
 
         # close the line
         self._end_line()
+
+    @property
+    def file_name(self) -> str:
+        return self._file_name
 
     def _end_line(self):
 
