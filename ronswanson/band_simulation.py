@@ -27,4 +27,4 @@ class BandSimulation(Simulation):
             xp=self._parameter_set["epeak"],
         )
 
-        return dict(output_0=b(self._energy_grid[0]))
+        return dict(output_0=b(self._energy_grid[0].grid))

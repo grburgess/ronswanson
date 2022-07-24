@@ -18,12 +18,12 @@ def test_database(database: Database):
     selections["alpha"] = dict(vmin=-0.5)
     selections["epeak"] = dict(vmin=300, vmax=800)
 
-    tm = database.to_3ml("ron", "ron", **selections)
+    tm = database.to_3ml("ron", "ron", overwrite=True, **selections)
 
 
 def test_table_model(database: Database):
 
-    tm = database.to_3ml("ron", "ron")
+    tm = database.to_3ml("ron", "ron", overwrite=True)
 
     b = Band()
 
