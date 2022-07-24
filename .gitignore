@@ -108,3 +108,6 @@ ENV/
 /docs/md/.virtual_documents/
 /run_simulation.sh
 /docs/md/ronswanson.ipynb
+/.dir-locals.el
+/.editorconfig
+/.readthedocs.yml
