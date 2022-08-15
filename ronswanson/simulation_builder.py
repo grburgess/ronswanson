@@ -9,7 +9,6 @@ import numpy as np
 import yaml
 from astromodels.functions.template_model import h5py
 
-from .database import Database
 from .script_generator import PythonGenerator, SLURMGenerator
 from .utils.logging import setup_logger
 
