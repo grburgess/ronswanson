@@ -107,7 +107,6 @@ class Simulation(metaclass=ABCMeta):
 
                             log.debug(f"parameters {v[()]} already exist!")
 
-
                 f.close()
 
                 break

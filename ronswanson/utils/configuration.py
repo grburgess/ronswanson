@@ -30,6 +30,7 @@ class SLURM:
     modules: Optional[List[str]] = None
     python: str = "python"
 
+
 @dataclass
 class RonSwansonConfig:
 

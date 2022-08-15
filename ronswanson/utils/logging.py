@@ -66,8 +66,10 @@ def setup_logger(name):
     # this must be set to allow debug messages through
     log.setLevel(logging.DEBUG)
 
-    # add the handlers
-    log.addHandler(ronswanson_console_log_handler)
+    if ronswanson_config.logging.on:
+
+        # add the handlers
+        log.addHandler(ronswanson_console_log_handler)
 
     # we do not want to duplicate teh messages in the parents
     log.propagate = False
