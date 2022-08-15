@@ -187,7 +187,9 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line("#SBATCH -N 1               ")
         self._add_line("#SBATCH --ntasks-per-node=1")
         self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
-        self._add_line(f"#SBATCH --time={self._hrs}:{self._min}:{self._sec}")
+        self._add_line(
+            f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
+        )
         self._add_line("#SBATCH --mail-type=ALL ")
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
