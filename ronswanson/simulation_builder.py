@@ -450,9 +450,13 @@ class SimulationBuilder:
 
             runs_per_node = 1
 
+            generator = range(self._n_cores)
+
         else:
 
             runs_per_node = self._runs_per_node
+
+            generator = range(runs_per_node)
 
         n_nodes = np.ceil(self._n_iterations / (self._n_cores * runs_per_node))
 
@@ -467,7 +471,7 @@ class SimulationBuilder:
         for i in range(self._n_nodes):
             output = []
 
-            for j in range(self._n_cores * runs_per_node):
+            for j in generator:
 
                 if (k + j) < self._n_iterations:
 
@@ -479,7 +483,7 @@ class SimulationBuilder:
 
                     f.write(f"{o}\n")
 
-            k += self._n_cores * runs_per_node
+            k += len(generator)
 
     def _generate_python_script(self) -> None:
 
