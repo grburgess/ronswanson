@@ -214,5 +214,5 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
         self._add_line("")
         self._add_line(
-            "srun /u/eschoe/conda-envs/py_env/bin/python3 run_sim_mp_rav.py ${SLURM_ARRAY_TASK_ID}"
+            "srun /u/eschoe/conda-envs/py_env/bin/python3 run_simulation.py ${SLURM_ARRAY_TASK_ID}"
         )

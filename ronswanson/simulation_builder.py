@@ -391,6 +391,7 @@ class SimulationBuilder:
         import_line: str,
         n_cores: int = 1,
         use_nodes: bool = False,
+        runs_per_node: Optional[int] = None,
         linear_execution: bool = False,
         hrs: Optional[int] = None,
         min: Optional[int] = None,
@@ -402,6 +403,8 @@ class SimulationBuilder:
         self._n_cores: int = n_cores
 
         self._use_nodes: bool = use_nodes
+
+        self._runs_per_node: Optional[int] = runs_per_node
 
         self._out_file: str = out_file
 
@@ -443,7 +446,15 @@ class SimulationBuilder:
 
     def _compute_chunks(self) -> None:
 
-        n_nodes = np.ceil(self._n_iterations / self._n_cores)
+        if self._runs_per_node is None:
+
+            runs_per_node = 1
+
+        else:
+
+            runs_per_node = self._runs_per_node
+
+        n_nodes = np.ceil(self._n_iterations / (self._n_cores * runs_per_node))
 
         if self._use_nodes:
 
@@ -456,7 +467,7 @@ class SimulationBuilder:
         for i in range(self._n_nodes):
             output = []
 
-            for j in range(self._n_cores):
+            for j in range(self._n_cores * runs_per_node):
 
                 if (k + j) < self._n_iterations:
 
