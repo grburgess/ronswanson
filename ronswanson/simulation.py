@@ -94,7 +94,6 @@ class Simulation(metaclass=ABCMeta):
 
                     # ok, this is a brand new file
                     log.debug("New database file")
-                    break
 
                 else:
 
@@ -108,7 +107,6 @@ class Simulation(metaclass=ABCMeta):
 
                             log.debug(f"parameters {v[()]} already exist!")
 
-                            break
 
                 f.close()
 
