@@ -127,7 +127,9 @@ class PythonGenerator(ScriptGenerator):
                 f"with open(f'{self._base_dir}/key_file{{key_num}}.txt') as f:"
             )
 
-            self._add_line("iteration = [int(x) for x in f.readlines()]", indent_level=1)
+            self._add_line(
+                "iteration = [int(x) for x in f.readlines()]", indent_level=1
+            )
 
             pass
 
@@ -218,5 +220,5 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
 
         self._add_line(
-            "srun /u/eschoe/conda-envs/py_env/bin/python3 run_simulation.py ${SLURM_ARRAY_TASK_ID}"
+            f"srun {ronswanson_config.slurm.python} run_simulation.py ${{SLURM_ARRAY_TASK_ID}"
         )
