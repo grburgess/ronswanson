@@ -127,7 +127,7 @@ class PythonGenerator(ScriptGenerator):
                 f"with open(f'{self._base_dir}/key_file{{key_num}}.txt') as f:"
             )
 
-            self._add_line("iteration = f.readlines()")
+            self._add_line("iteration = f.readlines()", indent_level=1)
 
             pass
 
@@ -191,10 +191,14 @@ class SLURMGenerator(ScriptGenerator):
             f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
         )
         self._add_line("#SBATCH --mail-type=ALL ")
+        self._add_line("#SBATCH --mem=20000")
+
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
         )
         self._add_line("")
+
+        self._add_line("module purge")
 
         if ronswanson_config.slurm.modules is not None:
 
@@ -212,7 +216,7 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line("")
         self._add_line("#add HDF5 library path to ld path")
         self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
-        self._add_line("")
+
         self._add_line(
             "srun /u/eschoe/conda-envs/py_env/bin/python3 run_simulation.py ${SLURM_ARRAY_TASK_ID}"
         )
