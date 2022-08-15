@@ -127,7 +127,7 @@ class PythonGenerator(ScriptGenerator):
                 f"with open(f'{self._base_dir}/key_file{{key_num}}.txt') as f:"
             )
 
-            self._add_line("iteration = f.readlines()", indent_level=1)
+            self._add_line("iteration = [int(x) for x in f.readlines()]", indent_level=1)
 
             pass
 

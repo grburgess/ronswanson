@@ -479,7 +479,7 @@ class SimulationBuilder:
 
                     f.write(f"{o}\n")
 
-            k += self._n_cores
+            k += self._n_cores * runs_per_node
 
     def _generate_python_script(self) -> None:
 
