@@ -57,6 +57,7 @@ class PythonGenerator(ScriptGenerator):
         n_procs: int,
         n_nodes: Optional[int] = None,
         linear_exceution: bool = False,
+        has_complete_params: bool = False,
     ) -> None:
 
         """
@@ -89,6 +90,7 @@ class PythonGenerator(ScriptGenerator):
         self._database_file: str = Path(database_file).absolute()
         self._base_dir: str = base_dir
         self._linear_execution: bool = linear_exceution
+        self._has_complete_params: bool = has_complete_params
 
         super().__init__(file_name)
 
@@ -96,6 +98,7 @@ class PythonGenerator(ScriptGenerator):
 
         self._add_line(self._import_line)
         self._add_line("from joblib import Parallel, delayed")
+        self._add_line("import json")
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
         if self._n_nodes is not None:
@@ -105,12 +108,24 @@ class PythonGenerator(ScriptGenerator):
 
         self._end_line()
 
+        if self._has_complete_params:
+
+            self._add_line("with open('completed_parameters.json', 'r') as f:")
+            self._add_line("complete_params = json.load(f)", indent_level=1)
+        
         self._add_line(
             f"pg = ParameterGrid.from_yaml('{self._parameter_file}')"
         )
 
         self._add_line("def func(i):")
         self._add_line("params = pg.at_index(i)", indent_level=1)
+
+        if self._has_complete_params:
+
+            self._add_line("for p in complete_params:", indent_level=1)
+            self._add_line("if np.alltrue(np.array(p) == params):", indent_level=2)
+            self._add_line("return", indent_level=3)
+
         self._add_line(
             f"simulation = Simulation(i, params, pg.energy_grid,'{self._database_file}')",
             indent_level=1,

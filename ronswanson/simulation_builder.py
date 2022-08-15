@@ -1,4 +1,5 @@
 import itertools
+import json
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -6,10 +7,10 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import yaml
+from astromodels.functions.template_model import h5py
 
+from .database import Database
 from .script_generator import PythonGenerator, SLURMGenerator
-
-# from .utils.hdf5_utils import recursively_save_dict_contents_to_group
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -398,6 +399,8 @@ class SimulationBuilder:
         sec: Optional[int] = None,
     ):
 
+        self._has_complete_params: bool = False
+
         self._import_line: str = import_line
 
         self._n_cores: int = n_cores
@@ -426,6 +429,8 @@ class SimulationBuilder:
 
         self._n_iterations: int = parameter_grid.n_points
 
+        self._check_completed()
+
         # if we are using nodes
         # we need to see how many
         # we need
@@ -443,6 +448,26 @@ class SimulationBuilder:
         if self._use_nodes:
 
             self._generate_slurm_script()
+
+    def _check_completed(self) -> None:
+
+        if Path(self._out_file).exists():
+
+            params = []
+
+            with h5py.File(self._out_file, "r") as f:
+
+                for k, v in f['parameters'].items():
+
+                    params.append(v[()].tolist())
+
+            out_file = self._base_dir / "completed_parameters.json"
+
+            with out_file.open("w") as f:
+
+                json.dump(params, f)
+
+            self._has_complete_params = True
 
     def _compute_chunks(self) -> None:
 
@@ -496,6 +521,7 @@ class SimulationBuilder:
             self._n_cores,
             self._n_nodes,
             self._linear_execution,
+            self._has_complete_params,
         )
 
         py_gen.write(str(self._base_dir))

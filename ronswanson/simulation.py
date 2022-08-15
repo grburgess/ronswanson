@@ -55,7 +55,7 @@ class Simulation(metaclass=ABCMeta):
 
         if not len(self._energy_grid) == self._num_outputs:
 
-            log.error(f"reuested number of outputs {self._num_outputs}")
+            log.error(f"requested number of outputs {self._num_outputs}")
             log.error(f"but only have {len(self._energy_grid)} energy grids")
 
             raise RuntimeError()
@@ -72,50 +72,50 @@ class Simulation(metaclass=ABCMeta):
 
         params = np.array(list(self._parameter_set.values()))
 
-        run_flag: bool = True
+        # run_flag: bool = True
 
-        while True:
+        # while True:
 
-            test, f = file_is_open(self._out_file)
+        #     test, f = file_is_open(self._out_file)
 
-            if test:
+        #     if test:
 
-                # the file is already open so wait
+        #         # the file is already open so wait
 
-                log.debug(
-                    f"simulation {self._simulation_id} is waiting on file to be closed"
-                )
+        #         log.debug(
+        #             f"simulation {self._simulation_id} is waiting on file to be closed"
+        #         )
 
-                time.sleep(np.random.uniform(3., 10))
+        #         time.sleep(np.random.uniform(3., 10.))
 
-            else:
+        #     else:
 
-                if "parameters" not in f.keys():
+        #         if "parameters" not in f.keys():
 
-                    # ok, this is a brand new file
-                    log.debug("New database file")
+        #             # ok, this is a brand new file
+        #             log.debug("New database file")
 
-                else:
+        #         else:
 
-                    for k, v in f["parameters"].items():
+        #             for k, v in f["parameters"].items():
 
-                        if np.alltrue(v[()] == params):
+        #                 if np.alltrue(v[()] == params):
 
-                            # this parameter set exists
+        #                     # this parameter set exists
 
-                            run_flag = False
+        #                     run_flag = False
 
-                            log.debug(f"parameters {v[()]} already exist!")
+        #                     log.debug(f"parameters {v[()]} already exist!")
 
-                f.close()
+        #         f.close()
 
-                break
+        #         break
 
-        if not run_flag:
+        # if not run_flag:
 
-            log.debug(f"simulation {self._simulation_id} not running")
+        #     log.debug(f"simulation {self._simulation_id} not running")
 
-            return
+        #     return
 
         # run the simulation
 
