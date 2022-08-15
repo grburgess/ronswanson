@@ -84,7 +84,7 @@ def recurse_dict(d, tree) -> None:
     return
 
 
-def show_configuration() -> None:
+def show_configuration() -> Tree:
 
     tree = Tree(
         "config", guide_style="bold medium_orchid", style="bold medium_orchid"
