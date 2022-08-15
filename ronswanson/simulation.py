@@ -135,7 +135,7 @@ class Simulation(metaclass=ABCMeta):
                     f"simulation {self._simulation_id} is waiting on file to be closed"
                 )
 
-                time.sleep(np.random.randint(3, 5))
+                time.sleep(np.random.randint(1, 5))
 
             else:
 
