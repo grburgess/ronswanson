@@ -199,7 +199,7 @@ class Simulation(metaclass=ABCMeta):
 
                 out_group = values_group[f"output_{i}"]
 
-                if new_key in out_group:
+                if str(new_key) in out_group:
 
                     log.error(f"simulation {self._simulation_id} screwed up")
                     log.error(f" we have a new key: {new_key}")
