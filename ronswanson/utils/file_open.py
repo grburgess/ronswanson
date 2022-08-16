@@ -26,7 +26,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
             # check one more time that
             # the file is not accessed
 
-            time.sleep(5)
+            time.sleep(3)
 
             try:
 
@@ -71,7 +71,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
         f.close()
 
-        time.sleep(5)
+        time.sleep(2)
 
         if block_file.exists():
 
