@@ -11,7 +11,7 @@ log = setup_logger(__name__)
 
 
 @contextmanager
-def open_database(file_name: str) -> None:
+def open_database(file_name: str) -> h5py.File:
 
     block_file: Path = Path("HDF5_DATABSE_OPEN")
 
