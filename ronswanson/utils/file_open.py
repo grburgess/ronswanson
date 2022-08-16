@@ -38,7 +38,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
                     tmp = h5py.File(file_name, "a")
 
-            except OSError:
+            except (OSError, BlockingIOError):
 
                 log.debug("file was already accessed")
                 log.debug(f"simulation {sim_id} will continue to wait")
@@ -71,6 +71,16 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
         time.sleep(1)
 
-        block_file.unlink()
+        if block_file.exists():
+
+            block_file.unlink()
+
+        else:
+
+            log.error("the block file was supposed to exist but it did not!")
+
+            raise RuntimeError(
+                "the block file was supposed to exist but it did not!"
+            )
 
         log.debug(f"simulation {sim_id} is unblocking")

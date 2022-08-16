@@ -129,7 +129,6 @@ class Simulation(metaclass=ABCMeta):
 
         #     test, f = file_is_open(self._out_file)
 
-
         with open_database(self._out_file, self._simulation_id) as f:
 
             # if test:
@@ -199,6 +198,16 @@ class Simulation(metaclass=ABCMeta):
             for i in range(self._num_outputs):
 
                 out_group = values_group[f"output_{i}"]
+
+                if new_key in out_group:
+
+                    log.error(f"simulation {self._simulation_id} screwed up")
+                    log.error(f" we have a new key: {new_key}")
+                    log.error(f" but there are {len(out_group.keys())} files")
+
+                    raise RuntimeError(
+                        f"simulation {self._simulation_id} screwed up"
+                    )
 
                 out_group.create_dataset(
                     f"{new_key}",
