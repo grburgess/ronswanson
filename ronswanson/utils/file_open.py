@@ -11,7 +11,7 @@ log = setup_logger(__name__)
 
 
 @contextmanager
-def open_database(file_name: str) -> h5py.File:
+def open_database(file_name: str, sim_id: int) -> h5py.File:
 
     block_file: Path = Path("HDF5_DATABASE_OPEN")
 
@@ -41,7 +41,7 @@ def open_database(file_name: str) -> h5py.File:
             except OSError:
 
                 log.debug("file was already accessed")
-                log.debug("will continue to wait")
+                log.debug(f"simulation {sim_id} will continue to wait")
 
             else:
 
@@ -49,13 +49,13 @@ def open_database(file_name: str) -> h5py.File:
 
                 f = h5py.File(file_name, "a")
 
-                log.debug("file is accessed!")
+                log.debug(f"file is accessed by simulation {sim_id}!")
 
                 break
 
         else:
 
-            log.debug("file is open so we wait")
+            log.debug(f"file is open so simulation {sim_id} wait")
 
             time.sleep(np.random.uniform(3.0, 5.0))
 
@@ -65,6 +65,10 @@ def open_database(file_name: str) -> h5py.File:
 
     finally:
 
+        log.debug(f"simulation {sim_id} is closing the file")
+
         f.close()
 
         block_file.unlink()
+
+        log.debug(f"simulation {sim_id} is unblocking")

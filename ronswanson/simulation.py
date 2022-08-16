@@ -130,7 +130,7 @@ class Simulation(metaclass=ABCMeta):
         #     test, f = file_is_open(self._out_file)
 
 
-        with open_database(self._out_file) as f:
+        with open_database(self._out_file, self._simulation_id) as f:
 
             # if test:
 
