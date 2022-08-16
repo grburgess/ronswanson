@@ -36,7 +36,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
                 else:
 
-                    tmp = h5py.File(file_name, "w")
+                    tmp = h5py.File(file_name, "a")
 
             except OSError:
 
@@ -68,6 +68,8 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
         log.debug(f"simulation {sim_id} is closing the file")
 
         f.close()
+
+        time.sleep(1)
 
         block_file.unlink()
 
