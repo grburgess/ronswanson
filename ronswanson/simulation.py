@@ -131,18 +131,6 @@ class Simulation(metaclass=ABCMeta):
 
         with open_database(self._out_file, self._simulation_id) as f:
 
-            # if test:
-
-            #     # the file is already open so wait
-
-            #     log.debug(
-            #         f"simulation {self._simulation_id} is waiting on file to be closed"
-            #     )
-
-            #     time.sleep(np.random.uniform(3., 5.))
-
-            # else:
-
             log.debug(f"simulation {self._simulation_id} is storing")
 
             # store the parameter names

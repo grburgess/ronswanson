@@ -26,7 +26,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
             # check one more time that
             # the file is not accessed
 
-            time.sleep(1)
+            time.sleep(5)
 
             try:
 
@@ -63,13 +63,15 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
         yield f
 
+        log.debug(f"simulation {sim_id} finished storing")
+
     finally:
 
         log.debug(f"simulation {sim_id} is closing the file")
 
         f.close()
 
-        time.sleep(1)
+        time.sleep(5)
 
         if block_file.exists():
 
