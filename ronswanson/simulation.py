@@ -8,6 +8,8 @@ import numpy as np
 import ronswanson.simulation_builder as sb
 
 from .utils.logging import setup_logger
+from .utils.file_open import open_database
+
 
 log = setup_logger(__name__)
 
@@ -123,87 +125,90 @@ class Simulation(metaclass=ABCMeta):
 
         output: Dict[str, np.ndarray] = self._run_call()
 
-        while True:
+        # while True:
 
-            test, f = file_is_open(self._out_file)
+        #     test, f = file_is_open(self._out_file)
 
-            if test:
 
-                # the file is already open so wait
+        with open_database(self._out_file) as f:
 
-                log.debug(
-                    f"simulation {self._simulation_id} is waiting on file to be closed"
-                )
+            # if test:
 
-                time.sleep(np.random.uniform(3., 5.))
+            #     # the file is already open so wait
 
-            else:
+            #     log.debug(
+            #         f"simulation {self._simulation_id} is waiting on file to be closed"
+            #     )
 
-                log.debug(f"simulation {self._simulation_id} is storing")
+            #     time.sleep(np.random.uniform(3., 5.))
 
-                # store the parameter names
+            # else:
 
-                if "parameter_names" not in f.keys():
+            log.debug(f"simulation {self._simulation_id} is storing")
 
-                    p_name_group = f.create_group("parameter_names")
+            # store the parameter names
 
-                    for i, name in enumerate(list(self._parameter_set.keys())):
+            if "parameter_names" not in f.keys():
 
-                        p_name_group.attrs[f"par{i}"] = name
+                p_name_group = f.create_group("parameter_names")
 
-                # store the energy grid
+                for i, name in enumerate(list(self._parameter_set.keys())):
 
-                if "energy_grid" not in f.keys():
+                    p_name_group.attrs[f"par{i}"] = name
 
-                    ene_grp = f.create_group("energy_grid")
+            # store the energy grid
 
-                    for i, grid in enumerate(self._energy_grid):
+            if "energy_grid" not in f.keys():
 
-                        ene_grp.create_dataset(
-                            f"energy_grid_{i}",
-                            data=grid.grid,
-                            compression="gzip",
-                        )
+                ene_grp = f.create_group("energy_grid")
 
-                if "parameters" not in f.keys():
+                for i, grid in enumerate(self._energy_grid):
 
-                    f.create_group("parameters")
-
-                param_group: h5py.Group = f["parameters"]
-
-                number_of_entries: int = len(param_group.keys())
-
-                new_key: int = number_of_entries
-
-                params = np.array(list(self._parameter_set.values()))
-
-                param_group.create_dataset(
-                    f"{new_key}", data=params, compression="gzip"
-                )
-
-                if "values" not in f.keys():
-
-                    val_grp: h5py.Group = f.create_group("values")
-
-                    for i in range(self._num_outputs):
-
-                        val_grp.create_group(f"output_{i}")
-
-                values_group: h5py.Group = f["values"]
-
-                for i in range(self._num_outputs):
-
-                    out_group = values_group[f"output_{i}"]
-
-                    out_group.create_dataset(
-                        f"{new_key}",
-                        data=output[f"output_{i}"],
+                    ene_grp.create_dataset(
+                        f"energy_grid_{i}",
+                        data=grid.grid,
                         compression="gzip",
                     )
 
-                f.close()
+            if "parameters" not in f.keys():
 
-                break
+                f.create_group("parameters")
+
+            param_group: h5py.Group = f["parameters"]
+
+            number_of_entries: int = len(param_group.keys())
+
+            new_key: int = number_of_entries
+
+            params = np.array(list(self._parameter_set.values()))
+
+            param_group.create_dataset(
+                f"{new_key}", data=params, compression="gzip"
+            )
+
+            if "values" not in f.keys():
+
+                val_grp: h5py.Group = f.create_group("values")
+
+                for i in range(self._num_outputs):
+
+                    val_grp.create_group(f"output_{i}")
+
+            values_group: h5py.Group = f["values"]
+
+            for i in range(self._num_outputs):
+
+                out_group = values_group[f"output_{i}"]
+
+                out_group.create_dataset(
+                    f"{new_key}",
+                    data=output[f"output_{i}"],
+                    compression="gzip",
+                )
+
+            # f.close()
+
+            # break
 
     @abstractmethod
     def _run_call(self) -> Dict[str, np.ndarray]:
