@@ -13,7 +13,7 @@ log = setup_logger(__name__)
 @contextmanager
 def open_database(file_name: str) -> h5py.File:
 
-    block_file: Path = Path("HDF5_DATABSE_OPEN")
+    block_file: Path = Path("HDF5_DATABASE_OPEN")
 
     while True:
 
@@ -30,7 +30,13 @@ def open_database(file_name: str) -> h5py.File:
 
             try:
 
-                tmp = h5py.File(file_name, "r")
+                if Path(file_name).exists():
+
+                    tmp = h5py.File(file_name, "r")
+
+                else:
+
+                    tmp = h5py.File(file_name, "w")
 
             except OSError:
 
