@@ -112,7 +112,7 @@ class PythonGenerator(ScriptGenerator):
 
             self._add_line("with open('completed_parameters.json', 'r') as f:")
             self._add_line("complete_params = json.load(f)", indent_level=1)
-        
+
         self._add_line(
             f"pg = ParameterGrid.from_yaml('{self._parameter_file}')"
         )
@@ -123,7 +123,9 @@ class PythonGenerator(ScriptGenerator):
         if self._has_complete_params:
 
             self._add_line("for p in complete_params:", indent_level=1)
-            self._add_line("if np.alltrue(np.array(p) == params):", indent_level=2)
+            self._add_line(
+                "if np.alltrue(np.array(p) == params):", indent_level=2
+            )
             self._add_line("return", indent_level=3)
 
         self._add_line(
