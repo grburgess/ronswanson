@@ -72,12 +72,22 @@ def test_script_gen_linear():
         linear_execution=True,
     )
 
+    block = Path("HDF5_DATABASE_OPEN")
+
+    if block.exists():
+
+        block.unlink()
+
+
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
 
     assert database_file.exists()
     database_file.unlink()
+
+    assert not block.exists()
+
 
 
 def test_script_gen_parallel():
@@ -102,13 +112,20 @@ def test_script_gen_parallel():
         linear_execution=False,
     )
 
+    block = Path("HDF5_DATABASE_OPEN")
+
+    if block.exists():
+
+        block.unlink()
+
+
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
 
     db = Database.from_file(str(database_file))
 
-    assert db.n_entries == 10 * 10 * 10
+    assert db.n_entries == 10 * 5 * 5
     assert db.n_parameters == 3
 
     for k, v in db.parameter_ranges.items():
@@ -123,6 +140,9 @@ def test_script_gen_parallel():
 
     assert database_file.exists()
     database_file.unlink()
+
+    assert not block.exists()
+
 
 
 def test_adding_params():
@@ -145,13 +165,21 @@ def test_adding_params():
         linear_execution=False,
     )
 
+
+    block = Path("HDF5_DATABASE_OPEN")
+
+    if block.exists():
+
+        block.unlink()
+
+
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
 
     db = Database.from_file(str(database_file))
 
-    assert db.n_entries == 10 * 10 * 10
+    assert db.n_entries == 10 * 5 * 5
     assert db.n_parameters == 3
     for k, v in db.parameter_ranges.items():
 
@@ -162,6 +190,9 @@ def test_adding_params():
         else:
 
             assert len(v) == 10
+
+    assert not block.exists()
+
 
     file_name = get_path_of_data_file("test_addition_params.yml")
 
@@ -175,13 +206,21 @@ def test_adding_params():
         linear_execution=False,
     )
 
+    block = Path("HDF5_DATABASE_OPEN")
+
+    if block.exists():
+
+        block.unlink()
+
+
+
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
 
     db = Database.from_file(str(database_file))
 
-    assert db.n_entries == 10 * 10 * 12
+    assert db.n_entries == 5 * 5 * 12
 
     assert db.n_parameters == 3
 
@@ -197,3 +236,5 @@ def test_adding_params():
 
     assert database_file.exists()
     database_file.unlink()
+
+    assert not block.exists()

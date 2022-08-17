@@ -21,10 +21,10 @@ class ValueContainer:
 class Database:
     def __init__(
         self,
-        grid_points: Dict[str, np.ndarray],
+        grid_points: np.ndarray,
         parameter_names: List[str],
         energy_grid: np.ndarray,
-        values: Dict[str, np.ndarray],
+        values: np.ndarray,
     ) -> None:
         """
         Databse of parameters and simulated values
@@ -52,15 +52,17 @@ class Database:
         # self._values: Dict[str, np.ndarray] = values
         # self._grid_points: Dict[str, np.ndarray] = grid_points
 
-        self._values: np.ndarray = np.empty(
-            (self._n_entries, len(self._energy_grid))
-        )
+        self._values: np.ndarray = values
 
-        self._grid_points: np.ndarray = np.empty(
-            (self._n_entries, self._n_parameters)
-        )
+        self._grid_points: np.ndarray = grid_points
 
-        self._extract_parameter_values(values, grid_points)
+        self._parameter_ranges: Dict[str, np.ndarray] = OrderedDict()
+
+        for i, par in enumerate(self._parameter_names):
+
+            self._parameter_ranges[par] = np.sort(
+                np.unique(self._grid_points[:, i])
+            )
 
     @property
     def n_entries(self) -> int:
@@ -91,35 +93,6 @@ class Database:
         return ValueContainer(
             params=self._grid_points[i, :], values=self._values[i, :]
         )
-
-    def _extract_parameter_values(self, values, grid_points):
-
-        """
-        extract the values and parameter ranges for
-        the tables
-
-        :param values:
-        :type values:
-        :param grid_points:
-        :type grid_points:
-        :returns:
-
-        """
-
-        # extract the values
-
-        for i in range(self._n_entries):
-
-            self._values[i] = values[f"{i}"]
-            self._grid_points[i] = grid_points[f"{i}"]
-
-        self._parameter_ranges = OrderedDict()
-
-        for i, par in enumerate(self._parameter_names):
-
-            self._parameter_ranges[par] = np.sort(
-                np.unique(self._grid_points[:, i])
-            )
 
     def _sub_selection(
         self,

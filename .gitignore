@@ -111,3 +111,5 @@ ENV/
 /.dir-locals.el
 /.editorconfig
 /.readthedocs.yml
+/HDF5_DATABASE_OPEN
+/completed_parameters.json

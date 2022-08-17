@@ -428,6 +428,8 @@ class SimulationBuilder:
 
         self._n_iterations: int = parameter_grid.n_points
 
+        self._initialize_database()
+
         self._check_completed()
 
         # if we are using nodes
@@ -448,23 +450,71 @@ class SimulationBuilder:
 
             self._generate_slurm_script()
 
+    def _initialize_database(self) -> None:
+
+        if not Path(self._out_file).exists():
+
+            with h5py.File(self._out_file, "w", libver="latest") as f:
+
+                pg = ParameterGrid.from_yaml(self._parameter_file)
+
+                # store the parameter names
+
+                p_name_group = f.create_group("parameter_names")
+
+                for i, name in enumerate(pg.parameter_names):
+
+                    p_name_group.attrs[f"par{i}"] = name
+
+                # store the energy grids
+
+                ene_grp = f.create_group("energy_grid")
+
+                for i, grid in enumerate(pg.energy_grid):
+
+                    ene_grp.create_dataset(
+                        f"energy_grid_{i}",
+                        data=grid.grid,
+                        compression="gzip",
+                    )
+
+                # create an empty group for the parameters
+
+                f.create_dataset(
+                    "parameters",
+                    shape=(0,) + np.array(pg.parameter_names).shape,
+                    maxshape=(None,) + np.array(pg.parameter_names).shape,
+                    compression="gzip",
+                )
+
+                val_grp: h5py.Group = f.create_group("values")
+
+                # create an empty data set for the values
+
+                for i in range(len(pg.energy_grid)):
+
+                    grp = val_grp.create_group(f"output_{i}")
+
+                    grp.create_dataset(
+                        "values",
+                        shape=(0,) + pg.energy_grid[i].grid.shape,
+                        maxshape=(None,) + pg.energy_grid[i].grid.shape,
+                        compression="gzip",
+                    )
+
     def _check_completed(self) -> None:
 
         if Path(self._out_file).exists():
 
-            params = []
-
             with h5py.File(self._out_file, "r") as f:
 
-                for k, v in f['parameters'].items():
-
-                    params.append(v[()].tolist())
+                params = f["parameters"][()]
 
             out_file = self._base_dir / "completed_parameters.json"
 
             with out_file.open("w") as f:
 
-                json.dump(params, f)
+                json.dump(params.tolist(), f)
 
             self._has_complete_params = True
 

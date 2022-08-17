@@ -70,55 +70,6 @@ class Simulation(metaclass=ABCMeta):
 
         """
 
-        # check if this already exists
-
-        params = np.array(list(self._parameter_set.values()))
-
-        # run_flag: bool = True
-
-        # while True:
-
-        #     test, f = file_is_open(self._out_file)
-
-        #     if test:
-
-        #         # the file is already open so wait
-
-        #         log.debug(
-        #             f"simulation {self._simulation_id} is waiting on file to be closed"
-        #         )
-
-        #         time.sleep(np.random.uniform(3., 10.))
-
-        #     else:
-
-        #         if "parameters" not in f.keys():
-
-        #             # ok, this is a brand new file
-        #             log.debug("New database file")
-
-        #         else:
-
-        #             for k, v in f["parameters"].items():
-
-        #                 if np.alltrue(v[()] == params):
-
-        #                     # this parameter set exists
-
-        #                     run_flag = False
-
-        #                     log.debug(f"parameters {v[()]} already exist!")
-
-        #         f.close()
-
-        #         break
-
-        # if not run_flag:
-
-        #     log.debug(f"simulation {self._simulation_id} not running")
-
-        #     return
-
         # run the simulation
 
         log.debug(f"simulation {self._simulation_id} is now running")
@@ -135,77 +86,26 @@ class Simulation(metaclass=ABCMeta):
 
             # store the parameter names
 
-            if "parameter_names" not in f.keys():
+            param_dataset: h5py.Dataset = f["parameters"]
 
-                p_name_group = f.create_group("parameter_names")
-
-                for i, name in enumerate(list(self._parameter_set.keys())):
-
-                    p_name_group.attrs[f"par{i}"] = name
-
-            # store the energy grid
-
-            if "energy_grid" not in f.keys():
-
-                ene_grp = f.create_group("energy_grid")
-
-                for i, grid in enumerate(self._energy_grid):
-
-                    ene_grp.create_dataset(
-                        f"energy_grid_{i}",
-                        data=grid.grid,
-                        compression="gzip",
-                    )
-
-            if "parameters" not in f.keys():
-
-                f.create_group("parameters")
-
-            param_group: h5py.Group = f["parameters"]
-
-            number_of_entries: int = len(param_group.keys())
-
-            new_key: int = number_of_entries
-
-            params = np.array(list(self._parameter_set.values()))
-
-            param_group.create_dataset(
-                f"{new_key}", data=params, compression="gzip"
+            param_dataset.resize(
+                (param_dataset.shape[0] + 1,) + param_dataset.shape[1:]
             )
 
-            if "values" not in f.keys():
-
-                val_grp: h5py.Group = f.create_group("values")
-
-                for i in range(self._num_outputs):
-
-                    val_grp.create_group(f"output_{i}")
+            param_dataset[-1] = np.array(list(self._parameter_set.values()))
 
             values_group: h5py.Group = f["values"]
 
             for i in range(self._num_outputs):
 
-                out_group = values_group[f"output_{i}"]
+                out_group: h5py.Group = values_group[f"output_{i}"]
+                values_dataset: h5py.Dataset = out_group["values"]
 
-                if str(new_key) in out_group.keys():
-
-                    log.error(f"simulation {self._simulation_id} screwed up")
-                    log.error(f" we have a new key: {new_key}")
-                    log.error(f" but there are {len(out_group.keys())} files")
-
-                    raise RuntimeError(
-                        f"simulation {self._simulation_id} screwed up"
-                    )
-
-                out_group.create_dataset(
-                    f"{new_key}",
-                    data=output[f"output_{i}"],
-                    compression="gzip",
+                values_dataset.resize(
+                    (values_dataset.shape[0] + 1,) + values_dataset.shape[1:]
                 )
 
-            # f.close()
-
-            # break
+                values_dataset[-1] = output[f"output_{i}"]
 
     @abstractmethod
     def _run_call(self) -> Dict[str, np.ndarray]:

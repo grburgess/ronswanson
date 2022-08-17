@@ -26,28 +26,48 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
             # check one more time that
             # the file is not accessed
 
-            time.sleep(3)
+            time.sleep(1)
 
             try:
 
                 if Path(file_name).exists():
 
-                    tmp = h5py.File(file_name, "r")
+                    tmp = h5py.File(
+                        file_name,
+                        "r",
+                        libver='latest',
+                        swmr=True,
+                        # driver='core',
+                        # backing_store=True,
+                    )
+
+                    tmp.close()
 
                 else:
 
-                    tmp = h5py.File(file_name, "a")
+                    log.error("There is no database file to write to!")
 
-            except (OSError, BlockingIOError):
+                    raise RuntimeError("There is no database file to write to!")
+
+            except (OSError, BlockingIOError) as e:
+
+                log.debug(f"{e}")
 
                 log.debug("file was already accessed")
                 log.debug(f"simulation {sim_id} will continue to wait")
 
             else:
 
-                tmp.close()
+                f = h5py.File(
+                    file_name,
+                    "a",
+                    libver='latest',
+                    swmr=False,
+                    # driver='core',
+                    # backing_store=True,
+                )
 
-                f = h5py.File(file_name, "a")
+                f.swmr_mode = True
 
                 log.debug(f"file is accessed by simulation {sim_id}!")
 
@@ -57,7 +77,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
             log.debug(f"file is open so simulation {sim_id} wait")
 
-            time.sleep(np.random.uniform(3.0, 5.0))
+            time.sleep(np.random.uniform(.01, 3.0))
 
     try:
 
@@ -71,7 +91,7 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
         f.close()
 
-        time.sleep(2)
+#        time.sleep(1)
 
         if block_file.exists():
 
