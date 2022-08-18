@@ -159,13 +159,11 @@ class Database:
         values = {}
         parameters = {}
 
-        with h5py.File(file_name, "r") as f:
+        with h5py.File(file_name, "r", libver='latest') as f:
 
             energy_grid = f['energy_grid'][f'energy_grid_{output}'][()]
 
             values_grp = f["values"][f"output_{output}"]
-
-            parameters_grp = f["parameters"]
 
             par_name_grp = f["parameter_names"]
 
@@ -173,10 +171,10 @@ class Database:
                 par_name_grp.attrs[f"par{i}"]
                 for i in range(len(par_name_grp.attrs))
             ]
-            for key in values_grp.keys():
 
-                values[key] = values_grp[key][()]
-                parameters[key] = parameters_grp[key][()]
+            parameters = f['parameters'][()]
+
+            values = values_grp['values'][()]
 
         return cls(parameters, parameter_names, energy_grid, values)
 

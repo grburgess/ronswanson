@@ -1,5 +1,6 @@
 import time
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from typing import Dict, List
 
 import h5py
@@ -7,9 +8,8 @@ import numpy as np
 
 import ronswanson.simulation_builder as sb
 
-from .utils.logging import setup_logger
 from .utils.file_open import open_database
-
+from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
 
@@ -92,7 +92,22 @@ class Simulation(metaclass=ABCMeta):
                 (param_dataset.shape[0] + 1,) + param_dataset.shape[1:]
             )
 
-            param_dataset[-1] = np.array(list(self._parameter_set.values()))
+            try:
+
+                param_dataset[-1] = np.array(list(self._parameter_set.values()))
+
+            except OSError as e:
+
+                log.error(f"{e}")
+                log.error(
+                    f" was trying to add {np.array(list(self._parameter_set.values())}"
+                )
+
+                f.close()
+
+                Path("HDF5_DATABASE_OPEN").unlink()
+
+                raise RuntimeError()
 
             values_group: h5py.Group = f["values"]
 
@@ -105,7 +120,20 @@ class Simulation(metaclass=ABCMeta):
                     (values_dataset.shape[0] + 1,) + values_dataset.shape[1:]
                 )
 
-                values_dataset[-1] = output[f"output_{i}"]
+                try:
+
+                    values_dataset[-1] = output[f"output_{i}"]
+
+                except OSError as e:
+
+                    log.error(f"{e}")
+                    log.error(f"was trying to add {output[f'output_{i}']}")
+
+                    f.close()
+
+                    Path("HDF5_DATABASE_OPEN").unlink()
+
+                    raise RuntimeError()
 
     @abstractmethod
     def _run_call(self) -> Dict[str, np.ndarray]:

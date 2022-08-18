@@ -63,8 +63,6 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
                     "a",
                     libver='latest',
                     swmr=False,
-                    # driver='core',
-                    # backing_store=True,
                 )
 
                 f.swmr_mode = True
@@ -75,9 +73,9 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
         else:
 
-            log.debug(f"file is open so simulation {sim_id} wait")
+            log.debug(f"file is open so simulation {sim_id} waits")
 
-            time.sleep(np.random.uniform(.01, 3.0))
+            time.sleep(np.random.uniform(0.01, 3.0))
 
     try:
 
@@ -90,8 +88,6 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
         log.debug(f"simulation {sim_id} is closing the file")
 
         f.close()
-
-#        time.sleep(1)
 
         if block_file.exists():
 

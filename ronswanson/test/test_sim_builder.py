@@ -136,7 +136,7 @@ def test_script_gen_parallel():
 
         else:
 
-            assert len(v) == 10
+            assert len(v) == 5
 
     assert database_file.exists()
     database_file.unlink()
@@ -189,7 +189,7 @@ def test_adding_params():
 
         else:
 
-            assert len(v) == 10
+            assert len(v) == 5
 
     assert not block.exists()
 
@@ -232,7 +232,7 @@ def test_adding_params():
 
         else:
 
-            assert len(v) == 10
+            assert len(v) == 5
 
     assert database_file.exists()
     database_file.unlink()

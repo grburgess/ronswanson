@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+from ronswanson.utils.logging import setup_logger
+
 from .utils import ronswanson_config
 
 
@@ -99,12 +101,17 @@ class PythonGenerator(ScriptGenerator):
         self._add_line(self._import_line)
         self._add_line("from joblib import Parallel, delayed")
         self._add_line("import json")
+        self._add_line("import numpy as np")
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
+        self._add_line("from ronswanson.utils.logging import setup_logger")
+
         if self._n_nodes is not None:
             self._add_line("import sys")
             self._end_line()
             self._add_line("key_num = int(sys.argv[-1])")
+
+        self._add_line("log = setup_logger(__name__)")
 
         self._end_line()
 
@@ -125,6 +132,10 @@ class PythonGenerator(ScriptGenerator):
             self._add_line("for p in complete_params:", indent_level=1)
             self._add_line(
                 "if np.alltrue(np.array(p) == params):", indent_level=2
+            )
+            self._add_line(
+                "log.debug('parameters already exists in file!')",
+                indent_level=3,
             )
             self._add_line("return", indent_level=3)
 
