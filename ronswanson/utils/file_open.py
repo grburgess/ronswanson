@@ -28,33 +28,37 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
 
             time.sleep(1)
 
-            try:
+            # try:
 
-                if Path(file_name).exists():
+            #     if Path(file_name).exists():
 
-                    tmp = h5py.File(
-                        file_name,
-                        "r",
-                        libver='latest',
-                        swmr=True,
-                        # driver='core',
-                        # backing_store=True,
-                    )
+            #         tmp = h5py.File(
+            #             file_name,
+            #             "r",
+            #             libver='latest',
+            #             swmr=True,
+            #             # driver='core',
+            #             # backing_store=True,
+            #         )
 
-                    tmp.close()
+            #         tmp.close()
 
-                else:
+            #     else:
 
-                    log.error("There is no database file to write to!")
+            #         log.error("There is no database file to write to!")
 
-                    raise RuntimeError("There is no database file to write to!")
+            #         raise RuntimeError("There is no database file to write to!")
 
-            except (OSError, BlockingIOError) as e:
+            # except (OSError, BlockingIOError) as e:
 
-                log.debug(f"{e}")
+            #     log.debug(f"{e}")
 
-                log.debug("file was already accessed")
-                log.debug(f"simulation {sim_id} will continue to wait")
+            #     log.debug("file was already accessed")
+            #     log.debug(f"simulation {sim_id} will continue to wait")
+
+            if False:
+
+                pass
 
             else:
 
