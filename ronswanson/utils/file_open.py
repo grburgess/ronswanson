@@ -62,10 +62,10 @@ def open_database(file_name: str, sim_id: int) -> h5py.File:
                     file_name,
                     "a",
                     libver='latest',
-                    swmr=False,
+                    swmr=True,
                 )
 
-                f.swmr_mode = True
+#                f.swmr_mode = True
 
                 log.debug(f"file is accessed by simulation {sim_id}!")
 
