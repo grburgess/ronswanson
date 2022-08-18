@@ -126,8 +126,10 @@ class Simulation(metaclass=ABCMeta):
 
                 except OSError as e:
 
+                    output = output[f"output_{i}"]
+
                     log.error(f"{e}")
-                    log.error(f"was trying to add {output[f'output_{i}']}")
+                    log.error(f"was trying to add {output}")
 
                     f.close()
 
