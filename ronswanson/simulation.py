@@ -100,7 +100,7 @@ class Simulation(metaclass=ABCMeta):
 
                 log.error(f"{e}")
                 log.error(
-                    f" was trying to add {np.array(list(self._parameter_set.values())}"
+                    f" was trying to add {list(self._parameter_set.values())}"
                 )
 
                 f.close()
