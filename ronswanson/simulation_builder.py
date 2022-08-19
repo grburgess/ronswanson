@@ -428,6 +428,8 @@ class SimulationBuilder:
 
         self._n_iterations: int = parameter_grid.n_points
 
+        self._current_database_size: int = 0
+
         self._initialize_database()
 
         self._check_completed()
@@ -482,7 +484,7 @@ class SimulationBuilder:
 
                 f.create_dataset(
                     "parameters",
-                    shape=(0,) + np.array(pg.parameter_names).shape,
+                    shape=(pg.n_points,) + np.array(pg.parameter_names).shape,
                     maxshape=(None,) + np.array(pg.parameter_names).shape,
                     compression="gzip",
                 )
@@ -497,9 +499,39 @@ class SimulationBuilder:
 
                     grp.create_dataset(
                         "values",
-                        shape=(0,) + pg.energy_grid[i].grid.shape,
+                        shape=(pg.n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
                         compression="gzip",
+                    )
+
+        else:
+
+            # we need to resize the dataset
+
+            with h5py.File(self._out_file, "a", libver="latest") as f:
+
+                pg = ParameterGrid.from_yaml(self._parameter_file)
+
+                dataset: h5py.Dataset = f["parameters"]
+
+                self._current_database_size = dataset.shape[0]
+
+                dataset.resize(
+                    (self._current_database_size + pg.n_points,)
+                    + dataset.shape[1:]
+                )
+
+                val_grp = f["values"]
+
+                for i in range(len(pg.energy_grid)):
+
+                    grp = val_grp[f"output_{i}"]
+
+                    dataset: h5py.Dataset = grp["values"]
+
+                    dataset.resize(
+                        (self._current_database_size + pg.n_points,)
+                        + dataset.shape[1:]
                     )
 
     def _check_completed(self) -> None:
@@ -571,6 +603,7 @@ class SimulationBuilder:
             self._n_nodes,
             self._linear_execution,
             self._has_complete_params,
+            self._current_database_size,
         )
 
         py_gen.write(str(self._base_dir))

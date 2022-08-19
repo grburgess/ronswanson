@@ -60,6 +60,7 @@ class PythonGenerator(ScriptGenerator):
         n_nodes: Optional[int] = None,
         linear_exceution: bool = False,
         has_complete_params: bool = False,
+        current_size: int = 0,
     ) -> None:
 
         """
@@ -93,6 +94,7 @@ class PythonGenerator(ScriptGenerator):
         self._base_dir: str = base_dir
         self._linear_execution: bool = linear_exceution
         self._has_complete_params: bool = has_complete_params
+        self._current_size: int = current_size
 
         super().__init__(file_name)
 
@@ -105,6 +107,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
         self._add_line("from ronswanson.utils.logging import setup_logger")
+        self._add_line("from ronswanson.simulation import gather, gather_mpi")
 
         if self._n_nodes is not None:
             self._add_line("import sys")
@@ -168,6 +171,10 @@ class PythonGenerator(ScriptGenerator):
             self._add_line("for i in tqdm(iteration):")
             self._add_line("func(i)", indent_level=1)
 
+            self._add_line(
+                f"gather('{self._database_file}', {self._current_size}, clean=True)"
+            )
+
         else:
 
             # use joblib
@@ -182,6 +189,10 @@ class PythonGenerator(ScriptGenerator):
 
                 self._add_line(
                     f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration, colour='#FC0A5A'))"
+                )
+
+                self._add_line(
+                    f"gather('{self._database_file}', {self._current_size}, clean=True)"
                 )
 
 
@@ -209,7 +220,7 @@ class SLURMGenerator(ScriptGenerator):
 
         self._add_line("#!/bin/bash")
         self._add_line("")
-        self._add_line(f"#SBATCH --array=0-{self._n_nodes} #generate array")
+        self._add_line(f"#SBATCH --array=0-{self._n_nodes-1} #generate array")
         self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
         self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
         self._add_line("#SBATCH -D ./                      #working directory")

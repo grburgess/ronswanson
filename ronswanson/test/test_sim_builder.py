@@ -14,10 +14,9 @@ from ronswanson.simulation_builder import (
 from ronswanson.utils.logging import update_logging_level
 from ronswanson.utils.package_data import get_path_of_data_file
 
+update_logging_level("DEBUG")
 
 def test_script_gen_nodes():
-
-    update_logging_level("ERROR")
 
     database_file = Path("database.h5")
 
@@ -51,9 +50,10 @@ def test_script_gen_nodes():
 
     slurm_script.unlink()
 
+    database_file.unlink()
+
 
 def test_script_gen_linear():
-
     database_file = Path("database.h5")
 
     if database_file.exists():
@@ -72,13 +72,6 @@ def test_script_gen_linear():
         linear_execution=True,
     )
 
-    block = Path("HDF5_DATABASE_OPEN")
-
-    if block.exists():
-
-        block.unlink()
-
-
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
@@ -86,7 +79,7 @@ def test_script_gen_linear():
     assert database_file.exists()
     database_file.unlink()
 
-    assert not block.exists()
+    assert not Path("database_store").exists()
 
 
 
@@ -118,7 +111,6 @@ def test_script_gen_parallel():
 
         block.unlink()
 
-
     os.system("python3 run_simulation.py")
 
     database_file = Path("database.h5")
@@ -144,7 +136,6 @@ def test_script_gen_parallel():
     assert not block.exists()
 
 
-
 def test_adding_params():
 
     database_file = Path("database.h5")
@@ -165,13 +156,11 @@ def test_adding_params():
         linear_execution=False,
     )
 
-
     block = Path("HDF5_DATABASE_OPEN")
 
     if block.exists():
 
         block.unlink()
-
 
     os.system("python3 run_simulation.py")
 
@@ -193,7 +182,6 @@ def test_adding_params():
 
     assert not block.exists()
 
-
     file_name = get_path_of_data_file("test_addition_params.yml")
 
     pg = ParameterGrid.from_yaml(file_name)
@@ -211,8 +199,6 @@ def test_adding_params():
     if block.exists():
 
         block.unlink()
-
-
 
     os.system("python3 run_simulation.py")
 

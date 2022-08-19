@@ -1,4 +1,4 @@
-import logging
+ pytest --log-cli-level=DEBUG -vv ronswanson/test/test_sim_builder.pyimport logging
 import os
 import shutil
 from glob import glob
