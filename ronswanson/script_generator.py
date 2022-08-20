@@ -2,50 +2,11 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+from ghost_writer import ScriptGenerator
+
 from ronswanson.utils.logging import setup_logger
 
 from .utils import ronswanson_config
-
-
-class ScriptGenerator(ABC):
-    def __init__(self, file_name: str) -> None:
-
-        self._file_name: str = file_name
-        self._output: str = ""
-        self._build_script()
-
-    @abstractmethod
-    def _build_script(self) -> None:
-        pass
-
-    def _add_line(self, line: str, indent_level: int = 0) -> None:
-
-        for i in range(indent_level):
-
-            self._output += "\t"
-
-        # add the line
-
-        self._output += line
-
-        # close the line
-        self._end_line()
-
-    @property
-    def file_name(self) -> str:
-        return self._file_name
-
-    def _end_line(self):
-
-        self._output += "\n"
-
-    def write(self, directory: str = ".") -> None:
-
-        out_file: Path = Path(directory) / self._file_name
-
-        with out_file.open("w") as f:
-
-            f.write(self._output)
 
 
 class PythonGenerator(ScriptGenerator):
@@ -225,6 +186,73 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
         self._add_line("#SBATCH -D ./                      #working directory")
         self._add_line("#SBATCH -J grid_mp                 #job name")
+        self._add_line("#SBATCH -N 1               ")
+        self._add_line("#SBATCH --ntasks-per-node=1")
+        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
+        self._add_line(
+            f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
+        )
+        self._add_line("#SBATCH --mail-type=ALL ")
+        self._add_line("#SBATCH --mem=20000")
+
+        self._add_line(
+            f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
+        )
+        self._add_line("")
+
+        self._add_line("module purge")
+
+        if ronswanson_config.slurm.modules is not None:
+
+            for m in ronswanson_config.slurm.modules:
+
+                self._add_line(f"module load {m}")
+
+        self._add_line("")
+
+        # self._add_line("module load gcc/11")
+        # self._add_line("module load openmpi/4")
+        # self._add_line("module load hdf5-serial/1.10.6")
+        # self._add_line("module load anaconda/3/2021.05")
+
+        self._add_line("")
+        self._add_line("#add HDF5 library path to ld path")
+        self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
+
+        self._add_line(
+            f"srun {ronswanson_config.slurm.python} run_simulation.py ${{SLURM_ARRAY_TASK_ID}}"
+        )
+
+
+class SLURMGatherGenerator(ScriptGenerator):
+    def __init__(
+        self,
+        file_name: str,
+        n_procs: int,
+        n_nodes: int,
+        hrs: int,
+        min: int,
+        sec: int,
+    ) -> None:
+
+        self._n_procs: int = n_procs
+        self._n_nodes: int = n_nodes
+
+        self._hrs: int = hrs
+        self._min: int = min
+        self._sec: int = sec
+
+        super().__init__(file_name)
+
+    def _build_script(self) -> None:
+
+        self._add_line("#!/bin/bash")
+        self._add_line("")
+        self._add_line(f"#SBATCH --array=0-{self._n_nodes-1} #generate array")
+        self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
+        self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
+        self._add_line("#SBATCH -D ./                      #working directory")
+        self._add_line("#SBATCH -J gather_out                 #job name")
         self._add_line("#SBATCH -N 1               ")
         self._add_line("#SBATCH --ntasks-per-node=1")
         self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
