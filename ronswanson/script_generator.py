@@ -68,7 +68,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
         self._add_line("from ronswanson.utils.logging import setup_logger")
-        self._add_line("from ronswanson.simulation import gather, gather_mpi")
+        self._add_line("from ronswanson.simulation import gather")
 
         if self._n_nodes is not None:
             self._add_line("import sys")
@@ -116,11 +116,13 @@ class PythonGenerator(ScriptGenerator):
         else:
 
             self._add_line(
-                f"with open(f'{self._base_dir}/key_file{{key_num}}.txt') as f:"
+                f"with open(f'{self._base_dir}/key_file.json','r') as f:"
             )
 
+            self._add_line("keys = json.load(f)[str(key_num)]", indent_level=1)
+
             self._add_line(
-                "iteration = [int(x) for x in f.readlines()]", indent_level=1
+                "iteration = [int(x) for x in keys]", indent_level=1
             )
 
             pass

@@ -390,6 +390,8 @@ class SimulationBuilder:
         out_file: str,
         import_line: str,
         n_cores: int = 1,
+        n_cores_to_use: int = 1,
+        n_gather_per_core: int = 1,
         use_nodes: bool = False,
         runs_per_node: Optional[int] = None,
         linear_execution: bool = False,
@@ -403,6 +405,10 @@ class SimulationBuilder:
         self._import_line: str = import_line
 
         self._n_cores: int = n_cores
+
+        self._n_cores_to_use: int = n_cores_to_use
+
+        self._n_gather_per_core: int = n_gather_per_core
 
         self._use_nodes: bool = use_nodes
 
@@ -445,6 +451,8 @@ class SimulationBuilder:
         else:
 
             self._n_nodes: Optional[int] = None
+
+            self._n_gather_nodes: Optional[int] = None
 
         self._generate_python_script()
 
@@ -574,7 +582,11 @@ class SimulationBuilder:
 
         # now generate the key files
         k = 0
+
+        key_out = {}
+
         for i in range(self._n_nodes):
+
             output = []
 
             for j in generator:
@@ -583,13 +595,51 @@ class SimulationBuilder:
 
                     output.append(k + j)
 
-            with open(self._base_dir / f"key_file{i}.txt", "w") as f:
-
-                for o in output:
-
-                    f.write(f"{o}\n")
+            key_out[i] = output
 
             k += len(generator)
+
+        with open(self._base_dir / "key_file.json", "w") as f:
+
+            json.dump(key_out, f)
+
+        # now collect the gather information
+
+        if self._use_nodes:
+
+            self._n_gather_nodes = int(
+                np.ceil(
+                    self._n_iterations
+                    / (self._n_cores_to_use * self._n_gather_per_core)
+                )
+            )
+
+            gather_out = {}
+            n = 0
+
+            for i in range(self._n_gather_nodes):
+
+                rank_list = {}
+
+                for j in range(self._n_cores_to_use):
+
+                    core_list = []
+
+                    for k in range(self._n_gather_per_core):
+
+                        if n < self._n_iterations:
+
+                            core_list.append(n)
+
+                            n += 1
+
+                    rank_list[j] = core_list
+
+                gather_out[i] = rank_list
+
+            with open(self._base_dir / "gather_file.json", "w") as f:
+
+                json.dump(gather_out, f)
 
     def _generate_python_script(self) -> None:
 
