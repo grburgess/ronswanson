@@ -113,6 +113,8 @@ def gather_mpi(
 
     this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"
 
+    log.debug(f"grabbing sim: {sim_id}")
+
     with h5py.File(file_name, "a", driver="mpio", comm=comm) as database_file:
 
         with h5py.File(this_file, "r") as f:

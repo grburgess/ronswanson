@@ -343,12 +343,6 @@ class ParameterGrid:
                 Dumper=yaml.SafeDumper,
             )
 
-    # def to_hdf5_group(self, f: h5py.File) -> None:
-
-    #     recursively_save_dict_contents_to_group(
-    #         f, "parameter_grid", self.to_dict()
-    #     )
-
     def at_index(self, i: int) -> Dict[str, float]:
         """
         return the ith set of parameters
@@ -464,7 +458,7 @@ class SimulationBuilder:
 
         if not Path(self._out_file).exists():
 
-            with h5py.File(self._out_file, "w", libver="latest") as f:
+            with h5py.File(self._out_file, "w") as f:
 
                 pg = ParameterGrid.from_yaml(self._parameter_file)
 
@@ -516,7 +510,7 @@ class SimulationBuilder:
 
             # we need to resize the dataset
 
-            with h5py.File(self._out_file, "a", libver="latest") as f:
+            with h5py.File(self._out_file, "a") as f:
 
                 pg = ParameterGrid.from_yaml(self._parameter_file)
 
