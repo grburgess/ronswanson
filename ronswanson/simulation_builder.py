@@ -488,7 +488,7 @@ class SimulationBuilder:
                     "parameters",
                     shape=(pg.n_points,) + np.array(pg.parameter_names).shape,
                     maxshape=(None,) + np.array(pg.parameter_names).shape,
-                #    compression="gzip",
+                    #    compression="gzip",
                 )
 
                 val_grp: h5py.Group = f.create_group("values")
@@ -503,7 +503,7 @@ class SimulationBuilder:
                         "values",
                         shape=(pg.n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
-                        #compression="gzip",
+                        # compression="gzip",
                     )
 
         else:
@@ -608,32 +608,26 @@ class SimulationBuilder:
                 )
             )
 
-            gather_out = {}
+            rank_list = {}
             n = 0
 
-            for i in range(self._n_gather_nodes):
+            for i in range(self._n_gather_nodes * self._n_cores_to_use):
 
-                rank_list = {}
+                core_list = []
 
-                for j in range(self._n_cores_to_use):
+                for j in range(self._n_gather_per_core):
 
-                    core_list = []
+                    if n < self._n_iterations:
 
-                    for k in range(self._n_gather_per_core):
+                        core_list.append(n)
 
-                        if n < self._n_iterations:
+                        n += 1
 
-                            core_list.append(n)
-
-                            n += 1
-
-                    rank_list[j] = core_list
-
-                gather_out[i] = rank_list
+                rank_list[i] = core_list
 
             with open(self._base_dir / "gather_file.json", "w") as f:
 
-                json.dump(gather_out, f)
+                json.dump(rank_list, f)
 
     def _generate_python_script(self) -> None:
 
