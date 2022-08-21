@@ -488,7 +488,7 @@ class SimulationBuilder:
                     "parameters",
                     shape=(pg.n_points,) + np.array(pg.parameter_names).shape,
                     maxshape=(None,) + np.array(pg.parameter_names).shape,
-                    compression="gzip",
+                #    compression="gzip",
                 )
 
                 val_grp: h5py.Group = f.create_group("values")
@@ -503,7 +503,7 @@ class SimulationBuilder:
                         "values",
                         shape=(pg.n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
-                        compression="gzip",
+                        #compression="gzip",
                     )
 
         else:
