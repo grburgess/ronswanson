@@ -613,6 +613,8 @@ class SimulationBuilder:
 
             log.debug(f"number nodes: {self._n_gather_nodes}")
             log.debug(f"total_ranks: {self._n_gather_nodes * self._n_cores_to_use}")
+            log.debug(f"number iterations: {self._n_iterations}" )
+
 
             for i in range(self._n_gather_nodes * self._n_cores_to_use):
 
