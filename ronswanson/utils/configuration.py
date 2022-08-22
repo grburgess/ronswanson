@@ -28,6 +28,7 @@ class Logging:
 class SLURM:
     user_email: str = "user@email.com"
     modules: Optional[List[str]] = None
+    mpi_modules: Optional[List[str]] = None
     python: str = "python"
     store_dir: Optional[str] = None
 

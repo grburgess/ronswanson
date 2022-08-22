@@ -658,6 +658,7 @@ class SimulationBuilder:
         slurm_gen: SLURMGenerator = SLURMGenerator(
             "run_simulation.sh",
             self._n_cores,
+            self._n_cores_to_use,
             self._n_nodes,
             self._hrs,
             self._min,

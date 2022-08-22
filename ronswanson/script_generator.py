@@ -164,6 +164,7 @@ class SLURMGenerator(ScriptGenerator):
         self,
         file_name: str,
         n_procs: int,
+        n_procs_to_use: int,
         n_nodes: int,
         hrs: int,
         min: int,
@@ -171,6 +172,7 @@ class SLURMGenerator(ScriptGenerator):
     ) -> None:
 
         self._n_procs: int = n_procs
+        self._n_procs_to_use: int = n_procs_to_use
         self._n_nodes: int = n_nodes
 
         self._hrs: int = hrs
@@ -190,7 +192,7 @@ class SLURMGenerator(ScriptGenerator):
         self._add_line("#SBATCH -J grid_mp                 #job name")
         self._add_line("#SBATCH -N 1               ")
         self._add_line("#SBATCH --ntasks-per-node=1")
-        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
+        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs_to_use}")
         self._add_line(
             f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
         )
@@ -250,14 +252,13 @@ class SLURMGatherGenerator(ScriptGenerator):
 
         self._add_line("#!/bin/bash")
         self._add_line("")
-        self._add_line(f"#SBATCH --array=0-{self._n_nodes-1} #generate array")
-        self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
-        self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
+        self._add_line("#SBATCH -o ./output/%A.out      #output file")
+        self._add_line("#SBATCH -e ./output/%A.err      #error file")
         self._add_line("#SBATCH -D ./                      #working directory")
         self._add_line("#SBATCH -J gather_out                 #job name")
-        self._add_line("#SBATCH -N 1               ")
-        self._add_line("#SBATCH --ntasks-per-node=1")
-        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
+        self._add_line(f"#SBATCH -N {self._n_nodes}               ")
+        self._add_line(f"#SBATCH --ntasks-per-node={self._n_procs}")
+
         self._add_line(
             f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
         )
@@ -271,23 +272,13 @@ class SLURMGatherGenerator(ScriptGenerator):
 
         self._add_line("module purge")
 
-        if ronswanson_config.slurm.modules is not None:
+        if ronswanson_config.slurm.mpi_modules is not None:
 
             for m in ronswanson_config.slurm.modules:
 
                 self._add_line(f"module load {m}")
 
-        self._add_line("")
-
-        # self._add_line("module load gcc/11")
-        # self._add_line("module load openmpi/4")
-        # self._add_line("module load hdf5-serial/1.10.6")
-        # self._add_line("module load anaconda/3/2021.05")
-
-        self._add_line("")
-        self._add_line("#add HDF5 library path to ld path")
-        self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
+        self._end_line()
 
         self._add_line(
-            f"srun {ronswanson_config.slurm.python} run_simulation.py ${{SLURM_ARRAY_TASK_ID}}"
-        )
+            f"srun {ronswanson_config.slurm.python} gather_results.py")
