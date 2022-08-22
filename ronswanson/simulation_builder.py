@@ -611,6 +611,9 @@ class SimulationBuilder:
             rank_list = {}
             n = 0
 
+            log.debug(f"number nodes: {self._n_gather_nodes}")
+            log.debug(f"total_ranks: {self._n_gather_nodes * self._n_cores_to_use}")
+
             for i in range(self._n_gather_nodes * self._n_cores_to_use):
 
                 core_list = []
