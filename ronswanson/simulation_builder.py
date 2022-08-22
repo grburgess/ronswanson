@@ -585,13 +585,13 @@ class SimulationBuilder:
 
             for j in generator:
 
-                if (k + j) < self._n_iterations:
+                if k < self._n_iterations:
 
-                    output.append(k + j)
+                    output.append(k)
+                    k += 1
 
             key_out[i] = output
 
-            k += len(generator)
 
         with open(self._base_dir / "key_file.json", "w") as f:
 
