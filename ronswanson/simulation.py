@@ -122,29 +122,37 @@ def gather_mpi(
 
     log.debug(f"grabbing sim: {sim_id}")
 
-    with h5py.File(file_name, "a", driver="mpio", comm=comm) as database_file:
+    with h5py.File(this_file, "r") as f:
 
-        log.debug(f"opened main file for: {sim_id}")
+        log.debug(f"opened {sim_id} for extractions")
 
+        params = f["parameters"][()]
 
-        with h5py.File(this_file, "r") as f:
+        vals = {}
+        for k, v in f.items():
 
-            log.debug(f"opened {sim_id} for extractions")
+            if "output_" in k:
 
-            database_file["parameters"][current_size + sim_id] = f[
-                "parameters"
-            ][()]
+                vals[k] = v[()]
 
-            for k, v in database_file["values"].items():
+    database_file = h5py.File(file_name, "a", driver="mpio", comm=comm)
 
-                v["values"][current_size + sim_id] = f[k][()]
+    log.debug(f"opened main file for: {sim_id}")
 
-        if clean:
+    database_file["parameters"][current_size + sim_id] = params
 
-            Path(this_file).unlink()
+    for k, v in database_file["values"].items():
 
+        v["values"][current_size + sim_id] = vals[k]
+
+    if clean:
+
+        Path(this_file).unlink()
+
+    database_file.close()
 
     log.debug(f"finished reading a writing {sim_id}")
+
 
 def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
