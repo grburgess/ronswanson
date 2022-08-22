@@ -126,6 +126,8 @@ def gather_mpi(
 
         with h5py.File(this_file, "r") as f:
 
+            log.debug(f"opened {sim_id} for extractions")
+
             database_file["parameters"][current_size + sim_id] = f[
                 "parameters"
             ][()]
@@ -138,6 +140,8 @@ def gather_mpi(
 
             Path(this_file).unlink()
 
+
+    log.debug(f"finished reading a writing {sim_id}")
 
 def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
