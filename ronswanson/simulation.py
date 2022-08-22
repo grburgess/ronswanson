@@ -124,6 +124,9 @@ def gather_mpi(
 
     with h5py.File(file_name, "a", driver="mpio", comm=comm) as database_file:
 
+        log.debug(f"opened main file for: {sim_id}")
+
+
         with h5py.File(this_file, "r") as f:
 
             log.debug(f"opened {sim_id} for extractions")
