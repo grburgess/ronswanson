@@ -197,7 +197,7 @@ class SLURMGenerator(ScriptGenerator):
             f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
         )
         self._add_line("#SBATCH --mail-type=ALL ")
-        self._add_line("#SBATCH --mem=20000")
+
 
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
@@ -258,7 +258,7 @@ class SLURMGatherGenerator(ScriptGenerator):
             f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
         )
         self._add_line("#SBATCH --mail-type=ALL ")
-        self._add_line("#SBATCH --mem=20000")
+
 
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
