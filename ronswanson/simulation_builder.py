@@ -560,13 +560,15 @@ class SimulationBuilder:
 
             generator = range(self._n_cores)
 
+            n_nodes = np.ceil(self._n_iterations / self._n_cores )
+
         else:
 
             runs_per_node = self._runs_per_node
 
             generator = range(runs_per_node)
 
-        n_nodes = np.ceil(self._n_iterations / (self._n_cores * runs_per_node))
+            n_nodes = np.ceil(self._n_iterations /  runs_per_node)
 
         if self._use_nodes:
 
