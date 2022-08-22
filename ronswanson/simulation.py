@@ -122,7 +122,7 @@ def gather_mpi(
 
     log.debug(f"grabbing sim: {sim_id}")
 
-    with h5py.File(this_file, "r") as f:
+    with h5py.File(this_file, "r", driver="mpio") as f:
 
         log.debug(f"opened {sim_id} for extractions")
 
@@ -134,6 +134,9 @@ def gather_mpi(
             if "output_" in k:
 
                 vals[k] = v[()]
+
+
+    log.debug(f"finished {sim_id} for extractions")
 
     database_file = h5py.File(file_name, "a", driver="mpio", comm=comm)
 
