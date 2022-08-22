@@ -9,7 +9,11 @@ import numpy as np
 import yaml
 from astromodels.functions.template_model import h5py
 
-from .script_generator import PythonGenerator, SLURMGenerator
+from .script_generator import (
+    PythonGenerator,
+    SLURMGatherGenerator,
+    SLURMGenerator,
+)
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -560,7 +564,7 @@ class SimulationBuilder:
 
             generator = range(self._n_cores)
 
-            n_nodes = np.ceil(self._n_iterations / self._n_cores )
+            n_nodes = np.ceil(self._n_iterations / self._n_cores)
 
         else:
 
@@ -568,7 +572,7 @@ class SimulationBuilder:
 
             generator = range(runs_per_node)
 
-            n_nodes = np.ceil(self._n_iterations /  runs_per_node)
+            n_nodes = np.ceil(self._n_iterations / runs_per_node)
 
         if self._use_nodes:
 
@@ -594,7 +598,6 @@ class SimulationBuilder:
 
             key_out[i] = output
 
-
         with open(self._base_dir / "key_file.json", "w") as f:
 
             json.dump(key_out, f)
@@ -614,9 +617,10 @@ class SimulationBuilder:
             n = 0
 
             log.debug(f"number nodes: {self._n_gather_nodes}")
-            log.debug(f"total_ranks: {self._n_gather_nodes * self._n_cores_to_use}")
-            log.debug(f"number iterations: {self._n_iterations}" )
-
+            log.debug(
+                f"total_ranks: {self._n_gather_nodes * self._n_cores_to_use}"
+            )
+            log.debug(f"number iterations: {self._n_iterations}")
 
             for i in range(self._n_gather_nodes * self._n_cores_to_use):
 
@@ -660,6 +664,17 @@ class SimulationBuilder:
             self._n_cores,
             self._n_cores_to_use,
             self._n_nodes,
+            self._hrs,
+            self._min,
+            self._sec,
+        )
+
+        slurm_gen.write(str(self._base_dir))
+
+        slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
+            "gather_results.sh",
+            self._n_cores_to_use,
+            self._n_gather_nodes,
             self._hrs,
             self._min,
             self._sec,

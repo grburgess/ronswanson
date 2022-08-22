@@ -212,14 +212,9 @@ class SLURMGenerator(ScriptGenerator):
 
                 self._add_line(f"module load {m}")
 
-        self._add_line("")
 
-        # self._add_line("module load gcc/11")
-        # self._add_line("module load openmpi/4")
-        # self._add_line("module load hdf5-serial/1.10.6")
-        # self._add_line("module load anaconda/3/2021.05")
+        self._end_line()
 
-        self._add_line("")
         self._add_line("#add HDF5 library path to ld path")
         self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
 
@@ -274,7 +269,7 @@ class SLURMGatherGenerator(ScriptGenerator):
 
         if ronswanson_config.slurm.mpi_modules is not None:
 
-            for m in ronswanson_config.slurm.modules:
+            for m in ronswanson_config.slurm.mpi_modules:
 
                 self._add_line(f"module load {m}")
 
