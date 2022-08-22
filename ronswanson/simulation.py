@@ -8,6 +8,7 @@ import h5py
 import numpy as np
 
 import ronswanson.simulation_builder as sb
+from ronswanson.utils.configuration import ronswanson_config
 
 from .utils.file_open import open_component_file, open_database
 from .utils.logging import setup_logger
@@ -107,7 +108,13 @@ def gather_mpi(
 
     p = Path(file_name)
 
-    parent_dir = p.absolute().parent
+    if ronswanson_config.slurm.store_dir is None:
+
+        parent_dir = p.absolute().parent
+
+    else:
+
+        parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()
 
     multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")
 
@@ -138,7 +145,13 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
     p = Path(file_name)
 
-    parent_dir = p.absolute().parent
+    if ronswanson_config.slurm.store_dir is None:
+
+        parent_dir = p.absolute().parent
+
+    else:
+
+        parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()
 
     multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")
 

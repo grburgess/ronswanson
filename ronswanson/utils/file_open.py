@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 
 from .logging import setup_logger
+from .configuration import ronswanson_config
 
 log = setup_logger(__name__)
 
@@ -113,7 +114,13 @@ def open_component_file(database_file_name: str, sim_id: int) -> h5py.File:
 
     p = Path(database_file_name)
 
-    parent_dir = p.absolute().parent
+    if ronswanson_config.slurm.store_dir is None:
+
+        parent_dir = p.absolute().parent
+
+    else:
+
+        parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()
 
     multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")
 
