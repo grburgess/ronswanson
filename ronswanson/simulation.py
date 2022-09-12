@@ -97,32 +97,18 @@ class Simulation(metaclass=ABCMeta):
 
 
 def gather_mpi(
-    file_name: str,
+    database: h5py.File,
+    multi_file_dir: Path,
     sim_id: int,
     current_size: int = 0,
     clean: bool = True,
-    comm=None,
 ) -> None:
-
-    # get the file name
-
-    p = Path(file_name)
-
-    if ronswanson_config.slurm.store_dir is None:
-
-        parent_dir = p.absolute().parent
-
-    else:
-
-        parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()
-
-    multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")
 
     this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"
 
     log.debug(f"grabbing sim: {sim_id}")
 
-    with h5py.File(this_file, "r", driver="mpio") as f:
+    with h5py.File(this_file, "r") as f:
 
         log.debug(f"opened {sim_id} for extractions")
 
@@ -135,14 +121,9 @@ def gather_mpi(
 
                 vals[k] = v[()]
 
-
     log.debug(f"finished {sim_id} for extractions")
 
-    database_file = h5py.File(file_name, "a", driver="mpio", comm=comm)
-
-    log.debug(f"opened main file for: {sim_id}")
-
-    database_file["parameters"][current_size + sim_id] = params
+    database["parameters"][current_size + sim_id] = params
 
     for k, v in database_file["values"].items():
 
@@ -151,8 +132,6 @@ def gather_mpi(
     if clean:
 
         Path(this_file).unlink()
-
-    database_file.close()
 
     log.debug(f"finished reading a writing {sim_id}")
 
