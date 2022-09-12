@@ -125,7 +125,7 @@ def gather_mpi(
 
     database["parameters"][current_size + sim_id] = params
 
-    for k, v in database_file["values"].items():
+    for k, v in database["values"].items():
 
         v["values"][current_size + sim_id] = vals[k]
 
