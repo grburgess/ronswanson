@@ -115,6 +115,7 @@ def gather_mpi(
         params = f["parameters"][()]
 
         vals = {}
+
         for k, v in f.items():
 
             if "output_" in k:

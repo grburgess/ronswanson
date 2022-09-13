@@ -389,6 +389,7 @@ class SimulationBuilder:
         import_line: str,
         n_cores: int = 1,
         n_cores_to_use: int = 1,
+        n_gather_cores: int = 1,
         n_gather_per_core: int = 1,
         use_nodes: bool = False,
         runs_per_node: Optional[int] = None,
@@ -407,6 +408,8 @@ class SimulationBuilder:
         self._n_cores_to_use: int = n_cores_to_use
 
         self._n_gather_per_core: int = n_gather_per_core
+
+        self._n_gather_cores: int = n_gather_cores
 
         self._use_nodes: bool = use_nodes
 
@@ -673,7 +676,7 @@ class SimulationBuilder:
 
         slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
             "gather_results.sh",
-            self._n_cores_to_use,
+            self._n_gather_cores,
             self._n_gather_nodes,
             self._hrs,
             self._min,
