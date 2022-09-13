@@ -461,6 +461,11 @@ class SimulationBuilder:
 
             self._generate_slurm_script()
 
+    @classmethod
+    def from_yaml(cls, file_name: str) -> "SimulationBuilder":
+        pass
+
+
     def _initialize_database(self) -> None:
 
         if not Path(self._out_file).exists():

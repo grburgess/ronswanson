@@ -124,11 +124,17 @@ def gather_mpi(
 
     log.debug(f"finished {sim_id} for extractions")
 
-    database["parameters"][current_size + sim_id,:] = params
+    index = int(current_size + sim_id)
+
+    db_params = database["parameters"]
+
+    db_params[index,:] = params
 
     for k, v in database["values"].items():
 
-        v["values"][current_size + sim_id,:] = vals[k]
+        db_v = v[k]
+
+        db_v[index,:] = vals[k]
 
     if clean:
 
