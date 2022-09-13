@@ -612,7 +612,7 @@ class SimulationBuilder:
             self._n_gather_nodes = int(
                 np.ceil(
                     self._n_iterations
-                    / (self._n_cores_to_use * self._n_gather_per_core)
+                    / (self._n_gather_cores * self._n_gather_per_core)
                 )
             )
 
@@ -621,11 +621,11 @@ class SimulationBuilder:
 
             log.debug(f"number nodes: {self._n_gather_nodes}")
             log.debug(
-                f"total_ranks: {self._n_gather_nodes * self._n_cores_to_use}"
+                f"total_ranks: {self._n_gather_nodes * self._n_gather_cores}"
             )
             log.debug(f"number iterations: {self._n_iterations}")
 
-            for i in range(self._n_gather_nodes * self._n_cores_to_use):
+            for i in range(self._n_gather_nodes * self._n_gather_cores):
 
                 core_list = []
 
