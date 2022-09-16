@@ -176,6 +176,7 @@ class PythonGatherGenerator(ScriptGenerator):
 
     def _build_script(self) -> None:
         self._add_line('import json')
+        self._add_line('from mpi4py import MPI')
         self._end_line()
         self._add_line(
             'from ronswanson.utils.configuration import ronswanson_config'
