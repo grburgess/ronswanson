@@ -162,7 +162,7 @@ class Database:
 
             energy_grid = f['energy_grid'][f'energy_grid_{output}'][()]
 
-            values_grp = f["values"][f"output_{output}"]
+            values_grp = f["values"]
 
             par_name_grp = f["parameter_names"]
 
@@ -173,7 +173,7 @@ class Database:
 
             parameters = f['parameters'][()]
 
-            values = values_grp['values'][()]
+            values = values_grp[f'output_{output}'][()]
 
         return cls(parameters, parameter_names, energy_grid, values)
 
