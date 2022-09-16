@@ -230,10 +230,8 @@ class SimulationBuilder:
 
                 for i in range(len(pg.energy_grid)):
 
-                    grp = val_grp.create_group(f"output_{i}")
-
-                    grp.create_dataset(
-                        "values",
+                    val_grp.create_dataset(
+                        f"output_{i}",
                         shape=(pg.n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
                         # compression="gzip",
