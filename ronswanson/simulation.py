@@ -7,7 +7,7 @@ from typing import Dict, List
 import h5py
 import numpy as np
 
-import ronswanson.simulation_builder as sb
+import ronswanson.grids as grids
 from ronswanson.utils.configuration import ronswanson_config
 
 from .utils.file_open import open_component_file, open_database
@@ -33,7 +33,7 @@ class Simulation(metaclass=ABCMeta):
         self,
         simulation_id: int,
         parameter_set: Dict[str, float],
-        energy_grid: sb.EnergyGrid,
+        energy_grid: grids.EnergyGrid,
         out_file: str,
         num_outputs: int = 1,
     ) -> None:
@@ -54,7 +54,7 @@ class Simulation(metaclass=ABCMeta):
         self._out_file: str = out_file
         self._parameter_set: Dict[str, float] = parameter_set
         self._simulation_id: int = simulation_id
-        self._energy_grid: List[sb.EnergyGrid] = energy_grid
+        self._energy_grid: List[grids.EnergyGrid] = energy_grid
         self._num_outputs: int = num_outputs
 
         if not len(self._energy_grid) == self._num_outputs:
@@ -128,13 +128,13 @@ def gather_mpi(
 
     db_params = database["parameters"]
 
-    db_params[index,:] = params
+    db_params[index, :] = params
 
     for k, v in database["values"].items():
 
         db_v = v[k]
 
-        db_v[index,:] = vals[k]
+        db_v[index, :] = vals[k]
 
     if clean:
 
