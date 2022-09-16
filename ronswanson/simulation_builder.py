@@ -41,7 +41,7 @@ class GatherConfig(JobConfig):
 @dataclass
 class SimulationConfig(JobConfig):
     n_mp_jobs: int
-    run_per_node: int = 1
+    run_per_node: Optional[int] = None
     use_nodes: bool = True
     linear_execution: bool = False
 
@@ -146,23 +146,19 @@ class SimulationBuilder:
 
         """
 
-
         with Path(file_name).open("r") as f:
 
             inputs = yaml.load(stream=f, Loader=yaml.SafeLoader)
 
         log.debug("reading setup inputs:")
 
-        for k,v in inputs.items():
+        for k, v in inputs.items():
 
             log.debug(f"{k}: {v}")
-
 
         parameter_grid = ParameterGrid.from_yaml(inputs.pop("parameter_grid"))
 
         simulation_input = inputs.pop("simulation")
-
-
 
         if "time" in simulation_input:
 
@@ -291,7 +287,9 @@ class SimulationBuilder:
 
     def _compute_chunks(self) -> None:
 
-        if self._simulation_config.run_per_node == 1:
+        if self._simulation_config.run_per_node is None:
+
+            log.debug("Each node will only execute the number of mp jobs")
 
             runs_per_node = 1
 
