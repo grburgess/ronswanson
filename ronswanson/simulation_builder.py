@@ -424,7 +424,7 @@ class SimulationBuilder:
 
         slurm_gen.write(str(self._base_dir))
 
-        python_gather_gen: PythonGatherGenerator(
+        python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
             "gather_results.py",
             database_file_name=self._out_file,
             current_size=self._current_database_size,
