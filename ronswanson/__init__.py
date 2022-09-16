@@ -8,7 +8,8 @@ __email__ = 'jburgess@mpe.mpg.de'
 from ._version import get_versions
 from .database import Database
 from .simulation import Simulation
-from .simulation_builder import ParameterGrid, SimulationBuilder
+from .simulation_builder import SimulationBuilder
+from .grids import ParameterGrid
 from .utils import ronswanson_config, show_configuration
 from .utils.logging import update_logging_level
 
