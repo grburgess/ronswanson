@@ -260,7 +260,7 @@ class PythonGatherGenerator(ScriptGenerator):
 
         if self._clean:
 
-            self._add_line("this_file.unlink()")
+            self._add_line("this_file.unlink()", indent_level=1)
 
         self._end_line()
         self._end_line()
