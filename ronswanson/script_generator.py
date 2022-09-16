@@ -279,12 +279,13 @@ class SLURMGenerator(ScriptGenerator):
         hrs: int,
         min: int,
         sec: int,
+        node_start: int = 0
     ) -> None:
 
         self._n_procs: int = n_procs
         self._n_procs_to_use: int = n_procs_to_use
         self._n_nodes: int = n_nodes
-
+        self._node_start: int = node_start
         self._hrs: int = hrs
         self._min: int = min
         self._sec: int = sec
@@ -295,7 +296,7 @@ class SLURMGenerator(ScriptGenerator):
 
         self._add_line("#!/bin/bash")
         self._add_line("")
-        self._add_line(f"#SBATCH --array=0-{self._n_nodes-1} #generate array")
+        self._add_line(f"#SBATCH --array={self._node_start}-{self._n_nodes-1} #generate array")
         self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
         self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
         self._add_line("#SBATCH -D ./                      #working directory")

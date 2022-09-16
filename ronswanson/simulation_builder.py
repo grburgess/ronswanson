@@ -42,6 +42,7 @@ class SimulationConfig(JobConfig):
     n_mp_jobs: int
     run_per_node: Optional[int] = None
     use_nodes: bool = True
+    max_nodes: Optional[int] = None
     linear_execution: bool = False
 
 
@@ -401,17 +402,72 @@ class SimulationBuilder:
 
     def _generate_slurm_script(self) -> None:
 
-        slurm_gen: SLURMGenerator = SLURMGenerator(
-            "run_simulation.sh",
-            self._simulation_config.n_mp_jobs,
-            self._simulation_config.n_cores_per_node,
-            self._n_nodes,
-            self._simulation_config.time.hrs,
-            self._simulation_config.time.min,
-            self._simulation_config.time.sec,
-        )
+        multi_script: bool = False
 
-        slurm_gen.write(str(self._base_dir))
+        if self._simulation_config.max_nodes is not None:
+
+            if self._n_nodes > self._simulation_config.max_nodes:
+
+                log.debug("The number of reuested nodes is too large.")
+
+                multi_script = True
+
+                n_files = int(
+                    np.ceil(self._n_nodes / self._simulation_config.max_nodes)
+                )
+
+                start = []
+                stop = []
+                current_number = 0
+
+                for i in range(n_files):
+
+                    start.append(current_number)
+
+                    next_number = int(
+                        (i + 1) * self._simulation_config.max_nodes
+                    )
+
+                    if next_number <= self._n_nodes:
+
+                        stop.append(next_number)
+
+                        current_number = next_number
+
+                    else:
+
+                        stop.append(self._n_nodes)
+
+        if multi_script:
+
+            for i, (a, b) in enumerate(zip(start, stop)):
+
+                slurm_gen: SLURMGenerator = SLURMGenerator(
+                    f"run_simulation_{i}.sh",
+                    self._simulation_config.n_mp_jobs,
+                    self._simulation_config.n_cores_per_node,
+                    b,
+                    self._simulation_config.time.hrs,
+                    self._simulation_config.time.min,
+                    self._simulation_config.time.sec,
+                    node_start=a,
+                )
+
+                slurm_gen.write(str(self._base_dir))
+
+        else:
+
+            slurm_gen: SLURMGenerator = SLURMGenerator(
+                "run_simulation.sh",
+                self._simulation_config.n_mp_jobs,
+                self._simulation_config.n_cores_per_node,
+                self._n_nodes,
+                self._simulation_config.time.hrs,
+                self._simulation_config.time.min,
+                self._simulation_config.time.sec,
+            )
+
+            slurm_gen.write(str(self._base_dir))
 
         slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
             "gather_results.sh",
