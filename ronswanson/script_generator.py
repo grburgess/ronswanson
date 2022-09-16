@@ -121,9 +121,7 @@ class PythonGenerator(ScriptGenerator):
 
             self._add_line("keys = json.load(f)[str(key_num)]", indent_level=1)
 
-            self._add_line(
-                "iteration = [int(x) for x in keys]", indent_level=1
-            )
+            self._add_line("iteration = [int(x) for x in keys]", indent_level=1)
 
             pass
 
@@ -157,6 +155,117 @@ class PythonGenerator(ScriptGenerator):
                 self._add_line(
                     f"gather('{self._database_file}', {self._current_size}, clean=True)"
                 )
+
+
+class PythonGatherGenerator(ScriptGenerator):
+    def __init__(
+        self,
+        file_name: str,
+        database_file_name: str,
+        current_size: int,
+        n_outputs: int,
+        clean: bool = True,
+    ) -> None:
+
+        self._database_file_name: str = database_file_name
+        self._current_size: int = current_size
+        self._n_outputs: int = n_outputs
+        self._clean: bool = clean
+
+        super().__init__(file_name)
+
+    def _build_script(self) -> None:
+        self._add_line('import json')
+        self._end_line()
+        self._add_line(
+            'from ronswanson.utils.configuration import ronswanson_config'
+        )
+        self._end_line()
+        self._add_line('import h5py')
+        self._add_line('import sys')
+        self._add_line('from pathlib import Path')
+        self._end_line()
+        self._end_line()
+        self._add_line('rank = MPI.COMM_WORLD.rank')
+        self._end_line()
+        self._add_line('with open("gather_file.json", "r") as f:')
+        self._end_line()
+        self._add_line(
+            'sim_ids = [int(x) for x in json.load(f)[str(rank)]]',
+            indent_level=1,
+        )
+        self._end_line()
+        self._end_line()
+        self._add_line(f'p = Path("{self._database_file_name}").absolute()')
+        self._end_line()
+        self._end_line()
+        self._add_line(
+            'database = h5py.File(str(p), "a", driver="mpio", comm=MPI.COMM_WORLD)'
+        )
+        self._end_line()
+        self._end_line()
+        self._end_line()
+        self._add_line('if ronswanson_config.slurm.store_dir is None:')
+        self._end_line()
+        self._add_line('parent_dir = p.absolute().parent', indent_level=1)
+        self._end_line()
+        self._add_line('else:')
+        self._end_line()
+        self._add_line(
+            'parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()',
+            indent_level=1,
+        )
+        self._end_line()
+        self._add_line(
+            'multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")'
+        )
+        self._end_line()
+        self._end_line()
+        self._add_line(f'current_size = {self._current_size}')
+        self._end_line()
+        self._end_line()
+        self._add_line('db_params = database["parameters"]')
+        self._end_line()
+        self._add_line('vals = database["values"]')
+        self._end_line()
+
+        for i in range(self._n_outputs):
+
+            self._add_line(f'output_{i} = vals["output_{i}"]')
+        self._end_line()
+
+        self._end_line()
+        self._end_line()
+        self._add_line('for sim_id in sim_ids:')
+        self._end_line()
+        self._add_line(
+            'this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"',
+            indent_level=1,
+        )
+        self._end_line()
+        self._add_line('index = int(current_size + sim_id)', indent_level=1)
+        self._end_line()
+        self._add_line('with h5py.File(this_file, "r") as f:', indent_level=1)
+        self._end_line()
+        self._add_line(
+            'db_params[index, :] = f["parameters"][()]', indent_level=2
+        )
+        self._end_line()
+
+        for i in range(self._n_outputs):
+
+            self._add_line(
+                f'output_{i}[index, :] = f["output_{i}"][()]', indent_level=2
+            )
+
+        if self._clean:
+
+            self._add_line("this_file.unlink()")
+
+        self._end_line()
+        self._end_line()
+        self._end_line()
+        self._add_line('f.close()')
 
 
 class SLURMGenerator(ScriptGenerator):
@@ -198,7 +307,6 @@ class SLURMGenerator(ScriptGenerator):
         )
         self._add_line("#SBATCH --mail-type=ALL ")
 
-
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
         )
@@ -211,7 +319,6 @@ class SLURMGenerator(ScriptGenerator):
             for m in ronswanson_config.slurm.modules:
 
                 self._add_line(f"module load {m}")
-
 
         self._end_line()
 
@@ -259,7 +366,6 @@ class SLURMGatherGenerator(ScriptGenerator):
         )
         self._add_line("#SBATCH --mail-type=ALL ")
 
-
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
         )
@@ -276,4 +382,5 @@ class SLURMGatherGenerator(ScriptGenerator):
         self._end_line()
 
         self._add_line(
-            f"srun {ronswanson_config.slurm.python} gather_results.py")
+            f"srun {ronswanson_config.slurm.python} gather_results.py"
+        )

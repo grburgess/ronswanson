@@ -1,9 +1,7 @@
-import itertools
 import json
-from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 import h5py
 import numpy as np
@@ -11,6 +9,7 @@ import yaml
 
 from .grids import ParameterGrid
 from .script_generator import (
+    PythonGatherGenerator,
     PythonGenerator,
     SLURMGatherGenerator,
     SLURMGenerator,
@@ -60,6 +59,7 @@ class SimulationBuilder:
         import_line: str,
         simulation_config: SimulationConfig,
         gather_config: Optional[GatherConfig] = None,
+        clean: bool = True,
     ):
 
         self._has_complete_params: bool = False
@@ -79,6 +79,10 @@ class SimulationBuilder:
         self._parameter_file: Path = self._base_dir / "parameters.yml"
 
         parameter_grid.write(str(self._parameter_file))
+
+        self._n_outputs: int = len(parameter_grid.energy_grid)
+
+        self._clean: bool = clean
 
         self._n_iterations: int = parameter_grid.n_points
 
@@ -267,6 +271,8 @@ class SimulationBuilder:
                         + dataset.shape[1:]
                     )
 
+        self._n_outputs: int = len(pg.energy_grid)
+
     def _check_completed(self) -> None:
 
         if Path(self._out_file).exists():
@@ -417,3 +423,13 @@ class SimulationBuilder:
         )
 
         slurm_gen.write(str(self._base_dir))
+
+        python_gather_gen: PythonGatherGenerator(
+            "gather_results.py",
+            database_file_name=self._out_file,
+            current_size=self._current_database_size,
+            n_outputs=self._n_outputs,
+            clean=self._clean,
+        )
+
+        python_gather_gen.write(str(self._base_dir))
