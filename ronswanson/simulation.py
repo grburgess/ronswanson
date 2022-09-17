@@ -96,53 +96,6 @@ class Simulation(metaclass=ABCMeta):
         raise RuntimeError()
 
 
-def gather_mpi(
-    database: h5py.File,
-    multi_file_dir: Path,
-    sim_id: int,
-    current_size: int = 0,
-    clean: bool = True,
-) -> None:
-
-    this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"
-
-    log.debug(f"grabbing sim: {sim_id}")
-
-    with h5py.File(this_file, "r") as f:
-
-        log.debug(f"opened {sim_id} for extractions")
-
-        params = f["parameters"][()]
-
-        vals = {}
-
-        for k, v in f.items():
-
-            if "output_" in k:
-
-                vals[k] = v[()]
-
-    log.debug(f"finished {sim_id} for extractions")
-
-    index = int(current_size + sim_id)
-
-    db_params = database["parameters"]
-
-    db_params[index, :] = params
-
-    for k, v in database["values"].items():
-
-        db_v = v[k]
-
-        db_v[index, :] = vals[k]
-
-    if clean:
-
-        Path(this_file).unlink()
-
-    log.debug(f"finished reading a writing {sim_id}")
-
-
 def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
     # gather the list of files
@@ -179,7 +132,7 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
                 for k, v in database_file["values"].items():
 
-                    v["values"][current_size + sim_id] = f[k][()]
+                    v[current_size + sim_id] = f[k][()]
 
             if clean:
 

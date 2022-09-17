@@ -28,8 +28,8 @@ class SLURMTime:
 
 @dataclass
 class JobConfig:
-    n_cores_per_node: int
     time: SLURMTime
+    n_cores_per_node: int
 
 
 @dataclass
@@ -41,7 +41,7 @@ class GatherConfig(JobConfig):
 class SimulationConfig(JobConfig):
     n_mp_jobs: int
     run_per_node: Optional[int] = None
-    use_nodes: bool = True
+    use_nodes: bool = False
     max_nodes: Optional[int] = None
     linear_execution: bool = False
 
@@ -91,8 +91,6 @@ class SimulationBuilder:
 
         self._initialize_database()
 
-        self._check_completed()
-
         # if we are using nodes
         # we need to see how many
         # we need
@@ -113,14 +111,13 @@ class SimulationBuilder:
 
             self._generate_slurm_script()
 
-        output_dir = self._base_dir / "output"
+            output_dir = self._base_dir / "output"
 
-        if not output_dir.exists():
+            if not output_dir.exists():
 
-            output_dir.mkdir()
+                output_dir.mkdir()
 
-            log.debug("created the output directory")
-
+                log.debug("created the output directory")
 
     @classmethod
     def from_yaml(cls, file_name: str) -> "SimulationBuilder":
@@ -182,9 +179,24 @@ class SimulationBuilder:
 
             sim_time = SLURMTime()
 
+        if "n_cores_per_node" not in simulation_input:
+
+            if "use_nodes" in simulation_input:
+
+                if simulation_input["use_nodes"]:
+
+                    log.warning(
+                        "you are using nodes but did not specify the number of n_cores_per_node"
+                    )
+                    log.warning(
+                        "the number of cores will be set to the number of multi-process jobs"
+                    )
+
+            simulation_input["n_cores_per_node"] = simulation_input["n_mp_jobs"]
+
         simulation_config = SimulationConfig(time=sim_time, **simulation_input)
 
-        gather_inputs = None
+        gather_config = None
 
         if "gather" in inputs:
 
@@ -255,6 +267,12 @@ class SimulationBuilder:
 
             # we need to resize the dataset
 
+            log.warning(
+                f"There was already a database: [red]{self._out_file}[/red]"
+            )
+
+            self._check_completed()
+
             with h5py.File(self._out_file, "a") as f:
 
                 pg = ParameterGrid.from_yaml(self._parameter_file)
@@ -262,6 +280,10 @@ class SimulationBuilder:
                 dataset: h5py.Dataset = f["parameters"]
 
                 self._current_database_size = dataset.shape[0]
+
+                log.warning(
+                    f"The existing data base had {self._current_database_size} entries"
+                )
 
                 dataset.resize(
                     (self._current_database_size + pg.n_points,)
@@ -272,9 +294,7 @@ class SimulationBuilder:
 
                 for i in range(len(pg.energy_grid)):
 
-                    grp = val_grp[f"output_{i}"]
-
-                    dataset: h5py.Dataset = grp["values"]
+                    dataset: h5py.Dataset = val_grp[f"output_{i}"]
 
                     dataset.resize(
                         (self._current_database_size + pg.n_points,)
@@ -321,7 +341,9 @@ class SimulationBuilder:
 
             n_nodes = np.ceil(self._n_iterations / runs_per_node)
 
-        log.info(f"there are [bold bright_red]{self._n_iterations} iterations [/bold bright_red]")
+        log.info(
+            f"there are [bold bright_red]{self._n_iterations} iterations [/bold bright_red]"
+        )
 
         if self._simulation_config.use_nodes:
 

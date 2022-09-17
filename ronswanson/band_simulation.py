@@ -3,7 +3,7 @@ from typing import Dict
 import numpy as np
 from astromodels import Band
 
-from ronswanson.simulation_builder import EnergyGrid
+from ronswanson.grids import EnergyGrid
 
 from .simulation import Simulation
 
