@@ -113,6 +113,15 @@ class SimulationBuilder:
 
             self._generate_slurm_script()
 
+        output_dir = self._base_dir / "output"
+
+        if not output_dir.exists():
+
+            output_dir.mkdir()
+
+            log.debug("created the output directory")
+
+
     @classmethod
     def from_yaml(cls, file_name: str) -> "SimulationBuilder":
         """
