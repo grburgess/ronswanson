@@ -329,7 +329,6 @@ def merge_databases(
 
                 k += n
 
-
         # create the new file
 
         with h5py.File(new_name, "w") as f:

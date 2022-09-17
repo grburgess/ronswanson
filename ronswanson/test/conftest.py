@@ -102,7 +102,6 @@ def linear_script():
 
         Path("gather_file.json").unlink()
 
-
     if Path("gather_results.py").exists():
 
         Path("gather_results.py").unlink()

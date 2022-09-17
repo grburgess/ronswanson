@@ -122,7 +122,6 @@ def test_adding_params(parallel_script, parallel_add_script):
 
     assert Path("completed_parameters.json").exists()
 
-
     os.system("python3 run_simulation.py")
 
     database_file = Path("database_para.h5")

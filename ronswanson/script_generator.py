@@ -10,6 +10,7 @@ from .utils import ronswanson_config
 
 log = setup_logger(__name__)
 
+
 class PythonGenerator(ScriptGenerator):
     def __init__(
         self,
@@ -280,7 +281,7 @@ class SLURMGenerator(ScriptGenerator):
         hrs: int,
         min: int,
         sec: int,
-        node_start: int = 0
+        node_start: int = 0,
     ) -> None:
 
         self._n_procs: int = n_procs
@@ -297,7 +298,9 @@ class SLURMGenerator(ScriptGenerator):
 
         self._add_line("#!/bin/bash")
         self._add_line("")
-        self._add_line(f"#SBATCH --array={self._node_start}-{self._n_nodes-1} #generate array")
+        self._add_line(
+            f"#SBATCH --array={self._node_start}-{self._n_nodes-1} #generate array"
+        )
         self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
         self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
         self._add_line("#SBATCH -D ./                      #working directory")

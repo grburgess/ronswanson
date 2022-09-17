@@ -32,6 +32,7 @@ class SLURM:
     python: str = "python"
     store_dir: Optional[str] = None
 
+
 @dataclass
 class RonSwansonConfig:
 
