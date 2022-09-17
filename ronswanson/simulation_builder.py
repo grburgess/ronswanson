@@ -312,11 +312,15 @@ class SimulationBuilder:
 
             n_nodes = np.ceil(self._n_iterations / runs_per_node)
 
+        log.info(f"there are {self._n_iterations} iterations")
+
         if self._simulation_config.use_nodes:
 
             self._n_nodes = int(n_nodes)
 
-            log.info(f"we will be using {self._n_nodes} nodes")
+            log.info(
+                f"we will be using {self._n_nodes} nodes for the simulation"
+            )
 
         # now generate the key files
         k = 0
@@ -357,7 +361,7 @@ class SimulationBuilder:
             rank_list = {}
             n = 0
 
-            log.debug(f"number nodes: {self._n_gather_nodes}")
+            log.info(f"the gather task will use: {self._n_gather_nodes} nodes")
             log.debug(
                 f"total_ranks: {self._n_gather_nodes * self._gather_config.n_cores_per_node}"
             )
@@ -400,6 +404,8 @@ class SimulationBuilder:
 
         py_gen.write(str(self._base_dir))
 
+        log.info(f"generated: run_simulation.py")
+
     def _generate_slurm_script(self) -> None:
 
         multi_script: bool = False
@@ -438,12 +444,16 @@ class SimulationBuilder:
 
                         stop.append(self._n_nodes)
 
+                        break
+
         if multi_script:
 
             for i, (a, b) in enumerate(zip(start, stop)):
 
+                file_name = f"run_simulation_{i}.sh"
+
                 slurm_gen: SLURMGenerator = SLURMGenerator(
-                    f"run_simulation_{i}.sh",
+                    file_name,
                     self._simulation_config.n_mp_jobs,
                     self._simulation_config.n_cores_per_node,
                     b,
@@ -454,6 +464,8 @@ class SimulationBuilder:
                 )
 
                 slurm_gen.write(str(self._base_dir))
+
+                log.info(f"generated: {file_name}")
 
         else:
 
@@ -469,6 +481,8 @@ class SimulationBuilder:
 
             slurm_gen.write(str(self._base_dir))
 
+            log.info(f"generated: run_simulations.sh")
+
         slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
             "gather_results.sh",
             self._gather_config.n_cores_per_node,
@@ -480,6 +494,8 @@ class SimulationBuilder:
 
         slurm_gen.write(str(self._base_dir))
 
+        log.info(f"generated: gather_results.sh")
+
         python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
             "gather_results.py",
             database_file_name=self._out_file,
@@ -489,3 +505,5 @@ class SimulationBuilder:
         )
 
         python_gather_gen.write(str(self._base_dir))
+
+        log.info(f"generated: gather_results.py")

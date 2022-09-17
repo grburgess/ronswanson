@@ -8,6 +8,7 @@ from ronswanson.utils.logging import setup_logger
 
 from .utils import ronswanson_config
 
+log = setup_logger(__name__)
 
 class PythonGenerator(ScriptGenerator):
     def __init__(
