@@ -1,0 +1,24 @@
+alpha:
+  custom: no
+  vmin: -1
+  vmax: 1
+  scale: "linear"
+  n_points: 5
+
+beta:
+  custom: no
+  vmin: -3
+  vmax: -2
+  scale: "linear"
+  n_points: 5
+
+epeak:
+  custom: yes
+  values: [50., 69.74 , 97.29, 135.72, 189.32, 264.097, 368.4, 513.9, 716.87, 1000.]
+
+energy_grid:
+  custom: no
+  vmin: 10
+  vmax: 1000
+  scale: "log"
+  n_points: 100
