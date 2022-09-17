@@ -1,127 +1,75 @@
 import os
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 from ronswanson.database import Database
-from ronswanson.simulation_builder import (
-    Parameter,
-    ParameterGrid,
-    SimulationBuilder,
-)
+from ronswanson.grids import Parameter, ParameterGrid
+from ronswanson.simulation_builder import SimulationBuilder
 from ronswanson.utils.logging import update_logging_level
 from ronswanson.utils.package_data import get_path_of_data_file
 
+update_logging_level("DEBUG")
 
-def test_script_gen_nodes():
 
-    update_logging_level("ERROR")
+def test_script_gen_nodes(node_script):
 
-    database_file = Path("database.h5")
+    database_file = Path("database_node.h5")
 
     if database_file.exists():
 
         database_file.unlink()
 
-    file_name = get_path_of_data_file("test_params.yml")
-
-    pg = ParameterGrid.from_yaml(file_name)
-
-    sb = SimulationBuilder(
-        pg,
-        "database.h5",
-        "from ronswanson.band_simulation import BandSimulation as Simulation",
-        n_cores=72,
-        use_nodes=True,
-    )
+    sb = SimulationBuilder.from_yaml(node_script)
 
     # delete crap
-
-    p = Path(".").glob("key_file*.txt")
-
-    for f in p:
-
-        f.unlink()
 
     slurm_script = Path("run_simulation.sh")
 
     assert slurm_script.exists()
 
-    slurm_script.unlink()
+    database_file.unlink()
 
 
-def test_script_gen_linear():
+def test_script_gen_linear(linear_script):
 
-    database_file = Path("database.h5")
+    database_file = Path("database_lin.h5")
 
     if database_file.exists():
 
         database_file.unlink()
 
-    file_name = get_path_of_data_file("test_params.yml")
-
-    pg = ParameterGrid.from_yaml(file_name)
-
-    sb = SimulationBuilder(
-        pg,
-        "database.h5",
-        "from ronswanson.band_simulation import BandSimulation as Simulation",
-        n_cores=8,
-        linear_execution=True,
-    )
-
-    block = Path("HDF5_DATABASE_OPEN")
-
-    if block.exists():
-
-        block.unlink()
-
+    sb = SimulationBuilder.from_yaml(linear_script)
 
     os.system("python3 run_simulation.py")
 
-    database_file = Path("database.h5")
+    database_file = Path("database_lin.h5")
 
     assert database_file.exists()
+
     database_file.unlink()
 
-    assert not block.exists()
+    assert not Path("database_lin_store").exists()
 
 
-
-def test_script_gen_parallel():
+def test_script_gen_parallel(parallel_script):
 
     update_logging_level("ERROR")
 
-    database_file = Path("database.h5")
+    database_file = Path("database_para.h5")
 
     if database_file.exists():
 
         database_file.unlink()
 
-    file_name = get_path_of_data_file("test_params.yml")
-
-    pg = ParameterGrid.from_yaml(file_name)
-
-    sb = SimulationBuilder(
-        pg,
-        "database.h5",
-        "from ronswanson.band_simulation import BandSimulation as Simulation",
-        n_cores=8,
-        linear_execution=False,
-    )
-
-    block = Path("HDF5_DATABASE_OPEN")
-
-    if block.exists():
-
-        block.unlink()
-
+    sb = SimulationBuilder.from_yaml(parallel_script)
 
     os.system("python3 run_simulation.py")
 
-    database_file = Path("database.h5")
+    database_file = Path("database_para.h5")
 
     db = Database.from_file(str(database_file))
 
@@ -141,41 +89,20 @@ def test_script_gen_parallel():
     assert database_file.exists()
     database_file.unlink()
 
-    assert not block.exists()
 
+def test_adding_params(parallel_script, parallel_add_script):
 
-
-def test_adding_params():
-
-    database_file = Path("database.h5")
+    database_file = Path("database_para.h5")
 
     if database_file.exists():
 
         database_file.unlink()
 
-    file_name = get_path_of_data_file("test_params.yml")
-
-    pg = ParameterGrid.from_yaml(file_name)
-
-    sb = SimulationBuilder(
-        pg,
-        "database.h5",
-        "from ronswanson.band_simulation import BandSimulation as Simulation",
-        n_cores=8,
-        linear_execution=False,
-    )
-
-
-    block = Path("HDF5_DATABASE_OPEN")
-
-    if block.exists():
-
-        block.unlink()
-
+    sb = SimulationBuilder.from_yaml(parallel_script)
 
     os.system("python3 run_simulation.py")
 
-    database_file = Path("database.h5")
+    database_file = Path("database_para.h5")
 
     db = Database.from_file(str(database_file))
 
@@ -191,32 +118,13 @@ def test_adding_params():
 
             assert len(v) == 5
 
-    assert not block.exists()
+    sb = SimulationBuilder.from_yaml(parallel_add_script)
 
-
-    file_name = get_path_of_data_file("test_addition_params.yml")
-
-    pg = ParameterGrid.from_yaml(file_name)
-
-    sb = SimulationBuilder(
-        pg,
-        "database.h5",
-        "from ronswanson.band_simulation import BandSimulation as Simulation",
-        n_cores=8,
-        linear_execution=False,
-    )
-
-    block = Path("HDF5_DATABASE_OPEN")
-
-    if block.exists():
-
-        block.unlink()
-
-
+    assert Path("completed_parameters.json").exists()
 
     os.system("python3 run_simulation.py")
 
-    database_file = Path("database.h5")
+    database_file = Path("database_para.h5")
 
     db = Database.from_file(str(database_file))
 
@@ -235,6 +143,5 @@ def test_adding_params():
             assert len(v) == 5
 
     assert database_file.exists()
-    database_file.unlink()
 
-    assert not block.exists()
+    database_file.unlink()

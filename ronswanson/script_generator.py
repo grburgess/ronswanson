@@ -2,50 +2,13 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+from ghost_writer import ScriptGenerator
+
 from ronswanson.utils.logging import setup_logger
 
 from .utils import ronswanson_config
 
-
-class ScriptGenerator(ABC):
-    def __init__(self, file_name: str) -> None:
-
-        self._file_name: str = file_name
-        self._output: str = ""
-        self._build_script()
-
-    @abstractmethod
-    def _build_script(self) -> None:
-        pass
-
-    def _add_line(self, line: str, indent_level: int = 0) -> None:
-
-        for i in range(indent_level):
-
-            self._output += "\t"
-
-        # add the line
-
-        self._output += line
-
-        # close the line
-        self._end_line()
-
-    @property
-    def file_name(self) -> str:
-        return self._file_name
-
-    def _end_line(self):
-
-        self._output += "\n"
-
-    def write(self, directory: str = ".") -> None:
-
-        out_file: Path = Path(directory) / self._file_name
-
-        with out_file.open("w") as f:
-
-            f.write(self._output)
+log = setup_logger(__name__)
 
 
 class PythonGenerator(ScriptGenerator):
@@ -60,6 +23,7 @@ class PythonGenerator(ScriptGenerator):
         n_nodes: Optional[int] = None,
         linear_exceution: bool = False,
         has_complete_params: bool = False,
+        current_size: int = 0,
     ) -> None:
 
         """
@@ -93,6 +57,7 @@ class PythonGenerator(ScriptGenerator):
         self._base_dir: str = base_dir
         self._linear_execution: bool = linear_exceution
         self._has_complete_params: bool = has_complete_params
+        self._current_size: int = current_size
 
         super().__init__(file_name)
 
@@ -105,6 +70,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
         self._add_line("from ronswanson.utils.logging import setup_logger")
+        self._add_line("from ronswanson.simulation import gather")
 
         if self._n_nodes is not None:
             self._add_line("import sys")
@@ -152,12 +118,12 @@ class PythonGenerator(ScriptGenerator):
         else:
 
             self._add_line(
-                f"with open(f'{self._base_dir}/key_file{{key_num}}.txt') as f:"
+                f"with open(f'{self._base_dir}/key_file.json','r') as f:"
             )
 
-            self._add_line(
-                "iteration = [int(x) for x in f.readlines()]", indent_level=1
-            )
+            self._add_line("keys = json.load(f)[str(key_num)]", indent_level=1)
+
+            self._add_line("iteration = [int(x) for x in keys]", indent_level=1)
 
             pass
 
@@ -167,6 +133,10 @@ class PythonGenerator(ScriptGenerator):
 
             self._add_line("for i in tqdm(iteration):")
             self._add_line("func(i)", indent_level=1)
+
+            self._add_line(
+                f"gather('{self._database_file}', {self._current_size}, clean=True)"
+            )
 
         else:
 
@@ -184,8 +154,189 @@ class PythonGenerator(ScriptGenerator):
                     f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration, colour='#FC0A5A'))"
                 )
 
+                self._add_line(
+                    f"gather('{self._database_file}', {self._current_size}, clean=True)"
+                )
+
+
+class PythonGatherGenerator(ScriptGenerator):
+    def __init__(
+        self,
+        file_name: str,
+        database_file_name: str,
+        current_size: int,
+        n_outputs: int,
+        clean: bool = True,
+    ) -> None:
+
+        self._database_file_name: str = database_file_name
+        self._current_size: int = current_size
+        self._n_outputs: int = n_outputs
+        self._clean: bool = clean
+
+        super().__init__(file_name)
+
+    def _build_script(self) -> None:
+        self._add_line('import json')
+        self._add_line('from mpi4py import MPI')
+        self._end_line()
+        self._add_line(
+            'from ronswanson.utils.configuration import ronswanson_config'
+        )
+        self._end_line()
+        self._add_line('import h5py')
+        self._add_line('import sys')
+        self._add_line('from pathlib import Path')
+        self._end_line()
+        self._end_line()
+        self._add_line('rank = MPI.COMM_WORLD.rank')
+        self._end_line()
+        self._add_line('with open("gather_file.json", "r") as f:')
+        self._end_line()
+        self._add_line(
+            'sim_ids = [int(x) for x in json.load(f)[str(rank)]]',
+            indent_level=1,
+        )
+        self._end_line()
+        self._end_line()
+        self._add_line(f'p = Path("{self._database_file_name}").absolute()')
+        self._end_line()
+        self._end_line()
+        self._add_line(
+            'database = h5py.File(str(p), "a", driver="mpio", comm=MPI.COMM_WORLD)'
+        )
+        self._end_line()
+        self._end_line()
+        self._end_line()
+        self._add_line('if ronswanson_config.slurm.store_dir is None:')
+        self._end_line()
+        self._add_line('parent_dir = p.absolute().parent', indent_level=1)
+        self._end_line()
+        self._add_line('else:')
+        self._end_line()
+        self._add_line(
+            'parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()',
+            indent_level=1,
+        )
+        self._end_line()
+        self._add_line(
+            'multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")'
+        )
+        self._end_line()
+        self._end_line()
+        self._add_line(f'current_size = {self._current_size}')
+        self._end_line()
+        self._end_line()
+        self._add_line('db_params = database["parameters"]')
+        self._end_line()
+        self._add_line('vals = database["values"]')
+        self._end_line()
+
+        for i in range(self._n_outputs):
+
+            self._add_line(f'output_{i} = vals["output_{i}"]')
+        self._end_line()
+
+        self._end_line()
+        self._end_line()
+        self._add_line('for sim_id in sim_ids:')
+        self._end_line()
+        self._add_line(
+            'this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"',
+            indent_level=1,
+        )
+        self._end_line()
+        self._add_line('index = int(current_size + sim_id)', indent_level=1)
+        self._end_line()
+        self._add_line('with h5py.File(this_file, "r") as f:', indent_level=1)
+        self._end_line()
+        self._add_line(
+            'db_params[index, :] = f["parameters"][()]', indent_level=2
+        )
+        self._end_line()
+
+        for i in range(self._n_outputs):
+
+            self._add_line(
+                f'output_{i}[index, :] = f["output_{i}"][()]', indent_level=2
+            )
+
+        if self._clean:
+
+            self._add_line("this_file.unlink()", indent_level=1)
+
+        self._end_line()
+        self._end_line()
+        self._end_line()
+        self._add_line('f.close()')
+
 
 class SLURMGenerator(ScriptGenerator):
+    def __init__(
+        self,
+        file_name: str,
+        n_procs: int,
+        n_procs_to_use: int,
+        n_nodes: int,
+        hrs: int,
+        min: int,
+        sec: int,
+        node_start: int = 0,
+    ) -> None:
+
+        self._n_procs: int = n_procs
+        self._n_procs_to_use: int = n_procs_to_use
+        self._n_nodes: int = n_nodes
+        self._node_start: int = node_start
+        self._hrs: int = hrs
+        self._min: int = min
+        self._sec: int = sec
+
+        super().__init__(file_name)
+
+    def _build_script(self) -> None:
+
+        self._add_line("#!/bin/bash")
+        self._add_line("")
+        self._add_line(
+            f"#SBATCH --array={self._node_start}-{self._n_nodes-1} #generate array"
+        )
+        self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
+        self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
+        self._add_line("#SBATCH -D ./                      #working directory")
+        self._add_line("#SBATCH -J grid_mp                 #job name")
+        self._add_line("#SBATCH -N 1               ")
+        self._add_line("#SBATCH --ntasks-per-node=1")
+        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs_to_use}")
+        self._add_line(
+            f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
+        )
+        self._add_line("#SBATCH --mail-type=ALL ")
+
+        self._add_line(
+            f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
+        )
+        self._add_line("")
+
+        self._add_line("module purge")
+
+        if ronswanson_config.slurm.modules is not None:
+
+            for m in ronswanson_config.slurm.modules:
+
+                self._add_line(f"module load {m}")
+
+        self._end_line()
+
+        self._add_line("#add HDF5 library path to ld path")
+        self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
+
+        self._add_line(
+            f"srun {ronswanson_config.slurm.python} run_simulation.py ${{SLURM_ARRAY_TASK_ID}}"
+        )
+
+
+class SLURMGatherGenerator(ScriptGenerator):
     def __init__(
         self,
         file_name: str,
@@ -209,19 +360,17 @@ class SLURMGenerator(ScriptGenerator):
 
         self._add_line("#!/bin/bash")
         self._add_line("")
-        self._add_line(f"#SBATCH --array=0-{self._n_nodes} #generate array")
-        self._add_line("#SBATCH -o ./output/%A_%a.out      #output file")
-        self._add_line("#SBATCH -e ./output/%A_%a.err      #error file")
+        self._add_line("#SBATCH -o ./output/%A.out      #output file")
+        self._add_line("#SBATCH -e ./output/%A.err      #error file")
         self._add_line("#SBATCH -D ./                      #working directory")
-        self._add_line("#SBATCH -J grid_mp                 #job name")
-        self._add_line("#SBATCH -N 1               ")
-        self._add_line("#SBATCH --ntasks-per-node=1")
-        self._add_line(f"#SBATCH --cpus-per-task={self._n_procs}")
+        self._add_line("#SBATCH -J gather_out                 #job name")
+        self._add_line(f"#SBATCH -N {self._n_nodes}               ")
+        self._add_line(f"#SBATCH --ntasks-per-node={self._n_procs}")
+
         self._add_line(
             f"#SBATCH --time={str(self._hrs).zfill(2)}:{str(self._min).zfill(2)}:{str(self._sec).zfill(2)}"
         )
         self._add_line("#SBATCH --mail-type=ALL ")
-        self._add_line("#SBATCH --mem=20000")
 
         self._add_line(
             f"#SBATCH --mail-user={ronswanson_config.slurm.user_email}"
@@ -230,23 +379,14 @@ class SLURMGenerator(ScriptGenerator):
 
         self._add_line("module purge")
 
-        if ronswanson_config.slurm.modules is not None:
+        if ronswanson_config.slurm.mpi_modules is not None:
 
-            for m in ronswanson_config.slurm.modules:
+            for m in ronswanson_config.slurm.mpi_modules:
 
                 self._add_line(f"module load {m}")
 
-        self._add_line("")
-
-        # self._add_line("module load gcc/11")
-        # self._add_line("module load openmpi/4")
-        # self._add_line("module load hdf5-serial/1.10.6")
-        # self._add_line("module load anaconda/3/2021.05")
-
-        self._add_line("")
-        self._add_line("#add HDF5 library path to ld path")
-        self._add_line("export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH")
+        self._end_line()
 
         self._add_line(
-            f"srun {ronswanson_config.slurm.python} run_simulation.py ${{SLURM_ARRAY_TASK_ID}}"
+            f"srun {ronswanson_config.slurm.python} gather_results.py"
         )

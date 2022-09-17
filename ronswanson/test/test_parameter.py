@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ronswanson.simulation_builder import Parameter, ParameterGrid
+from ronswanson.grids import Parameter, ParameterGrid
 from ronswanson.utils.package_data import get_path_of_data_file
 
 
@@ -39,8 +39,8 @@ def test_parameter_grid():
     pg = ParameterGrid.from_yaml(file_name)
 
     assert len(pg.parameter_list) == 3
-    assert len(pg.parameter_list[0].grid) == 10
-    assert len(pg.parameter_list[1].grid) == 10
+    assert len(pg.parameter_list[0].grid) == 5
+    assert len(pg.parameter_list[1].grid) == 5
     assert len(pg.parameter_list[2].grid) == 10
 
-    assert pg.n_points == 10 * 10 * 10
+    assert pg.n_points == 10 * 5 * 5

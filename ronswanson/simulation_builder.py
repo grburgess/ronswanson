@@ -1,380 +1,49 @@
-import itertools
 import json
-from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
+import h5py
 import numpy as np
 import yaml
-from astromodels.functions.template_model import h5py
 
-from .script_generator import PythonGenerator, SLURMGenerator
+from .grids import ParameterGrid
+from .script_generator import (
+    PythonGatherGenerator,
+    PythonGenerator,
+    SLURMGatherGenerator,
+    SLURMGenerator,
+)
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
 
 
 @dataclass(frozen=True)
-class EnergyGrid:
+class SLURMTime:
+    hrs: int = 0
+    min: int = 10
+    sec: int = 0
 
-    vmin: Optional[float] = None
-    vmax: Optional[float] = None
-    scale: Optional[str] = None
-    n_points: Optional[int] = None
-    values: Optional[np.ndarray] = None
-    custom: bool = False
 
-    def __post_init__(self):
+@dataclass
+class JobConfig:
+    time: SLURMTime
+    n_cores_per_node: int
 
-        if not self.custom:
 
-            # we will build a grid
+@dataclass
+class GatherConfig(JobConfig):
+    n_gather_per_core: int
 
-            if (self.vmin is None) or (self.vmax is None):
 
-                log.error("non-custom grids must include vmin and vmax")
-
-                raise AssertionError
-
-            if self.scale is None:
-
-                log.error(
-                    "non-custom grids must include scale 'log' or 'linear'"
-                )
-
-                raise AssertionError
-
-            else:
-
-                if self.scale not in ['log', 'linear']:
-
-                    log.error(
-                        "non-custom grids must include scale 'log' or 'linear'"
-                    )
-
-                    raise AssertionError
-
-            if self.n_points is None:
-
-                log.error("non-custom grids must include n_points")
-
-                raise AssertionError
-
-        else:
-
-            if self.values is None:
-
-                log.error("custom grids must include values")
-
-                raise AssertionError
-
-    @property
-    def grid(self) -> np.ndarray:
-
-        if self.custom:
-
-            return self.values
-
-        else:
-
-            if self.scale.lower() == 'log':
-
-                return np.geomspace(self.vmin, self.vmax, self.n_points)
-
-            else:
-
-                return np.linspace(self.vmin, self.vmax, self.n_points)
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "Parameter":
-
-        inputs = {}
-        inputs["custom"] = d["custom"]
-
-        if d["custom"]:
-
-            inputs["values"] = np.array(d["values"])
-
-        else:
-
-            inputs["vmin"] = d["vmin"]
-            inputs["vmax"] = d["vmax"]
-            inputs["scale"] = d["scale"]
-            inputs["n_points"] = d["n_points"]
-
-        return cls(**inputs)
-
-    def to_dict(self) -> Dict[str, Any]:
-
-        out = dict(custom=self.custom)
-
-        if self.custom:
-
-            out["values"] = self.values.tolist()
-
-        else:
-
-            out["vmin"] = self.vmin
-            out["vmax"] = self.vmax
-            out["scale"] = self.scale
-            out["n_points"] = self.n_points
-
-        return out
-
-
-@dataclass(frozen=True)
-class Parameter:
-
-    name: str
-    vmin: Optional[float] = None
-    vmax: Optional[float] = None
-    scale: Optional[str] = None
-    n_points: Optional[int] = None
-    values: Optional[np.ndarray] = None
-    custom: bool = False
-    #   grid: np.ndarray = field(init=False)
-
-    def __post_init__(self):
-
-        if not self.custom:
-
-            # we will build a grid
-
-            if (self.vmin is None) or (self.vmax is None):
-
-                log.error("non-custom grids must include vmin and vmax")
-
-                raise AssertionError
-
-            if self.scale is None:
-
-                log.error(
-                    "non-custom grids must include scale 'log' or 'linear'"
-                )
-
-                raise AssertionError
-
-            else:
-
-                if self.scale not in ['log', 'linear']:
-
-                    log.error(
-                        "non-custom grids must include scale 'log' or 'linear'"
-                    )
-
-                    raise AssertionError
-
-            if self.n_points is None:
-
-                log.error("non-custom grids must include n_points")
-
-                raise AssertionError
-
-        else:
-
-            if self.values is None:
-
-                log.error("custom grids must include values")
-
-                raise AssertionError
-
-    @property
-    def grid(self) -> np.ndarray:
-
-        if self.custom:
-
-            return self.values
-
-        else:
-
-            if self.scale.lower() == 'log':
-
-                return np.geomspace(self.vmin, self.vmax, self.n_points)
-
-            else:
-
-                return np.linspace(self.vmin, self.vmax, self.n_points)
-
-    @classmethod
-    def from_dict(cls, name: str, d: Dict[str, Any]) -> "Parameter":
-
-        inputs = {}
-        inputs["custom"] = d["custom"]
-
-        if d["custom"]:
-
-            inputs["values"] = np.array(d["values"])
-
-        else:
-
-            inputs["vmin"] = d["vmin"]
-            inputs["vmax"] = d["vmax"]
-            inputs["scale"] = d["scale"]
-            inputs["n_points"] = d["n_points"]
-
-        return cls(name, **inputs)
-
-    def to_dict(self) -> Dict[str, Any]:
-
-        out = dict(custom=self.custom)
-
-        if self.custom:
-
-            out["values"] = self.values.tolist()
-
-        else:
-
-            out["vmin"] = self.vmin
-            out["vmax"] = self.vmax
-            out["scale"] = self.scale
-            out["n_points"] = self.n_points
-
-        return out
-
-
-@dataclass(frozen=True)
-class ParameterGrid:
-
-    parameter_list: List[Parameter]
-    energy_grid: List[EnergyGrid]
-
-    @property
-    def n_points(self) -> int:
-
-        n = 1
-        for param in self.parameter_list:
-
-            n *= len(param.grid)
-
-        return n
-
-    @property
-    def n_parameters(self) -> int:
-
-        return len(self.parameter_list)
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Dict[str, Any]]) -> "ParameterGrid":
-
-        # make sure to sort so that we always have the same parameter
-        # ordering
-
-        is_multi_output: bool = False
-        n_energy_grids = 1
-
-        for k in d.keys():
-
-            if "energy_grid" in k:
-
-                if len(k.split("_")) == 3:
-
-                    if is_multi_output:
-
-                        # we have already detected one
-
-                        n_energy_grids += 1
-
-                    is_multi_output = True
-
-        if not is_multi_output:
-
-            energy_grid = [EnergyGrid.from_dict(d.pop("energy_grid"))]
-
-        else:
-
-            energy_grid = [
-                EnergyGrid.from_dict(d.pop(f"energy_grid_{i}"))
-                for i in range(n_energy_grids)
-            ]
-
-        pars = list(d.keys())
-
-        pars.sort()
-
-        par_list = [
-            Parameter.from_dict(par_name, d[par_name]) for par_name in pars
-        ]
-
-        return cls(par_list, energy_grid)
-
-    @classmethod
-    def from_yaml(cls, file_name: str) -> "ParameterGrid":
-
-        with open(file_name, 'r') as f:
-
-            inputs = yaml.load(stream=f, Loader=yaml.SafeLoader)
-
-        return cls.from_dict(inputs)
-
-    @property
-    def parameter_names(self) -> List[str]:
-
-        return [p.name for p in self.parameter_list]
-
-    def to_dict(self) -> Dict[str, Dict[str, Any]]:
-
-        out = {}
-
-        for p in self.parameter_list:
-
-            out[p.name] = p.to_dict()
-
-        if len(self.energy_grid) == 1:
-
-            out['energy_grid'] = self.energy_grid[0].to_dict()
-
-        else:
-
-            for i, eg in enumerate(self.energy_grid):
-
-                out[f"energy_grid_{i}"] = eg.to_dict()
-
-        return out
-
-    def write(self, file_name: str) -> None:
-
-        with open(file_name, "w") as f:
-
-            yaml.dump(
-                stream=f,
-                data=self.to_dict(),
-                default_flow_style=False,
-                Dumper=yaml.SafeDumper,
-            )
-
-    # def to_hdf5_group(self, f: h5py.File) -> None:
-
-    #     recursively_save_dict_contents_to_group(
-    #         f, "parameter_grid", self.to_dict()
-    #     )
-
-    def at_index(self, i: int) -> Dict[str, float]:
-        """
-        return the ith set of parameters
-
-        :param i:
-        :type i: int
-        :returns:
-
-        """
-        idx = 0
-
-        for result in itertools.product(*[p.grid for p in self.parameter_list]):
-
-            if i == idx:
-
-                d = OrderedDict()
-
-                for k, v in zip(self.parameter_names, result):
-
-                    d[k] = v
-
-                return d
-
-            else:
-
-                idx += 1
+@dataclass
+class SimulationConfig(JobConfig):
+    n_mp_jobs: int
+    run_per_node: Optional[int] = None
+    use_nodes: bool = False
+    max_nodes: Optional[int] = None
+    linear_execution: bool = False
 
 
 class SimulationBuilder:
@@ -389,36 +58,22 @@ class SimulationBuilder:
         parameter_grid: ParameterGrid,
         out_file: str,
         import_line: str,
-        n_cores: int = 1,
-        use_nodes: bool = False,
-        runs_per_node: Optional[int] = None,
-        linear_execution: bool = False,
-        hrs: Optional[int] = None,
-        min: Optional[int] = None,
-        sec: Optional[int] = None,
+        simulation_config: SimulationConfig,
+        gather_config: Optional[GatherConfig] = None,
+        clean: bool = True,
     ):
 
         self._has_complete_params: bool = False
 
         self._import_line: str = import_line
 
-        self._n_cores: int = n_cores
+        self._simulation_config: SimulationConfig = simulation_config
 
-        self._use_nodes: bool = use_nodes
-
-        self._runs_per_node: Optional[int] = runs_per_node
+        self._gather_config: Optional[GatherConfig] = gather_config
 
         self._out_file: str = out_file
 
         self._base_dir: Path = Path(out_file).parent.absolute()
-
-        self._linear_execution: bool = linear_execution
-
-        self._hrs: Optional[int] = hrs
-
-        self._min: Optional[int] = min
-
-        self._sec: Optional[int] = sec
 
         # write out the parameter file
 
@@ -426,17 +81,21 @@ class SimulationBuilder:
 
         parameter_grid.write(str(self._parameter_file))
 
+        self._n_outputs: int = len(parameter_grid.energy_grid)
+
+        self._clean: bool = clean
+
         self._n_iterations: int = parameter_grid.n_points
 
-        self._initialize_database()
+        self._current_database_size: int = 0
 
-        self._check_completed()
+        self._initialize_database()
 
         # if we are using nodes
         # we need to see how many
         # we need
 
-        if self._use_nodes:
+        if self._simulation_config.use_nodes:
 
             self._compute_chunks()
 
@@ -444,17 +103,121 @@ class SimulationBuilder:
 
             self._n_nodes: Optional[int] = None
 
+            self._n_gather_nodes: Optional[int] = None
+
         self._generate_python_script()
 
-        if self._use_nodes:
+        if self._simulation_config.use_nodes:
 
             self._generate_slurm_script()
+
+            output_dir = self._base_dir / "output"
+
+            if not output_dir.exists():
+
+                output_dir.mkdir()
+
+                log.debug("created the output directory")
+
+    @classmethod
+    def from_yaml(cls, file_name: str) -> "SimulationBuilder":
+        """
+        Create a simulation setup from a yaml file. The file
+        structure should follow:
+
+        ----
+
+        import_line: "from my_pkg import MySimulation as Simulation"
+        parameter_grid: my_grid.yml
+        out_file: my_database.h5
+
+        simulation:
+          n_mp_jobs: 9
+          n_cores_per_node: 72
+          use_nodes: yes
+
+          time:
+            hrs: 1
+            min: 15
+            sec: 0
+
+        # if running on a cluster
+
+        gather:
+          n_gather_per_core: 2
+          n_cores_per_node: 50
+
+          time:
+            hrs: 0
+            min: 10
+            sec: 0
+
+        ----
+
+
+        """
+
+        with Path(file_name).open("r") as f:
+
+            inputs = yaml.load(stream=f, Loader=yaml.SafeLoader)
+
+        log.debug("reading setup inputs:")
+
+        for k, v in inputs.items():
+
+            log.debug(f"{k}: {v}")
+
+        parameter_grid = ParameterGrid.from_yaml(inputs.pop("parameter_grid"))
+
+        simulation_input = inputs.pop("simulation")
+
+        if "time" in simulation_input:
+
+            sim_time = SLURMTime(**simulation_input.pop("time"))
+
+        else:
+
+            sim_time = SLURMTime()
+
+        if "n_cores_per_node" not in simulation_input:
+
+            if "use_nodes" in simulation_input:
+
+                if simulation_input["use_nodes"]:
+
+                    log.warning(
+                        "you are using nodes but did not specify the number of n_cores_per_node"
+                    )
+                    log.warning(
+                        "the number of cores will be set to the number of multi-process jobs"
+                    )
+
+            simulation_input["n_cores_per_node"] = simulation_input["n_mp_jobs"]
+
+        simulation_config = SimulationConfig(time=sim_time, **simulation_input)
+
+        gather_config = None
+
+        if "gather" in inputs:
+
+            gather_inputs = inputs.pop("gather")
+
+            gather_time = SLURMTime(**gather_inputs.pop("time"))
+
+            gather_config = GatherConfig(time=gather_time, **gather_inputs)
+
+        return cls(
+            parameter_grid=parameter_grid,
+            simulation_config=simulation_config,
+            gather_config=gather_config,
+            **inputs,
+        )
 
     def _initialize_database(self) -> None:
 
         if not Path(self._out_file).exists():
 
-            with h5py.File(self._out_file, "w", libver="latest") as f:
+            with h5py.File(self._out_file, "w") as f:
 
                 pg = ParameterGrid.from_yaml(self._parameter_file)
 
@@ -482,9 +245,9 @@ class SimulationBuilder:
 
                 f.create_dataset(
                     "parameters",
-                    shape=(0,) + np.array(pg.parameter_names).shape,
+                    shape=(pg.n_points,) + np.array(pg.parameter_names).shape,
                     maxshape=(None,) + np.array(pg.parameter_names).shape,
-                    compression="gzip",
+                    #    compression="gzip",
                 )
 
                 val_grp: h5py.Group = f.create_group("values")
@@ -493,14 +256,52 @@ class SimulationBuilder:
 
                 for i in range(len(pg.energy_grid)):
 
-                    grp = val_grp.create_group(f"output_{i}")
-
-                    grp.create_dataset(
-                        "values",
-                        shape=(0,) + pg.energy_grid[i].grid.shape,
+                    val_grp.create_dataset(
+                        f"output_{i}",
+                        shape=(pg.n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
-                        compression="gzip",
+                        # compression="gzip",
                     )
+
+        else:
+
+            # we need to resize the dataset
+
+            log.warning(
+                f"There was already a database: [red]{self._out_file}[/red]"
+            )
+
+            self._check_completed()
+
+            with h5py.File(self._out_file, "a") as f:
+
+                pg = ParameterGrid.from_yaml(self._parameter_file)
+
+                dataset: h5py.Dataset = f["parameters"]
+
+                self._current_database_size = dataset.shape[0]
+
+                log.warning(
+                    f"The existing data base had {self._current_database_size} entries"
+                )
+
+                dataset.resize(
+                    (self._current_database_size + pg.n_points,)
+                    + dataset.shape[1:]
+                )
+
+                val_grp = f["values"]
+
+                for i in range(len(pg.energy_grid)):
+
+                    dataset: h5py.Dataset = val_grp[f"output_{i}"]
+
+                    dataset.resize(
+                        (self._current_database_size + pg.n_points,)
+                        + dataset.shape[1:]
+                    )
+
+        self._n_outputs: int = len(pg.energy_grid)
 
     def _check_completed(self) -> None:
 
@@ -520,44 +321,102 @@ class SimulationBuilder:
 
     def _compute_chunks(self) -> None:
 
-        if self._runs_per_node is None:
+        if self._simulation_config.run_per_node is None:
+
+            log.debug("Each node will only execute the number of mp jobs")
 
             runs_per_node = 1
 
-            generator = range(self._n_cores)
+            generator = range(self._simulation_config.n_mp_jobs)
+
+            n_nodes = np.ceil(
+                self._n_iterations / self._simulation_config.n_mp_jobs
+            )
 
         else:
 
-            runs_per_node = self._runs_per_node
+            runs_per_node = self._simulation_config.run_per_node
 
             generator = range(runs_per_node)
 
-        n_nodes = np.ceil(self._n_iterations / (self._n_cores * runs_per_node))
+            n_nodes = np.ceil(self._n_iterations / runs_per_node)
 
-        if self._use_nodes:
+        log.info(
+            f"there are [bold bright_red]{self._n_iterations} iterations [/bold bright_red]"
+        )
+
+        if self._simulation_config.use_nodes:
 
             self._n_nodes = int(n_nodes)
 
-            log.info(f"we will be using {self._n_nodes} nodes")
+            log.info(
+                f"we will be using {self._n_nodes} nodes for the simulation"
+            )
 
         # now generate the key files
         k = 0
+
+        key_out = {}
+
         for i in range(self._n_nodes):
+
             output = []
 
             for j in generator:
 
-                if (k + j) < self._n_iterations:
+                if k < self._n_iterations:
 
-                    output.append(k + j)
+                    output.append(k)
+                    k += 1
 
-            with open(self._base_dir / f"key_file{i}.txt", "w") as f:
+            key_out[i] = output
 
-                for o in output:
+        with open(self._base_dir / "key_file.json", "w") as f:
 
-                    f.write(f"{o}\n")
+            json.dump(key_out, f)
 
-            k += len(generator)
+        # now collect the gather information
+
+        if self._simulation_config.use_nodes:
+
+            self._n_gather_nodes = int(
+                np.ceil(
+                    self._n_iterations
+                    / (
+                        self._gather_config.n_cores_per_node
+                        * self._gather_config.n_gather_per_core
+                    )
+                )
+            )
+
+            rank_list = {}
+            n = 0
+
+            log.info(f"the gather task will use: {self._n_gather_nodes} nodes")
+            log.debug(
+                f"total_ranks: {self._n_gather_nodes * self._gather_config.n_cores_per_node}"
+            )
+            log.debug(f"number iterations: {self._n_iterations}")
+
+            for i in range(
+                self._n_gather_nodes * self._gather_config.n_cores_per_node
+            ):
+
+                core_list = []
+
+                for j in range(self._gather_config.n_gather_per_core):
+
+                    if n < self._n_iterations:
+
+                        core_list.append(n)
+
+                        n += 1
+
+                rank_list[i] = core_list
+
+            with open(self._base_dir / "gather_file.json", "w") as f:
+
+                json.dump(rank_list, f)
 
     def _generate_python_script(self) -> None:
 
@@ -567,23 +426,115 @@ class SimulationBuilder:
             str(self._parameter_file),
             self._base_dir,
             self._import_line,
-            self._n_cores,
+            self._simulation_config.n_mp_jobs,
             self._n_nodes,
-            self._linear_execution,
+            self._simulation_config.linear_execution,
             self._has_complete_params,
+            self._current_database_size,
         )
 
         py_gen.write(str(self._base_dir))
 
+        log.info("[bold green]generated:[/bold green] run_simulation.py")
+
     def _generate_slurm_script(self) -> None:
 
-        slurm_gen: SLURMGenerator = SLURMGenerator(
-            "run_simulation.sh",
-            self._n_cores,
-            self._n_nodes,
-            self._hrs,
-            self._min,
-            self._sec,
+        multi_script: bool = False
+
+        if self._simulation_config.max_nodes is not None:
+
+            if self._n_nodes > self._simulation_config.max_nodes:
+
+                log.debug("The number of reuested nodes is too large.")
+
+                multi_script = True
+
+                n_files = int(
+                    np.ceil(self._n_nodes / self._simulation_config.max_nodes)
+                )
+
+                start = []
+                stop = []
+                current_number = 0
+
+                for i in range(n_files):
+
+                    start.append(current_number)
+
+                    next_number = int(
+                        (i + 1) * self._simulation_config.max_nodes
+                    )
+
+                    if next_number <= self._n_nodes:
+
+                        stop.append(next_number)
+
+                        current_number = next_number
+
+                    else:
+
+                        stop.append(self._n_nodes)
+
+                        break
+
+        if multi_script:
+
+            for i, (a, b) in enumerate(zip(start, stop)):
+
+                file_name = f"run_simulation_{i}.sh"
+
+                slurm_gen: SLURMGenerator = SLURMGenerator(
+                    file_name,
+                    self._simulation_config.n_mp_jobs,
+                    self._simulation_config.n_cores_per_node,
+                    b,
+                    self._simulation_config.time.hrs,
+                    self._simulation_config.time.min,
+                    self._simulation_config.time.sec,
+                    node_start=a,
+                )
+
+                slurm_gen.write(str(self._base_dir))
+
+                log.info(f"[bold green]generated:[/bold green] {file_name}")
+
+        else:
+
+            slurm_gen: SLURMGenerator = SLURMGenerator(
+                "run_simulation.sh",
+                self._simulation_config.n_mp_jobs,
+                self._simulation_config.n_cores_per_node,
+                self._n_nodes,
+                self._simulation_config.time.hrs,
+                self._simulation_config.time.min,
+                self._simulation_config.time.sec,
+            )
+
+            slurm_gen.write(str(self._base_dir))
+
+            log.info("[bold green]generated:[/bold green] run_simulations.sh")
+
+        slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
+            "gather_results.sh",
+            self._gather_config.n_cores_per_node,
+            self._n_gather_nodes,
+            self._gather_config.time.hrs,
+            self._gather_config.time.min,
+            self._gather_config.time.sec,
         )
 
         slurm_gen.write(str(self._base_dir))
+
+        log.info("[bold green]generated:[/bold green] gather_results.sh")
+
+        python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
+            "gather_results.py",
+            database_file_name=self._out_file,
+            current_size=self._current_database_size,
+            n_outputs=self._n_outputs,
+            clean=self._clean,
+        )
+
+        python_gather_gen.write(str(self._base_dir))
+
+        log.info("[bold green]generated:[/bold green] gather_results.py")

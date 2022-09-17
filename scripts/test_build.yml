@@ -1,0 +1,8 @@
+import_line: "from ronswanson.band_simulation import BandSimulation as Simulation"
+parameter_grid: "test_params.yml"
+out_file: test_database.h5
+clean: yes
+
+
+simulation:
+  n_mp_jobs: 10

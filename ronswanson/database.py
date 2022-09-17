@@ -6,7 +6,6 @@ import h5py
 import numpy as np
 from astromodels import TemplateModel, TemplateModelFactory
 
-from .simulation_builder import Parameter, ParameterGrid
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -159,11 +158,11 @@ class Database:
         values = {}
         parameters = {}
 
-        with h5py.File(file_name, "r", libver='latest') as f:
+        with h5py.File(file_name, "r") as f:
 
             energy_grid = f['energy_grid'][f'energy_grid_{output}'][()]
 
-            values_grp = f["values"][f"output_{output}"]
+            values_grp = f["values"]
 
             par_name_grp = f["parameter_names"]
 
@@ -174,7 +173,7 @@ class Database:
 
             parameters = f['parameters'][()]
 
-            values = values_grp['values'][()]
+            values = values_grp[f'output_{output}'][()]
 
         return cls(parameters, parameter_names, energy_grid, values)
 
@@ -264,6 +263,92 @@ class Database:
         tmf.save_data(overwrite=overwrite)
 
         return TemplateModel(name)
+
+
+def merge_databases(
+    *file_names: List[str], new_name: str = "merged_db.h5"
+) -> None:
+
+    """TODO describe function
+
+    :param new_name:
+    :type new_name: str
+    :returns:
+
+    """
+    n_entries = 0
+
+    for i, fname in enumerate(file_names):
+
+        with h5py.File(fname, "r") as f:
+
+            n_entries += f["parameters"].shape[0]
+
+            if i == 0:
+
+                par_name_grp = f["parameter_names"]
+
+                parameter_names = [
+                    par_name_grp.attrs[f"par{i}"]
+                    for i in range(len(par_name_grp.attrs))
+                ]
+
+                energy_grids = []
+
+                for _, v in f["energy_grid"].items():
+
+                    energy_grids.append(v[()])
+
+        n_outputs = len(energy_grids)
+
+        n_parameters = len(parameter_names)
+
+        parameters = np.zeros((n_entries, n_parameters))
+
+        values = []
+
+        for grid in energy_grids:
+
+            values.append(np.zeros((n_entries, len(grid))))
+
+        k = 0
+
+        # extract all the information
+
+        for i, fname in enumerate(file_names):
+
+            with h5py.File(fname, "r") as f:
+
+                n = f["parameters"].shape[0]
+
+                parameter_names[k:n, :] = f["parameters"][()]
+
+                for j, val in enumerate(values):
+
+                    val[k:n] = f["values"][f"output_{j}"][()]
+
+                k += n
+
+        # create the new file
+
+        with h5py.File(new_name, "w") as f:
+
+            f.create_dataset("parameters", data=parameters)
+
+            val_grp = f.create_group("values")
+            energy_grid_grp = f.create_group("energy_grid")
+
+            par_name_grp = f.create_group("parameters_names")
+            for i in range(n_parameters):
+
+                par_name_grp.attrs[f"par{i}"] = parameter_names[i]
+
+            for i in range(n_outputs):
+
+                val_grp.create_dataset(f"output_{i}", data=values[i])
+                energy_grid_grp.create_dataset(
+                    f"energy_grid_{i}", data=energy_grids[i]
+                )
 
 
 __all__ = ["Database"]
