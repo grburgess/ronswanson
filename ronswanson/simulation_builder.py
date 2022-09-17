@@ -312,7 +312,7 @@ class SimulationBuilder:
 
             n_nodes = np.ceil(self._n_iterations / runs_per_node)
 
-        log.info(f"there are {self._n_iterations} iterations")
+        log.info(f"there are [bold bright_red]{self._n_iterations} iterations [/bold bright_red]")
 
         if self._simulation_config.use_nodes:
 
@@ -404,7 +404,7 @@ class SimulationBuilder:
 
         py_gen.write(str(self._base_dir))
 
-        log.info(f"generated: run_simulation.py")
+        log.info("[bold green]generated:[/bold green] run_simulation.py")
 
     def _generate_slurm_script(self) -> None:
 
@@ -465,7 +465,7 @@ class SimulationBuilder:
 
                 slurm_gen.write(str(self._base_dir))
 
-                log.info(f"generated: {file_name}")
+                log.info(f"[bold green]generated:[/bold green] {file_name}")
 
         else:
 
@@ -481,7 +481,7 @@ class SimulationBuilder:
 
             slurm_gen.write(str(self._base_dir))
 
-            log.info(f"generated: run_simulations.sh")
+            log.info("[bold green]generated:[/bold green] run_simulations.sh")
 
         slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
             "gather_results.sh",
@@ -494,7 +494,7 @@ class SimulationBuilder:
 
         slurm_gen.write(str(self._base_dir))
 
-        log.info(f"generated: gather_results.sh")
+        log.info("[bold green]generated:[/bold green] gather_results.sh")
 
         python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
             "gather_results.py",
@@ -506,4 +506,4 @@ class SimulationBuilder:
 
         python_gather_gen.write(str(self._base_dir))
 
-        log.info(f"generated: gather_results.py")
+        log.info("[bold green]generated:[/bold green] gather_results.py")
