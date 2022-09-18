@@ -173,7 +173,7 @@ class Database:
 
             values_grp = f["values"]
 
-            run_time = f["run_time"]
+            run_time = f["run_time"][()]
 
             par_name_grp = f["parameter_names"]
 
