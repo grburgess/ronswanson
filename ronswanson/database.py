@@ -27,6 +27,7 @@ class Database:
         energy_grid: np.ndarray,
         run_time: np.ndarray,
         values: np.ndarray,
+        meta_data: Optional[Dict[str, np.ndarray]] = None,
     ) -> None:
         """
         Databse of parameters and simulated values
@@ -67,6 +68,8 @@ class Database:
             self._parameter_ranges[par] = np.sort(
                 np.unique(self._grid_points[:, i])
             )
+
+        self._meta_data: Optional[Dict[str, np.ndarray]] = meta_data
 
     @property
     def n_entries(self) -> int:
@@ -186,12 +189,23 @@ class Database:
 
             values = values_grp[f'output_{output}'][()]
 
+            meta_data = None
+
+            if "meta" in list(f.keys()):
+
+                meta_data = {}
+
+                for k, v in f['meta'].items():
+
+                    meta_data[k] = v[()]
+
         return cls(
             grid_points=parameters,
             parameter_names=parameter_names,
             energy_grid=energy_grid,
             values=values,
             run_time=run_time,
+            meta_data=meta_data,
         )
 
     def to_3ml(
