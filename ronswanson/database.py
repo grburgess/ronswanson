@@ -5,6 +5,8 @@ from typing import Dict, List, Optional
 import h5py
 import numpy as np
 from astromodels import TemplateModel, TemplateModelFactory
+from astromodels.utils.logging import silence_console_log
+from tqdm.auto import tqdm
 
 from .utils.logging import setup_logger
 
@@ -251,16 +253,20 @@ class Database:
 
             tmf.define_parameter_grid(k, sub_parameter_ranges[k])
 
-        for i in range(len(sub_values)):
 
-            ### DO NOT SORT
+        with silence_console_log():
 
-            tmf.add_interpolation_data(
-                sub_values[i],
-                **{k: v for k, v in zip(self._parameter_names, sub_grid[i])},
-            )
+            for i in tqdm(range(len(sub_values))):
 
-        tmf.save_data(overwrite=overwrite)
+                ### DO NOT SORT
+
+                tmf.add_interpolation_data(
+                    sub_values[i],
+                    **{k: v for k, v in zip(self._parameter_names, sub_grid[i])},
+                )
+
+            tmf.save_data(overwrite=overwrite)
+
 
         return TemplateModel(name)
 
