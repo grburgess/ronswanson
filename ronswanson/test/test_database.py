@@ -8,6 +8,8 @@ def test_database(database: Database):
     assert database.n_parameters == 3
     assert database.n_entries == 10 * 5 * 5
 
+    assert len(database.run_time) == database.n_entries
+
     assert database._grid_points.shape == (10 * 5 * 5, 3)
 
     assert len(database._parameter_names) == 3
