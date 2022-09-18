@@ -25,6 +25,7 @@ class Database:
         grid_points: np.ndarray,
         parameter_names: List[str],
         energy_grid: np.ndarray,
+        run_time: np.ndarray,
         values: np.ndarray,
     ) -> None:
         """
@@ -57,6 +58,8 @@ class Database:
 
         self._grid_points: np.ndarray = grid_points
 
+        self._run_time: np.ndarray = run_time
+
         self._parameter_ranges: Dict[str, np.ndarray] = OrderedDict()
 
         for i, par in enumerate(self._parameter_names):
@@ -80,6 +83,10 @@ class Database:
     @property
     def paramerter_names(self) -> List[str]:
         return self._parameter_names
+
+    @property
+    def run_time(self) -> np.ndarray:
+        return self._run_time
 
     @property
     def energy_grid(self) -> np.ndarray:
@@ -166,6 +173,8 @@ class Database:
 
             values_grp = f["values"]
 
+            run_time = f["run_time"]
+
             par_name_grp = f["parameter_names"]
 
             parameter_names = [
@@ -177,7 +186,13 @@ class Database:
 
             values = values_grp[f'output_{output}'][()]
 
-        return cls(parameters, parameter_names, energy_grid, values)
+        return cls(
+            grid_points=parameters,
+            parameter_names=parameter_names,
+            energy_grid=energy_grid,
+            values=values,
+            run_time=run_time,
+        )
 
     def to_3ml(
         self,
