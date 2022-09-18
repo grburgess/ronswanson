@@ -16,16 +16,17 @@ from .utils.logging import setup_logger
 log = setup_logger(__name__)
 
 
-def file_is_open(file_name: str):
+class Timer(object):
+    """
+    A timing context manager
+    """
 
-    try:
-        tmp = h5py.File(file_name, "a")
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
 
-        return False, tmp
-
-    except OSError:
-
-        return True, None
+    def __exit__(self, type, value, traceback):
+        self.total_time = time.perf_counter() - self.start
 
 
 class Simulation(metaclass=ABCMeta):
@@ -76,9 +77,13 @@ class Simulation(metaclass=ABCMeta):
 
         log.debug(f"simulation {self._simulation_id} is now running")
 
-        output: Dict[str, np.ndarray] = self._run_call()
+        with Timer() as timer:
+
+            output: Dict[str, np.ndarray] = self._run_call()
 
         with open_component_file(self._out_file, self._simulation_id) as f:
+
+            f.attrs['run_time'] = timer.total_time
 
             f.create_dataset(
                 "parameters", data=np.array(list(self._parameter_set.values()))
