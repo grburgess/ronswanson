@@ -166,6 +166,7 @@ class PythonGatherGenerator(ScriptGenerator):
         database_file_name: str,
         current_size: int,
         n_outputs: int,
+        num_meta_parameters: Optional[int] = None,
         clean: bool = True,
     ) -> None:
 
@@ -173,6 +174,7 @@ class PythonGatherGenerator(ScriptGenerator):
         self._current_size: int = current_size
         self._n_outputs: int = n_outputs
         self._clean: bool = clean
+        self._num_meta_parmeters: Optional[int] = num_meta_parameters
 
         super().__init__(file_name)
 
@@ -231,6 +233,15 @@ class PythonGatherGenerator(ScriptGenerator):
         self._add_line('db_run_time = database["run_time"]')
         self._end_line()
         self._add_line('vals = database["values"]')
+
+        if self._num_meta_parmeters is not None:
+
+            self._add_line("meta = database['meta']")
+
+            for i in range(self._num_meta_parmeters):
+
+                self._add_line(f'meta_{i} = meta["meta_{i}"]')
+
         self._end_line()
 
         for i in range(self._n_outputs):
@@ -265,6 +276,14 @@ class PythonGatherGenerator(ScriptGenerator):
             self._add_line(
                 f'output_{i}[index, :] = f["output_{i}"][()]', indent_level=2
             )
+
+        if self._num_meta_parmeters is not None:
+
+            for i in range(self._num_meta_parmeters):
+
+                self._add_line(
+                    f'meta_{i}[index] = f.attrs["meta_{i}"]', indent_level=2
+                )
 
         if self._clean:
 

@@ -60,6 +60,7 @@ class SimulationBuilder:
         import_line: str,
         simulation_config: SimulationConfig,
         gather_config: Optional[GatherConfig] = None,
+        num_meta_parameters: Optional[int] = None,
         clean: bool = True,
     ):
 
@@ -74,6 +75,8 @@ class SimulationBuilder:
         self._out_file: str = out_file
 
         self._base_dir: Path = Path(out_file).parent.absolute()
+
+        self._num_meta_parameters: Optional[int] = num_meta_parameters
 
         # write out the parameter file
 
@@ -94,6 +97,10 @@ class SimulationBuilder:
         # if we are using nodes
         # we need to see how many
         # we need
+
+        log.info(
+            f"there are [bold bright_red]{self._n_iterations} iterations [/bold bright_red]"
+        )
 
         if self._simulation_config.use_nodes:
 
@@ -267,6 +274,18 @@ class SimulationBuilder:
                     "run_time", shape=(pg.n_points,), maxshape=(None,)
                 )
 
+                if self._num_meta_parameters is not None:
+
+                    meta_grp: h5py.Group = f.create_group("meta")
+
+                    log.debug("detected meta parameters")
+
+                    for i in range(self._num_meta_parameters):
+
+                        meta_grp.create_dataset(
+                            f"meta_{i}", shape=(pg.n_points,), maxshape=(None,)
+                        )
+
         else:
 
             # we need to resize the dataset
@@ -309,6 +328,20 @@ class SimulationBuilder:
 
                 dataset.resize((self._current_database_size + pg.n_points,))
 
+                if self._num_meta_parameters is not None:
+
+                    log.debug("detected meta parameters")
+
+                    meta_grp = f["meta"]
+
+                    for i in range(self._num_meta_parameters):
+
+                        dataset: h5py.Dataset = meta_grp[f"meta_{i}"]
+
+                        dataset.resize(
+                            (self._current_database_size + pg.n_points,)
+                        )
+
         self._n_outputs: int = len(pg.energy_grid)
 
     def _check_completed(self) -> None:
@@ -348,10 +381,6 @@ class SimulationBuilder:
             generator = range(runs_per_node)
 
             n_nodes = np.ceil(self._n_iterations / runs_per_node)
-
-        log.info(
-            f"there are [bold bright_red]{self._n_iterations} iterations [/bold bright_red]"
-        )
 
         if self._simulation_config.use_nodes:
 
@@ -443,7 +472,9 @@ class SimulationBuilder:
 
         py_gen.write(str(self._base_dir))
 
-        log.info("[bold green]generated:[/bold green] run_simulation.py")
+        log.info(
+            "[bold green blink]generated:[/bold green blink] run_simulation.py"
+        )
 
     def _generate_slurm_script(self) -> None:
 
@@ -504,7 +535,9 @@ class SimulationBuilder:
 
                 slurm_gen.write(str(self._base_dir))
 
-                log.info(f"[bold green]generated:[/bold green] {file_name}")
+                log.info(
+                    f"[bold green blink]generated:[/bold green blink] {file_name}"
+                )
 
         else:
 
@@ -520,7 +553,9 @@ class SimulationBuilder:
 
             slurm_gen.write(str(self._base_dir))
 
-            log.info("[bold green]generated:[/bold green] run_simulations.sh")
+            log.info(
+                "[bold green blink]generated:[/bold green blink] run_simulations.sh"
+            )
 
         slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
             "gather_results.sh",
@@ -533,7 +568,9 @@ class SimulationBuilder:
 
         slurm_gen.write(str(self._base_dir))
 
-        log.info("[bold green]generated:[/bold green] gather_results.sh")
+        log.info(
+            "[bold green blink]generated:[/bold green blink] gather_results.sh"
+        )
 
         python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
             "gather_results.py",
@@ -541,8 +578,11 @@ class SimulationBuilder:
             current_size=self._current_database_size,
             n_outputs=self._n_outputs,
             clean=self._clean,
+            num_meta_parameters=self._num_meta_parameters,
         )
 
         python_gather_gen.write(str(self._base_dir))
 
-        log.info("[bold green]generated:[/bold green] gather_results.py")
+        log.info(
+            "[bold green blink]generated:[/bold green blink] gather_results.py"
+        )

@@ -2,7 +2,7 @@ import re
 import time
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import h5py
 import numpy as np
@@ -34,9 +34,10 @@ class Simulation(metaclass=ABCMeta):
         self,
         simulation_id: int,
         parameter_set: Dict[str, float],
-        energy_grid: grids.EnergyGrid,
+        energy_grid: List[grids.EnergyGrid],
         out_file: str,
         num_outputs: int = 1,
+        num_meta_parameters: Optional[int] = None,
     ) -> None:
 
         """
@@ -57,6 +58,7 @@ class Simulation(metaclass=ABCMeta):
         self._simulation_id: int = simulation_id
         self._energy_grid: List[grids.EnergyGrid] = energy_grid
         self._num_outputs: int = num_outputs
+        self._num_meta_parameters: Optional[int] = num_meta_parameters
 
         if not len(self._energy_grid) == self._num_outputs:
 
@@ -92,6 +94,12 @@ class Simulation(metaclass=ABCMeta):
             for i in range(self._num_outputs):
 
                 f.create_dataset(f"output_{i}", data=output[f"output_{i}"])
+
+            if self._num_meta_parameters is not None:
+
+                for i in range(self._num_meta_parameters):
+
+                    f.attrs[f'meta_{i}'] = output[f"meta_{i}"]
 
     @abstractmethod
     def _run_call(self) -> Dict[str, np.ndarray]:
@@ -142,6 +150,12 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
                 database_file["run_time"][current_size + sim_id] = f.attrs[
                     "run_time"
                 ]
+
+                if "meta" in (database_file.keys()):
+
+                    for k, v in database_file["meta"].items():
+
+                        v[current_size + sim_id] = f.attrs[k]
 
             if clean:
 
