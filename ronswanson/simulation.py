@@ -139,6 +139,8 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
                     v[current_size + sim_id] = f[k][()]
 
+                database_file["run_time"][current_size + sim_id] = f.attrs["run_time"]
+
             if clean:
 
                 log.debug(f"removing: {store}")

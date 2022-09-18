@@ -228,6 +228,7 @@ class PythonGatherGenerator(ScriptGenerator):
         self._end_line()
         self._end_line()
         self._add_line('db_params = database["parameters"]')
+        self._add_line('db_run_time = database["run_time"]')
         self._end_line()
         self._add_line('vals = database["values"]')
         self._end_line()
@@ -254,6 +255,11 @@ class PythonGatherGenerator(ScriptGenerator):
             'db_params[index, :] = f["parameters"][()]', indent_level=2
         )
         self._end_line()
+
+        self._add_line(
+            'db_run_time[index] = f.attrs["run_time"]', indent_level=2
+        )
+
 
         for i in range(self._n_outputs):
 
