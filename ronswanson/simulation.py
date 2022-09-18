@@ -10,7 +10,7 @@ import numpy as np
 import ronswanson.grids as grids
 from ronswanson.utils.configuration import ronswanson_config
 
-from .utils.file_open import open_component_file, open_database
+from .utils.file_open import open_component_file
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -26,7 +26,7 @@ class Timer(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.total_time = time.perf_counter() - self.start
+        self.total_time = time.perf_counter() - self.start_time
 
 
 class Simulation(metaclass=ABCMeta):
@@ -139,7 +139,9 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
                     v[current_size + sim_id] = f[k][()]
 
-                database_file["run_time"][current_size + sim_id] = f.attrs["run_time"]
+                database_file["run_time"][current_size + sim_id] = f.attrs[
+                    "run_time"
+                ]
 
             if clean:
 

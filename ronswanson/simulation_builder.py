@@ -264,7 +264,7 @@ class SimulationBuilder:
                     )
 
                 f.create_dataset(
-                    "run_time", shape=(pg.n_points,), max_shape=(None,)
+                    "run_time", shape=(pg.n_points,), maxshape=(None,)
                 )
 
         else:
@@ -308,7 +308,6 @@ class SimulationBuilder:
                 dataset: h5py.Dataset = f["run_time"]
 
                 dataset.resize((self._current_database_size + pg.n_points,))
-
 
         self._n_outputs: int = len(pg.energy_grid)
 

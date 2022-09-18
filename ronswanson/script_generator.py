@@ -260,7 +260,6 @@ class PythonGatherGenerator(ScriptGenerator):
             'db_run_time[index] = f.attrs["run_time"]', indent_level=2
         )
 
-
         for i in range(self._n_outputs):
 
             self._add_line(

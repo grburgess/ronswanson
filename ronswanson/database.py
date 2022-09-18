@@ -253,7 +253,6 @@ class Database:
 
             tmf.define_parameter_grid(k, sub_parameter_ranges[k])
 
-
         with silence_console_log():
 
             for i in tqdm(range(len(sub_values))):
@@ -262,11 +261,12 @@ class Database:
 
                 tmf.add_interpolation_data(
                     sub_values[i],
-                    **{k: v for k, v in zip(self._parameter_names, sub_grid[i])},
+                    **{
+                        k: v for k, v in zip(self._parameter_names, sub_grid[i])
+                    },
                 )
 
             tmf.save_data(overwrite=overwrite)
-
 
         return TemplateModel(name)
 

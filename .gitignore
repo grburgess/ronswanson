@@ -113,3 +113,5 @@ ENV/
 /.readthedocs.yml
 /HDF5_DATABASE_OPEN
 /completed_parameters.json
+/scripts/parameters.yml
+/scripts/run_simulation.py
