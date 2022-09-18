@@ -95,6 +95,10 @@ class Database:
     def energy_grid(self) -> np.ndarray:
         return self._energy_grid
 
+    @property
+    def meta_data(self) -> Optional[Dict[str, np.ndarray]]:
+        return self._meta_data
+
     def at(self, i: int) -> ValueContainer:
         """
         return the parameters and values
