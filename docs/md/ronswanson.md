@@ -8,9 +8,9 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.14.1
   kernelspec:
-    display_name: Python 3 (ipykernel)
+    display_name: ron
     language: python
-    name: python3
+    name: ron
 ---
 
 # Intro
@@ -116,6 +116,9 @@ class BandSimulation(dukesilver.Simulation):
 
 ```
 
+
+### The Simulation Builder
+
 Now we need to tell the simulation builder a few things so it can construct our
 files for us. We have stored this YAML file in the repo itself. You should use
 your own!
@@ -124,24 +127,37 @@ The `SimulationBuilder` class takes a parameter grid, the name of the file that
 will be created, the import line for the custom simulation class, the number of
 cores and nodes to execute on.
 
+We configure this with a YAML file.
+
+```yaml
+# the import line to get our simulation
+# we ALWAYS import as Simulation
+import_line: "from ronswanson.band_simulation import BandSimulation as Simulation"
+
+# the parameter grid 
+parameter_grid: "test_params.yml"
+
+# name of our database
+out_file: database.h5
+
+# clean out the simulation directory after
+# the run. It is defaulted to yes
+clean: yes
+
+simulation:
+  
+  # number of multi-process jobs
+  n_mp_jobs: 8
+
+
+
+
+```
+
 ```python
-from ronswanson.utils.package_data import get_path_of_data_file
 import ronswanson
 
-file_name = get_path_of_data_file("test_params.yml")
-
-
-# create a parameter grid from our file
-pg = ronswanson.ParameterGrid.from_yaml(file_name)
-
-# create a simulation builder
-sb = ronswanson.SimulationBuilder(
-    pg,
-    "database.h5",
-    "from ronswanson.band_simulation import BandSimulation as Simulation",
-    n_cores=8,
-    use_nodes=None
-)
+sb = ronswanson.SimulationBuilder.from_yaml("sim_build.yml")
 ```
 
 Now a python file will be written to the disk which you can run to create your
@@ -169,6 +185,73 @@ the parameter combinations. If iterations are to also be divided across HPC
 nodes, the python script will be modified and an associated `SLURM` script will
 be generated.
 
+<!-- #region -->
+#### SLURM and advanced options
+
+Configuring for SLURM and SBATCH systems is similar, but there are a few more options. ```ronswanson``` will set up bash scripts that will submit jobs to complete the simulations and then gather them into a database.
+
+Here is an example script:
+
+```yaml
+
+# the import line to get our simulation
+# we ALWAYS import as Simulation
+import_line: "from ronswanson.band_simulation import BandSimulation as Simulation"
+
+# the parameter grid 
+parameter_grid: "test_params.yml"
+
+# name of our database
+out_file: database.h5
+
+simulation:
+  
+  # number of multi-process jobs PER node
+  n_mp_jobs: 9
+  
+  # number of cpus to request per node (leave room for threads)
+  n_cores_per_node: 72
+  
+  # number of runs per node
+  # here, the 9 mp jobs will take turns with these 500 runs
+  run_per_node: 500
+  
+  # the switch to say we are performing SLURM job
+  use_nodes: yes
+  
+  # optional maximum number of nodes to request
+  # if more than this are required, multiple
+  # submission scripts are generated
+  max_nodes: 300
+
+  # the max run time for each job in the array
+  time:
+    hrs: 10
+    min: 30
+    sec: 0
+
+gather:
+
+  # after the simulations run
+  # you submit and MPI job that collects the simualtions
+  
+  # number of simulations to collect per MPI rank
+  n_gather_per_core: 100
+  
+  # number of cpus per node
+  n_cores_per_node: 70
+
+  # maximum job time
+  time:
+    hrs: 1
+    min: 0
+    sec: 0
+
+```
+
+
+Additional configuration of SLURM jobs can be handle with the ```ronswanson``` configuration.
+<!-- #endregion -->
 
 ### The Database
 
@@ -253,6 +336,61 @@ table_model_small
 Awesome! Now go enjoy your weekend.
 
 ![alt text](https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/enjoy.jpg)
+
+
+## User configuration
+
+A simple YAML configuration is stored in ```~/.config/ronswanson/ronswanson_config.yml```. It allows for configuring the log as well as putting default SLURM configuration parameters.
+
+An example:
+
+```yaml
+
+logging:
+  'on': on
+  level: INFO
+slurm:
+
+  # where to send SLURM emails
+  user_email: my_email.com
+  
+  # modules to be loaded for MPI jobs (gather script)
+  mpi_modules: ['intel/21.4.0', 'impi/2021.4',
+  'anaconda/3/2021.11','hdf5-mpi/1.12.2', 'mpi4py/3.0.3', 'h5py-mpi/2.10']
+  
+  # modules to load for simulation jobs
+  modules: ['intel/21.4.0', 'impi/2021.4', 'anaconda/3/2021.11','hdf5-serial/1.12.2']
+  
+  # the python binary for running the simulation jobs
+  python: "python3"
+  
+  # where to store the simulations before
+  # database creation (default will be the directory where the code is run)
+  store_dir: /ptmp/jburgess
+
+```
+
+The configuration can be modified on the fly.
+
+```python
+from ronswanson import ronswanson_config, show_configuration
+```
+
+```python
+show_configuration()
+```
+
+```python
+ronswanson_config.slurm.user_email
+```
+
+```python
+ronswanson_config.slurm.user_email = "workemail@email.com"
+```
+
+```python
+show_configuration()
+```
 
 ```python
 

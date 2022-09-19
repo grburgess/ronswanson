@@ -20,7 +20,7 @@ jobs:
           pip install black
           pip install --upgrade numpy ipython jupyter cython astropy numpy numba
           pip install jupytext jupyterthemes
-          #pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
+          pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
           #pip3 install git+https://github.com/threeML/threeML.git@dev#egg=threeML
           
           python setup.py develop
@@ -29,6 +29,17 @@ jobs:
       - name: Execute the notebooks
         shell: bash -l {0}
         run: |
+
+          # generate the yml file
+          cp scripts/generate_yaml.py docs/md/
+
+          cd docs/md/
+
+          python generate_yaml.py
+
+          ls
+
+          cd ../../
 
           jupytext --to ipynb --pipe black --execute docs/md/*.md
           mv docs/md/*.ipynb docs/notebooks
@@ -62,7 +73,7 @@ jobs:
 
           pip3 install cython
           pip3 install numpy scipy numba astropy
-          #pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
+          pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
           #pip3 install git+https://github.com/threeML/threeML.git@dev#egg=threeML
           python setup.py develop
 
@@ -110,7 +121,7 @@ jobs:
 
 
           pip3 install numpy scipy numba astropy
-          #pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
+          pip3 install git+https://github.com/threeML/astromodels.git@dev#egg=astromodels
           #pip3 install git+https://github.com/threeML/threeML.git@dev#egg=threeML
           brew install sphinx-doc pandoc
 
