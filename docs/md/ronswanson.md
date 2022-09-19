@@ -288,6 +288,7 @@ from astromodels import Band
 We can compare our table model with the Band function.
 
 ```python
+import numpy as np
 ene = np.geomspace(10,1000,100)
 
 b = Band()
