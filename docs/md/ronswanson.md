@@ -8,9 +8,9 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.14.1
   kernelspec:
-    display_name: ron
+    display_name: Python 3 (ipykernel)
     language: python
-    name: ron
+    name: python3
 ---
 
 # Intro
