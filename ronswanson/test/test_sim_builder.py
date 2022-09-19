@@ -32,8 +32,6 @@ def test_bad_sim_build():
         SimulationBuilder.from_yaml(file_name=str(file_name))
 
 
-
-
 def test_script_gen_nodes(node_script):
 
     database_file = Path("database_node.h5")

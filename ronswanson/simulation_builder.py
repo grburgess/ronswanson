@@ -205,10 +205,9 @@ class SimulationBuilder:
 
             test_structure = OmegaConf.load(file_name)
 
-            merged =OmegaConf.merge(structure, test_structure)
+            merged = OmegaConf.merge(structure, test_structure)
 
             OmegaConf.to_container(merged, throw_on_missing=True)
-
 
         except Exception as e:
 
