@@ -1,0 +1,7 @@
+ronswanson.utils.file_open module
+=================================
+
+.. automodule:: ronswanson.utils.file_open
+    :members:
+    :undoc-members:
+    :show-inheritance:

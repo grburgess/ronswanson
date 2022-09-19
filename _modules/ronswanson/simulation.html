@@ -92,28 +92,35 @@
            <div itemprop="articleBody">
              
   <h1>Source code for ronswanson.simulation</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">time</span>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">import</span> <span class="nn">ronswanson.grids</span> <span class="k">as</span> <span class="nn">grids</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.configuration</span> <span class="kn">import</span> <span class="n">ronswanson_config</span>
+
+<span class="kn">from</span> <span class="nn">.utils.file_open</span> <span class="kn">import</span> <span class="n">open_component_file</span>
 <span class="kn">from</span> <span class="nn">.utils.logging</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="file_is_open"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.file_is_open">[docs]</a><span class="k">def</span> <span class="nf">file_is_open</span><span class="p">(</span><span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Timer"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Timer">[docs]</a><span class="k">class</span> <span class="nc">Timer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A timing context manager</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">tmp</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
-        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">tmp</span>
-
-    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-
-        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span></div>
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span></div>
 
 
 <div class="viewcode-block" id="Simulation"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Simulation">[docs]</a><span class="k">class</span> <span class="nc">Simulation</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
@@ -121,8 +128,10 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">simulation_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">parameter_set</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="n">energy_grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">energy_grid</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">grids</span><span class="o">.</span><span class="n">EnergyGrid</span><span class="p">],</span>
         <span class="n">out_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">num_outputs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
@@ -141,7 +150,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">out_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_set</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">simulation_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_energy_grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">energy_grid</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_energy_grid</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">grids</span><span class="o">.</span><span class="n">EnergyGrid</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_outputs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">num_outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_meta_parameters</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_grid</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_outputs</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;requested number of outputs </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_outputs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;but only have </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_grid</span><span class="p">)</span><span class="si">}</span><span class="s2"> energy grids&quot;</span><span class="p">)</span>
+
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Simulation.run"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Simulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
@@ -151,138 +169,97 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># check if this already exists</span>
-
-        <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-
-        <span class="n">run_flag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-
-            <span class="n">test</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">file_is_open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">test</span><span class="p">:</span>
-
-                <span class="c1"># the file is already open so wait</span>
-
-                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;simulation </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="si">}</span><span class="s2"> is waiting on file to be closed&quot;</span>
-                <span class="p">)</span>
-
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-
-            <span class="k">else</span><span class="p">:</span>
-
-                <span class="k">if</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-
-                    <span class="c1"># ok, this is a brand new file</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;New database file&quot;</span><span class="p">)</span>
-                    <span class="k">break</span>
-
-                <span class="k">else</span><span class="p">:</span>
-
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">alltrue</span><span class="p">(</span><span class="n">v</span><span class="p">[()]</span> <span class="o">==</span> <span class="n">params</span><span class="p">):</span>
-
-                            <span class="c1"># this parameter set exists</span>
-
-                            <span class="n">run_flag</span> <span class="o">=</span> <span class="kc">False</span>
-
-                            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;parameters </span><span class="si">{</span><span class="n">v</span><span class="p">[()]</span><span class="si">}</span><span class="s2"> already exist!&quot;</span><span class="p">)</span>
-
-                            <span class="k">break</span>
-
-                <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-                <span class="k">break</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">run_flag</span><span class="p">:</span>
-
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simulation </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="si">}</span><span class="s2"> not running&quot;</span><span class="p">)</span>
-
-            <span class="k">return</span>
-
         <span class="c1"># run the simulation</span>
 
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simulation </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="si">}</span><span class="s2"> is now running&quot;</span><span class="p">)</span>
 
-        <span class="n">output</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_call</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">()</span> <span class="k">as</span> <span class="n">timer</span><span class="p">:</span>
 
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_call</span><span class="p">()</span>
 
-            <span class="n">test</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">file_is_open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">open_component_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 
-            <span class="k">if</span> <span class="n">test</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;run_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timer</span><span class="o">.</span><span class="n">total_time</span>
 
-                <span class="c1"># the file is already open so wait</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                <span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="p">)</span>
 
-                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;simulation </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="si">}</span><span class="s2"> is waiting on file to be closed&quot;</span>
-                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_outputs</span><span class="p">):</span>
 
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">output</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
 
-            <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
-                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simulation </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_id</span><span class="si">}</span><span class="s2"> is storing&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">):</span>
 
-                <span class="c1"># store the parameter names</span>
-
-                <span class="k">if</span> <span class="s2">&quot;parameter_names&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-
-                    <span class="n">p_name_group</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;parameter_names&quot;</span><span class="p">)</span>
-
-                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
-
-                        <span class="n">p_name_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;par</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
-
-                <span class="c1"># store the energy grid</span>
-
-                <span class="k">if</span> <span class="s2">&quot;energy_grid&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-
-                    <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
-                        <span class="s2">&quot;energy_grid&quot;</span><span class="p">,</span>
-                        <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_grid</span><span class="p">,</span>
-                        <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
-                    <span class="p">)</span>
-
-                <span class="k">if</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-
-                    <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;parameters&quot;</span><span class="p">)</span>
-
-                <span class="n">param_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
-
-                <span class="n">number_of_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_group</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-                <span class="n">new_key</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">number_of_entries</span>
-
-                <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-
-                <span class="n">param_group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span>
-                <span class="p">)</span>
-
-                <span class="k">if</span> <span class="s2">&quot;values&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-
-                    <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;values&quot;</span><span class="p">)</span>
-
-                <span class="n">values_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
-
-                <span class="n">values_group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">output</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span>
-                <span class="p">)</span>
-
-                <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-                <span class="k">break</span></div>
+                    <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span></div>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_run_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_run_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 
         <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Attempting to use base class&quot;</span><span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="gather"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.gather">[docs]</a><span class="k">def</span> <span class="nf">gather</span><span class="p">(</span><span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="c1"># gather the list of files</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">store_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">store_dir</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+
+    <span class="n">multi_file_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">parent_dir</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_store&quot;</span><span class="p">)</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="n">multi_file_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;sim_store_*.h5&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">database_file</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">store</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;reading: </span><span class="si">{</span><span class="n">store</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">sim_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s2">&quot;^sim_store_(\d*).h5&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">store</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">database_file</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="n">current_size</span> <span class="o">+</span> <span class="n">sim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span>
+                    <span class="s2">&quot;parameters&quot;</span>
+                <span class="p">][()]</span>
+
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">database_file</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                    <span class="n">v</span><span class="p">[</span><span class="n">current_size</span> <span class="o">+</span> <span class="n">sim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">k</span><span class="p">][()]</span>
+
+                <span class="n">database_file</span><span class="p">[</span><span class="s2">&quot;run_time&quot;</span><span class="p">][</span><span class="n">current_size</span> <span class="o">+</span> <span class="n">sim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span>
+                    <span class="s2">&quot;run_time&quot;</span>
+                <span class="p">]</span>
+
+                <span class="k">if</span> <span class="s2">&quot;meta&quot;</span> <span class="ow">in</span> <span class="p">(</span><span class="n">database_file</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">database_file</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                        <span class="n">v</span><span class="p">[</span><span class="n">current_size</span> <span class="o">+</span> <span class="n">sim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">clean</span><span class="p">:</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;removing: </span><span class="si">{</span><span class="n">store</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">store</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">clean</span><span class="p">:</span>
+
+        <span class="n">multi_file_dir</span><span class="o">.</span><span class="n">rmdir</span><span class="p">()</span></div>
 </pre></div>
 
            </div>

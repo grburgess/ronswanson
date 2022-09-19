@@ -17,6 +17,7 @@ Submodules
 
    ronswanson.band_simulation
    ronswanson.database
+   ronswanson.grids
    ronswanson.script_generator
    ronswanson.simulation
    ronswanson.simulation_builder

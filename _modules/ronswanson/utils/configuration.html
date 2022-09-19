@@ -121,7 +121,10 @@
 <div class="viewcode-block" id="SLURM"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.SLURM">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SLURM</span><span class="p">:</span>
     <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;user@email.com&quot;</span>
-    <span class="n">modules</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">modules</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">mpi_modules</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">python</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;python&quot;</span>
+    <span class="n">store_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="RonSwansonConfig"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.RonSwansonConfig">[docs]</a><span class="nd">@dataclass</span>
@@ -177,7 +180,7 @@
     <span class="k">return</span></div>
 
 
-<div class="viewcode-block" id="show_configuration"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.show_configuration">[docs]</a><span class="k">def</span> <span class="nf">show_configuration</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="show_configuration"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.show_configuration">[docs]</a><span class="k">def</span> <span class="nf">show_configuration</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tree</span><span class="p">:</span>
 
     <span class="n">tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span>
         <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">guide_style</span><span class="o">=</span><span class="s2">&quot;bold medium_orchid&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold medium_orchid&quot;</span>

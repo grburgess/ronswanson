@@ -92,46 +92,17 @@
            <div itemprop="articleBody">
              
   <h1>Source code for ronswanson.script_generator</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">ghost_writer</span> <span class="kn">import</span> <span class="n">ScriptGenerator</span>
+
+<span class="kn">from</span> <span class="nn">ronswanson.utils.logging</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">ronswanson_config</span>
 
-
-<div class="viewcode-block" id="ScriptGenerator"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.ScriptGenerator">[docs]</a><span class="k">class</span> <span class="nc">ScriptGenerator</span><span class="p">:</span>
-<div class="viewcode-block" id="ScriptGenerator.__init__"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.ScriptGenerator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">file_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_build_script</span><span class="p">()</span></div>
-
-    <span class="k">def</span> <span class="nf">_build_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">pass</span>
-
-    <span class="k">def</span> <span class="nf">_add_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">indent_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">indent_level</span><span class="p">):</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span>
-
-        <span class="c1"># add the line</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="o">+=</span> <span class="n">line</span>
-
-        <span class="c1"># close the line</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">_end_line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-<div class="viewcode-block" id="ScriptGenerator.write"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.ScriptGenerator.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
-        <span class="n">out_file</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span>
-
-        <span class="k">with</span> <span class="n">out_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span></div></div>
+<span class="n">log</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PythonGenerator"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.PythonGenerator">[docs]</a><span class="k">class</span> <span class="nc">PythonGenerator</span><span class="p">(</span><span class="n">ScriptGenerator</span><span class="p">):</span>
@@ -145,6 +116,8 @@
         <span class="n">n_procs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">n_nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">linear_exceution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">has_complete_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">current_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
@@ -177,6 +150,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">database_file</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">base_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">linear_exceution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">has_complete_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">current_size</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span></div>
 
@@ -184,14 +159,26 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_import_line</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from joblib import Parallel, delayed&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;import json&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;import numpy as np&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from tqdm.auto import tqdm&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson import ParameterGrid&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson.utils.logging import setup_logger&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson.simulation import gather&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;import sys&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;key_num = int(sys.argv[-1])&quot;</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;log = setup_logger(__name__)&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;with open(&#39;completed_parameters.json&#39;, &#39;r&#39;) as f:&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;complete_params = json.load(f)&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;pg = ParameterGrid.from_yaml(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_file</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
@@ -199,8 +186,21 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;def func(i):&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;params = pg.at_index(i)&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;for p in complete_params:&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                <span class="s2">&quot;if np.alltrue(np.array(p) == params):&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                <span class="s2">&quot;log.debug(&#39;parameters already exists in file!&#39;)&quot;</span><span class="p">,</span>
+                <span class="n">indent_level</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;return&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;simulation = Simulation(i, params, pg.energy_grid.grid,&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="si">}</span><span class="s2">&#39;)&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;simulation = Simulation(i, params, pg.energy_grid,&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="si">}</span><span class="s2">&#39;)&quot;</span><span class="p">,</span>
             <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;simulation.run()&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -212,10 +212,12 @@
         <span class="k">else</span><span class="p">:</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;with open(f&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="si">}</span><span class="s2">/key_file</span><span class="se">{{</span><span class="s2">key_num</span><span class="se">}}</span><span class="s2">.txt&#39;) as f:&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;with open(f&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="si">}</span><span class="s2">/key_file.json&#39;,&#39;r&#39;) as f:&quot;</span>
             <span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;iteration = f.readlines()&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;keys = json.load(f)[str(key_num)]&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;iteration = [int(x) for x in keys]&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="k">pass</span>
 
@@ -225,6 +227,10 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;for i in tqdm(iteration):&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;func(i)&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;gather(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="si">}</span><span class="s2">&#39;, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="si">}</span><span class="s2">, clean=True)&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
 
@@ -239,12 +245,221 @@
             <span class="k">else</span><span class="p">:</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in tqdm(iteration))&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in tqdm(iteration, colour=&#39;#FC0A5A&#39;))&quot;</span>
+                <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;gather(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="si">}</span><span class="s2">&#39;, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="si">}</span><span class="s2">, clean=True)&quot;</span>
                 <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PythonGatherGenerator"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.PythonGatherGenerator">[docs]</a><span class="k">class</span> <span class="nc">PythonGatherGenerator</span><span class="p">(</span><span class="n">ScriptGenerator</span><span class="p">):</span>
+<div class="viewcode-block" id="PythonGatherGenerator.__init__"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.PythonGatherGenerator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">database_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">current_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_outputs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">database_file_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">current_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">n_outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">clean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parmeters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_meta_parameters</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;import json&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;from mpi4py import MPI&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;from ronswanson.utils.configuration import ronswanson_config&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;import h5py&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;import sys&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;from pathlib import Path&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;rank = MPI.COMM_WORLD.rank&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;with open(&quot;gather_file.json&quot;, &quot;r&quot;) as f:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;sim_ids = [int(x) for x in json.load(f)[str(rank)]]&#39;</span><span class="p">,</span>
+            <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;p = Path(&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file_name</span><span class="si">}</span><span class="s1">&quot;).absolute()&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;database = h5py.File(str(p), &quot;a&quot;, driver=&quot;mpio&quot;, comm=MPI.COMM_WORLD)&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;if ronswanson_config.slurm.store_dir is None:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;parent_dir = p.absolute().parent&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;else:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;parent_dir = Path(ronswanson_config.slurm.store_dir).absolute()&#39;</span><span class="p">,</span>
+            <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;multi_file_dir: Path = parent_dir / Path(f&quot;</span><span class="si">{p.stem}</span><span class="s1">_store&quot;)&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;current_size = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;db_params = database[&quot;parameters&quot;]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;db_run_time = database[&quot;run_time&quot;]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;vals = database[&quot;values&quot;]&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parmeters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;meta = database[&#39;meta&#39;]&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parmeters</span><span class="p">):</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1"> = meta[&quot;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&quot;]&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">):</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1"> = vals[&quot;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&quot;]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;for sim_id in sim_ids:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;this_file: Path = multi_file_dir / f&quot;sim_store_</span><span class="si">{sim_id}</span><span class="s1">.h5&quot;&#39;</span><span class="p">,</span>
+            <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;index = int(current_size + sim_id)&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;with h5py.File(this_file, &quot;r&quot;) as f:&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;db_params[index, :] = f[&quot;parameters&quot;][()]&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="s1">&#39;db_run_time[index] = f.attrs[&quot;run_time&quot;]&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">):</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">[index, :] = f[&quot;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&quot;][()]&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parmeters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parmeters</span><span class="p">):</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">[index] = f.attrs[&quot;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&quot;]&#39;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">2</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;this_file.unlink()&quot;</span><span class="p">,</span> <span class="n">indent_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;f.close()&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SLURMGenerator"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.SLURMGenerator">[docs]</a><span class="k">class</span> <span class="nc">SLURMGenerator</span><span class="p">(</span><span class="n">ScriptGenerator</span><span class="p">):</span>
 <div class="viewcode-block" id="SLURMGenerator.__init__"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.SLURMGenerator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">n_procs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_procs_to_use</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_nodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">hrs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sec</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">node_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">n_procs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_procs_to_use</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">n_procs_to_use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">n_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">node_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hrs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">hrs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sec</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">sec</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#!/bin/bash&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_start</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;#SBATCH --array=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_node_start</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> #generate array&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -o ./output/%A_</span><span class="si">%a</span><span class="s2">.out      #output file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -e ./output/%A_</span><span class="si">%a</span><span class="s2">.err      #error file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -D ./                      #working directory&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -J grid_mp                 #job name&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -N 1               &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH --ntasks-per-node=1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#SBATCH --cpus-per-task=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs_to_use</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;#SBATCH --time=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hrs</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sec</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH --mail-type=ALL &quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;#SBATCH --mail-user=</span><span class="si">{</span><span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">user_email</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;module purge&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">modules</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;module load </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#add HDF5 library path to ld path&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;srun </span><span class="si">{</span><span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">python</span><span class="si">}</span><span class="s2"> run_simulation.py $</span><span class="se">{{</span><span class="s2">SLURM_ARRAY_TASK_ID</span><span class="se">}}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SLURMGatherGenerator"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.SLURMGatherGenerator">[docs]</a><span class="k">class</span> <span class="nc">SLURMGatherGenerator</span><span class="p">(</span><span class="n">ScriptGenerator</span><span class="p">):</span>
+<div class="viewcode-block" id="SLURMGatherGenerator.__init__"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.script_generator.SLURMGatherGenerator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">n_procs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -267,40 +482,35 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#!/bin/bash&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#SBATCH --array=0-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="si">}</span><span class="s2"> #generate array&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -o ./output/%A_</span><span class="si">%a</span><span class="s2">.out      #output file&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -e ./output/%A_</span><span class="si">%a</span><span class="s2">.err      #error file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -o ./output/%A.out      #output file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -e ./output/%A.err      #error file&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -D ./                      #working directory&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -J grid_mp                 #job name&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -N 1               &quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH --ntasks-per-node=1&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#SBATCH --cpus-per-task=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#SBATCH --time=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_hrs</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_sec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH -J gather_out                 #job name&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#SBATCH -N </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="si">}</span><span class="s2">               &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#SBATCH --ntasks-per-node=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;#SBATCH --time=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hrs</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sec</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#SBATCH --mail-type=ALL &quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;#SBATCH --mail-user=</span><span class="si">{</span><span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">user_email</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">modules</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;module purge&quot;</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">mpi_modules</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">mpi_modules</span><span class="p">:</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;module load </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
 
-        <span class="c1"># self._add_line(&quot;module load gcc/11&quot;)</span>
-        <span class="c1"># self._add_line(&quot;module load openmpi/4&quot;)</span>
-        <span class="c1"># self._add_line(&quot;module load hdf5-serial/1.10.6&quot;)</span>
-        <span class="c1"># self._add_line(&quot;module load anaconda/3/2021.05&quot;)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;#add HDF5 library path to ld path&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;export LD_LIBRARY_PATH=$HDF5_HOME/lib:$LD_LIBRARY_PATH&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-            <span class="s2">&quot;srun /u/eschoe/conda-envs/py_env/bin/python3 run_sim_mp_rav.py $</span><span class="si">{SLURM_ARRAY_TASK_ID}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;srun </span><span class="si">{</span><span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">python</span><span class="si">}</span><span class="s2"> gather_results.py&quot;</span>
         <span class="p">)</span></div>
 </pre></div>
 

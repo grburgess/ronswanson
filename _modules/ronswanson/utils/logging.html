@@ -160,8 +160,10 @@
     <span class="c1"># this must be set to allow debug messages through</span>
     <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 
-    <span class="c1"># add the handlers</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">ronswanson_console_log_handler</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">on</span><span class="p">:</span>
+
+        <span class="c1"># add the handlers</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">ronswanson_console_log_handler</span><span class="p">)</span>
 
     <span class="c1"># we do not want to duplicate teh messages in the parents</span>
     <span class="n">log</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>

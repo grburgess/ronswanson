@@ -12,6 +12,14 @@ ronswanson.utils.configuration module
    :undoc-members:
    :show-inheritance:
 
+ronswanson.utils.file\_open module
+----------------------------------
+
+.. automodule:: ronswanson.utils.file_open
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 ronswanson.utils.hdf5\_utils module
 -----------------------------------
 

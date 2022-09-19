@@ -53,9 +53,14 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Intro</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Example-with-a-Band-function">Example with a Band function</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#The-Simulation-class">The Simulation class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#The-Simulation-Builder">The Simulation Builder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#SLURM-and-advanced-options">SLURM and advanced options</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#The-Database">The Database</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#User-configuration">User configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api/API.html">API</a></li>
@@ -415,40 +420,72 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <p>As can be seen, we can specify the parameter/energy grids ourselves, or we can specify their ranges and let it be done for us.</p>
+<p>It is possible that a simulation outputs more than one type of array (photons, electrons, neutrinos, etc.). In this case, each output may have its own energy grid. These can be specified as <code class="docutils literal notranslate"><span class="pre">energy_grid_0</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_grid_1</span></code>…<code class="docutils literal notranslate"><span class="pre">energy_grid_n</span></code>. More on how to grab the output from these below.</p>
 <section id="The-Simulation-class">
 <h3>The Simulation class<a class="headerlink" href="#The-Simulation-class" title="Permalink to this heading"></a></h3>
-<p>Now we need to make a class for the simulation. We will inherit from the simulation class and specify a <code class="docutils literal notranslate"><span class="pre">_run_call</span></code> function that tells the program how to run the simulation for a given set of parameters. This function <strong>must</strong> return an array of photon fluxes for the given energies.</p>
+<p>Now we need to make a class for the simulation. We will inherit from the simulation class and specify a <code class="docutils literal notranslate"><span class="pre">_run_call</span></code> function that tells the program how to run the simulation for a given set of parameters. This function <strong>must</strong> return a dictionary of arrays of photon / particle fluxes for the given energies. The keys of the dictionary should be <code class="docutils literal notranslate"><span class="pre">output_0</span></code>, <code class="docutils literal notranslate"><span class="pre">output_1</span></code>…<code class="docutils literal notranslate"><span class="pre">output_n</span></code> for each type of output corresponding to the energy grids above.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astromodels</span> <span class="kn">import</span> <span class="n">Band</span>
+<span class="kn">import</span> <span class="nn">ronswanson</span> <span class="k">as</span> <span class="nn">dukesilver</span>
+
+
+<span class="k">class</span> <span class="nc">BandSimulation</span><span class="p">(</span><span class="n">dukesilver</span><span class="o">.</span><span class="n">Simulation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">simulation_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">parameter_set</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">energy_grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">out_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">simulation_id</span><span class="p">,</span> <span class="n">parameter_set</span><span class="p">,</span> <span class="n">energy_grid</span><span class="p">,</span> <span class="n">out_file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">Band</span><span class="p">(</span>
+            <span class="n">K</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">],</span>
+            <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">],</span>
+            <span class="n">xp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_set</span><span class="p">[</span><span class="s2">&quot;epeak&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">output_0</span><span class="o">=</span><span class="n">b</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_grid</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="The-Simulation-Builder">
+<h3>The Simulation Builder<a class="headerlink" href="#The-Simulation-Builder" title="Permalink to this heading"></a></h3>
+<p>Now we need to tell the simulation builder a few things so it can construct our files for us. We have stored this YAML file in the repo itself. You should use your own!</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">SimulationBuilder</span></code> class takes a parameter grid, the name of the file that will be created, the import line for the custom simulation class, the number of cores and nodes to execute on.</p>
+<p>We configure this with a YAML file.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># the import line to get our simulation</span><span class="w"></span>
+<span class="c1"># we ALWAYS import as Simulation</span><span class="w"></span>
+<span class="nt">import_line</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;from</span><span class="nv"> </span><span class="s">ronswanson.band_simulation</span><span class="nv"> </span><span class="s">import</span><span class="nv"> </span><span class="s">BandSimulation</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="s">Simulation&quot;</span><span class="w"></span>
+
+<span class="c1"># the parameter grid</span><span class="w"></span>
+<span class="nt">parameter_grid</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test_params.yml&quot;</span><span class="w"></span>
+
+<span class="c1"># name of our database</span><span class="w"></span>
+<span class="nt">out_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">database.h5</span><span class="w"></span>
+
+<span class="c1"># clean out the simulation directory after</span><span class="w"></span>
+<span class="c1"># the run. It is defaulted to yes</span><span class="w"></span>
+<span class="nt">clean</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span><span class="w"></span>
+
+<span class="nt">simulation</span><span class="p">:</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># number of multi-process jobs</span><span class="w"></span>
+<span class="w">  </span><span class="nt">n_mp_jobs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span><span class="w"></span>
+</pre></div>
+</div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from typing import Dict
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ronswanson
 
-import numpy as np
-from astromodels import Band
-import ronswanson as dukesilver
-
-
-class BandSimulation(dukesilver.Simulation):
-    def __init__(
-        self,
-        simulation_id: int,
-        parameter_set: Dict[str, float],
-        energy_grid: np.ndarray,
-        out_file: str,
-    ) -&gt; None:
-        super().__init__(simulation_id, parameter_set, energy_grid, out_file)
-
-    def _run_call(self) -&gt; np.ndarray:
-
-        b = Band(
-            K=1,
-            alpha=self._parameter_set[&quot;alpha&quot;],
-            beta=self._parameter_set[&quot;beta&quot;],
-            xp=self._parameter_set[&quot;epeak&quot;],
-        )
-
-        return b(self._energy_grid)
+sb = ronswanson.SimulationBuilder.from_yaml(&quot;sim_build.yml&quot;)
 </pre></div>
 </div>
 </div>
@@ -456,7 +493,7 @@ class BandSimulation(dukesilver.Simulation):
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">16:34:55 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The naima package is not available. Models that depend on it will not be         </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">functions.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py#50" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">50</span></a>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">06:26:52 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The naima package is not available. Models that depend on it will not be         </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/functions_1D/functions.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">functions.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/functions_1D/functions.py#48" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">48</span></a>
 <span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">available                                                                         </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">               </span>
 </pre></div>
 </div>
@@ -464,43 +501,59 @@ class BandSimulation(dukesilver.Simulation):
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The GSL library or the pygsl wrapper cannot be loaded. Models that depend on it  </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">functions.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/functions.py#71" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">71</span></a>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The GSL library or the pygsl wrapper cannot be loaded. Models that depend on it  </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/functions_1D/functions.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">functions.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/functions_1D/functions.py#69" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">69</span></a>
 <span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">will not be available.                                                            </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">               </span>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">06:26:53 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The ebltable package is not available. Models that depend on it will not be     </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/functions_1D/absorption.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">absorption.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/functions_1D/absorption.py#36" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">36</span></a>
+<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">available                                                                        </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                </span>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> We have set the min_value of K to </span><span style="color: #c0c0c0; text-decoration-color: #c0c0c0; font-weight: bold">1e-99</span><span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> because there was a postive transform   </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">parameter.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py#704" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">704</span></a>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> We have set the min_value of K to </span><span style="color: #c0c0c0; text-decoration-color: #c0c0c0; font-weight: bold">1e-99</span><span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> because there was a postive transform   </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">parameter.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py#704" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">704</span></a>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> We have set the min_value of K to </span><span style="color: #c0c0c0; text-decoration-color: #c0c0c0; font-weight: bold">1e-99</span><span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> because there was a postive transform   </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">parameter.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py#704" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">704</span></a>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> We have set the min_value of K to </span><span style="color: #c0c0c0; text-decoration-color: #c0c0c0; font-weight: bold">1e-99</span><span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> because there was a postive transform   </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">parameter.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py#704" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">704</span></a>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> We have set the min_value of F to </span><span style="color: #c0c0c0; text-decoration-color: #c0c0c0; font-weight: bold">1e-99</span><span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> because there was a postive transform   </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">parameter.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py#704" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">704</span></a>
 </pre></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> The ebltable package is not available. Models that depend on it will not be     </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/absorption.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">absorption.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/functions_1D/absorption.py#36" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">36</span></a>
-<span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">available                                                                        </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                </span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> We have set the min_value of K to </span><span style="color: #c0c0c0; text-decoration-color: #c0c0c0; font-weight: bold">1e-99</span><span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> because there was a postive transform   </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">parameter.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/core/parameter.py#704" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">704</span></a>
 </pre></div>
-</div>
-<p>Now we need to tell the simulation builder a few things so it can construct our files for us. We have stored this YAML file in the repo itself. You should use your own!</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">SimulationBuilder</span></code> class takes a parameter grid, the name of the file that will be created, the import line for the custom simulation class, the number of cores and nodes to execute on.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from ronswanson.utils.package_data import get_path_of_data_file
-
-
-file_name = get_path_of_data_file(&quot;test_params.yml&quot;)
-
-
-# create a parameter grid from our file
-pg = dukesilver.ParameterGrid.from_yaml(file_name)
-
-# create a simulation builder
-sb = dukesilver.SimulationBuilder(
-    pg,
-    &quot;database.h5&quot;,
-    &quot;from ronswanson.band_simulation import BandSimulation as Simulation&quot;,
-    n_cores=8,
-    use_nodes=None,
-)
-</pre></div>
-</div>
 </div>
 <p>Now a python file will be written to the disk which you can run to create your simulation runs. we can have a look at the file.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>from ronswanson.band_simulation import BandSimulation as Simulation
@@ -518,13 +571,73 @@ iteration = [i for i in range(0, pg.n_points)]
 Parallel(n_jobs=8)(delayed(func)(i) for i in iteration)
 </pre></div>
 </div>
-<p>Now this simply uses <code class="docutils literal notranslate"><span class="pre">joblib</span></code> to farm out the iterations over the parameter combinations. If iterations are to also be divided across HPC nodes, the python script will be modified and an associated <code class="docutils literal notranslate"><span class="pre">SLURM</span></code> script will be generated.</p>
+<!-- #region --><p>Now this simply uses <code class="docutils literal notranslate"><span class="pre">joblib</span></code> to farm out the iterations over the parameter combinations. If iterations are to also be divided across HPC nodes, the python script will be modified and an associated <code class="docutils literal notranslate"><span class="pre">SLURM</span></code> script will be generated.</p>
+<section id="SLURM-and-advanced-options">
+<h4>SLURM and advanced options<a class="headerlink" href="#SLURM-and-advanced-options" title="Permalink to this heading"></a></h4>
+<p>Configuring for SLURM and SBATCH systems is similar, but there are a few more options. <code class="docutils literal notranslate"><span class="pre">ronswanson</span></code> will set up bash scripts that will submit jobs to complete the simulations and then gather them into a database.</p>
+<p>Here is an example script:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># the import line to get our simulation</span><span class="w"></span>
+<span class="c1"># we ALWAYS import as Simulation</span><span class="w"></span>
+<span class="nt">import_line</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;from</span><span class="nv"> </span><span class="s">ronswanson.band_simulation</span><span class="nv"> </span><span class="s">import</span><span class="nv"> </span><span class="s">BandSimulation</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="s">Simulation&quot;</span><span class="w"></span>
+
+<span class="c1"># the parameter grid</span><span class="w"></span>
+<span class="nt">parameter_grid</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test_params.yml&quot;</span><span class="w"></span>
+
+<span class="c1"># name of our database</span><span class="w"></span>
+<span class="nt">out_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">database.h5</span><span class="w"></span>
+
+<span class="nt">simulation</span><span class="p">:</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># number of multi-process jobs PER node</span><span class="w"></span>
+<span class="w">  </span><span class="nt">n_mp_jobs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># number of cpus to request per node (leave room for threads)</span><span class="w"></span>
+<span class="w">  </span><span class="nt">n_cores_per_node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">72</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># number of runs per node</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># here, the 9 mp jobs will take turns with these 500 runs</span><span class="w"></span>
+<span class="w">  </span><span class="nt">run_per_node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># the switch to say we are performing SLURM job</span><span class="w"></span>
+<span class="w">  </span><span class="nt">use_nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># optional maximum number of nodes to request</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># if more than this are required, multiple</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># submission scripts are generated</span><span class="w"></span>
+<span class="w">  </span><span class="nt">max_nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># the max run time for each job in the array</span><span class="w"></span>
+<span class="w">  </span><span class="nt">time</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hrs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
+<span class="w">    </span><span class="nt">sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+
+<span class="nt">gather</span><span class="p">:</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># after the simulations run</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># you submit and MPI job that collects the simualtions</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># number of simulations to collect per MPI rank</span><span class="w"></span>
+<span class="w">  </span><span class="nt">n_gather_per_core</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># number of cpus per node</span><span class="w"></span>
+<span class="w">  </span><span class="nt">n_cores_per_node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">70</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># maximum job time</span><span class="w"></span>
+<span class="w">  </span><span class="nt">time</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">hrs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">    </span><span class="nt">sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Additional configuration of SLURM jobs can be handle with the <code class="docutils literal notranslate"><span class="pre">ronswanson</span></code> configuration.</p>
+</section>
 </section>
 <section id="The-Database">
 <h3>The Database<a class="headerlink" href="#The-Database" title="Permalink to this heading"></a></h3>
 <p>Upon running the script, an HDF5 database of the runs is created which contains all the information needed to build a table model in <code class="docutils literal notranslate"><span class="pre">3ML</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from ronswanson.utils.package_data import get_path_of_data_file
@@ -533,7 +646,7 @@ from ronswanson import Database
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>db = Database.from_file(get_path_of_data_file(&quot;test_database.h5&quot;))
@@ -542,26 +655,22 @@ db.parameter_ranges
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-OrderedDict([(&#39;alpha&#39;,
-              array([-1.        , -0.77777778, -0.55555556, -0.33333333, -0.11111111,
-                      0.11111111,  0.33333333,  0.55555556,  0.77777778,  1.        ])),
+OrderedDict([(&#39;alpha&#39;, array([-1. , -0.5,  0. ,  0.5,  1. ], dtype=float32)),
              (&#39;beta&#39;,
-              array([-3.        , -2.88888889, -2.77777778, -2.66666667, -2.55555556,
-                     -2.44444444, -2.33333333, -2.22222222, -2.11111111, -2.        ])),
+              array([-3.  , -2.75, -2.5 , -2.25, -2.  ], dtype=float32)),
              (&#39;epeak&#39;,
-              array([  50.        ,   69.7475397 ,   97.29438588,  135.72088083,
-                      189.32395047,  264.09759503,  368.40314986,  513.9042664 ,
-                      716.87116444, 1000.        ]))])
+              array([  50.   ,   69.74 ,   97.29 ,  135.72 ,  189.32 ,  264.097,
+                      368.4  ,  513.9  ,  716.87 , 1000.   ], dtype=float32))])
 </pre></div></div>
 </div>
 <p>Now we can use the database to construct and save a table model for <code class="docutils literal notranslate"><span class="pre">3ML</span></code></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>table_model = db.to_3ml(&quot;my_model&quot;, &quot;a new model for 3ML&quot;)
@@ -573,12 +682,18 @@ table_model
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">16:34:56 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> Energy unit is not a Quantity instance, so units has not been provided.    </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">template_model.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py#109" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">109</span></a>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">         </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> Energy unit is not a Quantity instance, so units has not been provided.    </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/template_model.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">template_model.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/template_model.py#106" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">106</span></a>
 <span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">Using keV.                                                                  </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                     </span>
 </pre></div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "81767c799b3349d6bb17ba77c7684284", "version_major": 2, "version_minor": 0}</script></div>
+</div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -686,7 +801,7 @@ table_model
 <li>epeak:
 <ul>
 
-<li>value: 226.71077275</li>
+<li>value: 226.70849609375</li>
 
 <li>desc: None</li>
 
@@ -698,7 +813,7 @@ table_model
 
 <li>is_normalization: False</li>
 
-<li>delta: 22.671077275000002</li>
+<li>delta: 22.670849609375</li>
 
 <li>free: True</li>
 
@@ -713,7 +828,7 @@ table_model
 </ul></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import matplotlib.pyplot as plt
@@ -725,10 +840,12 @@ from astromodels import Band
 </div>
 <p>We can compare our table model with the Band function.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ene = np.geomspace(10, 1000, 100)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+
+ene = np.geomspace(10, 1000, 100)
 
 b = Band()
 b.alpha = -0.6
@@ -755,12 +872,12 @@ ax.legend()
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x7fbbf4d9dcd0&gt;
+&lt;matplotlib.legend.Legend at 0x7fa550673550&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -775,7 +892,7 @@ ax.legend()
 <p>Suppose we did not want to use all the values in the parameter ranges we have simulated. Bigger interpolation tables take up memory when fitting.</p>
 <p>We can select a subset of the parameter ranges when building the table</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>selection = {}
@@ -793,12 +910,18 @@ table_model_small
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">16:35:01 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> Energy unit is not a Quantity instance, so units has not been provided.    </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">template_model.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels-2.3.5-py3.8.egg/astromodels/functions/template_model.py#109" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">109</span></a>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">06:26:57 </span><span style="color: #af5fd7; text-decoration-color: #af5fd7">WARNING </span> <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold"> Energy unit is not a Quantity instance, so units has not been provided.    </span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/template_model.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">template_model.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///opt/hostedtoolcache/Python/3.8.13/x64/lib/python3.8/site-packages/astromodels/functions/template_model.py#106" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">106</span></a>
 <span style="color: #00ff00; text-decoration-color: #00ff00">         </span>         <span style="color: #c6c6c6; text-decoration-color: #c6c6c6; font-weight: bold">Using keV.                                                                  </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                     </span>
 </pre></div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a34d35e3b9a84dfd8e541cb7044ddc15", "version_major": 2, "version_minor": 0}</script></div>
+</div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -860,19 +983,19 @@ table_model_small
 <li>alpha:
 <ul>
 
-<li>value: -0.5555555555555556</li>
+<li>value: -0.5</li>
 
 <li>desc: None</li>
 
 <li>min_value: -1.0</li>
 
-<li>max_value: -0.11111111111111116</li>
+<li>max_value: 0.0</li>
 
 <li>unit: </li>
 
 <li>is_normalization: False</li>
 
-<li>delta: 0.05555555555555556</li>
+<li>delta: 0.05</li>
 
 <li>free: True</li>
 
@@ -906,19 +1029,19 @@ table_model_small
 <li>epeak:
 <ul>
 
-<li>value: 368.40314986</li>
+<li>value: 368.3999938964844</li>
 
 <li>desc: None</li>
 
-<li>min_value: 264.09759503</li>
+<li>min_value: 264.09698486328125</li>
 
-<li>max_value: 513.9042664</li>
+<li>max_value: 513.9000244140625</li>
 
 <li>unit: </li>
 
 <li>is_normalization: False</li>
 
-<li>delta: 36.840314986</li>
+<li>delta: 36.83999938964844</li>
 
 <li>free: True</li>
 
@@ -934,6 +1057,119 @@ table_model_small
 </div>
 <p>Awesome! Now go enjoy your weekend.</p>
 <img alt="alt text" src="https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/enjoy.jpg" />
+</section>
+</section>
+<section id="User-configuration">
+<h2>User configuration<a class="headerlink" href="#User-configuration" title="Permalink to this heading"></a></h2>
+<p>A simple YAML configuration is stored in <code class="docutils literal notranslate"><span class="pre">~/.config/ronswanson/ronswanson_config.yml</span></code>. It allows for configuring the log as well as putting default SLURM configuration parameters.</p>
+<p>An example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">logging</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="s">&#39;on&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">on</span><span class="w"></span>
+<span class="w">  </span><span class="nt">level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span><span class="w"></span>
+<span class="nt">slurm</span><span class="p">:</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># where to send SLURM emails</span><span class="w"></span>
+<span class="w">  </span><span class="nt">user_email</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_email.com</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># modules to be loaded for MPI jobs (gather script)</span><span class="w"></span>
+<span class="w">  </span><span class="nt">mpi_modules</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;intel/21.4.0&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;impi/2021.4&#39;</span><span class="p p-Indicator">,</span><span class="w"></span>
+<span class="w">  </span><span class="s">&#39;anaconda/3/2021.11&#39;</span><span class="p p-Indicator">,</span><span class="s">&#39;hdf5-mpi/1.12.2&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;mpi4py/3.0.3&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;h5py-mpi/2.10&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># modules to load for simulation jobs</span><span class="w"></span>
+<span class="w">  </span><span class="nt">modules</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;intel/21.4.0&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;impi/2021.4&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;anaconda/3/2021.11&#39;</span><span class="p p-Indicator">,</span><span class="s">&#39;hdf5-serial/1.12.2&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># the python binary for running the simulation jobs</span><span class="w"></span>
+<span class="w">  </span><span class="nt">python</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;python3&quot;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># where to store the simulations before</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># database creation (default will be the directory where the code is run)</span><span class="w"></span>
+<span class="w">  </span><span class="nt">store_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/ptmp/jburgess</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The configuration can be modified on the fly.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from ronswanson import ronswanson_config, show_configuration
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>show_configuration()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #af5fd7; text-decoration-color: #af5fd7; font-weight: bold">config</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┣━━ </span><span style="color: #af5fd7; text-decoration-color: #af5fd7; font-weight: bold">logging</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┃   ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">on: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">True</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┃   ┗━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">level: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">WARNING</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┗━━ </span><span style="color: #af5fd7; text-decoration-color: #af5fd7; font-weight: bold">slurm</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">user_email: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">user@email.com</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">modules: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">None</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">mpi_modules: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">None</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">python: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">python</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┗━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">store_dir: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">None</span>
+</pre></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ronswanson_config.slurm.user_email
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;user@email.com&#39;
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ronswanson_config.slurm.user_email = &quot;workemail@email.com&quot;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>show_configuration()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #af5fd7; text-decoration-color: #af5fd7; font-weight: bold">config</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┣━━ </span><span style="color: #af5fd7; text-decoration-color: #af5fd7; font-weight: bold">logging</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┃   ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">on: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">True</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┃   ┗━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">level: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">WARNING</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">┗━━ </span><span style="color: #af5fd7; text-decoration-color: #af5fd7; font-weight: bold">slurm</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">user_email: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">workemail@email.com</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">modules: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">None</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">mpi_modules: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">None</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┣━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">python: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">python</span>
+<span style="color: #af5fd7; text-decoration-color: #af5fd7">    ┗━━ </span><span style="color: #00ffaf; text-decoration-color: #00ffaf; font-weight: bold">store_dir: </span><span style="color: #5f87ff; text-decoration-color: #5f87ff; font-weight: bold">None</span>
+</pre></div>
+</div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -942,8 +1178,9 @@ table_model_small
 </pre></div>
 </div>
 </div>
-</section>
-</section>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"0b166591163e45cbaf9de48a56ab4c75": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "25bb4a0c30ce4e33b0a92363ca7b0bf3": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "2d4f6ca35920466ca2efb81add5625a3": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_f2a89c649e29486db220d5cbb5708dbb", "max": 45.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_0b166591163e45cbaf9de48a56ab4c75", "tabbable": null, "tooltip": null, "value": 45.0}}, "30aa4c04333a458581aa78f472f09c62": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "32c65519c7f04c679a9084e54653c155": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_69daa8005d3349e7a3df11530c1caf60", "placeholder": "\u200b", "style": "IPY_MODEL_ed4fed626c6041808a224b530641a761", "tabbable": null, "tooltip": null, "value": "100%"}}, "33e6c823b1384cedbe6f93f84f35e552": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5a754172ba5a483c8e8d6fac111b1e08": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "69daa8005d3349e7a3df11530c1caf60": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "731f3dc4ee034e78a32f3fe9b085e07b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "734cd0dfa0bc4afb8233c1848299a577": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "81767c799b3349d6bb17ba77c7684284": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_838504415c3740acabb06859687e25ae", "IPY_MODEL_d0c1cf1f037046adb320198900c27226", "IPY_MODEL_873dda91c68a45bbbb6f2946e25e0817"], "layout": "IPY_MODEL_8d27874eff174b8aae569ae0e3ebdd42", "tabbable": null, "tooltip": null}}, "838504415c3740acabb06859687e25ae": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_88294d5107a543b8bfcff726550ce689", "placeholder": "\u200b", "style": "IPY_MODEL_5a754172ba5a483c8e8d6fac111b1e08", "tabbable": null, "tooltip": null, "value": "100%"}}, "873dda91c68a45bbbb6f2946e25e0817": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_aeaaff6385914036b4b17cc5578d1dcb", "placeholder": "\u200b", "style": "IPY_MODEL_734cd0dfa0bc4afb8233c1848299a577", "tabbable": null, "tooltip": null, "value": " 250/250 [00:00&lt;00:00, 2436.46it/s]"}}, "88294d5107a543b8bfcff726550ce689": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "8d27874eff174b8aae569ae0e3ebdd42": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "a34d35e3b9a84dfd8e541cb7044ddc15": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_32c65519c7f04c679a9084e54653c155", "IPY_MODEL_2d4f6ca35920466ca2efb81add5625a3", "IPY_MODEL_e21902aee6e04a4c9efd1ce5a7b152c7"], "layout": "IPY_MODEL_ac2b28644f794ee18a89f823286970b6", "tabbable": null, "tooltip": null}}, "ac2b28644f794ee18a89f823286970b6": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "aeaaff6385914036b4b17cc5578d1dcb": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "d0c1cf1f037046adb320198900c27226": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_30aa4c04333a458581aa78f472f09c62", "max": 250.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_731f3dc4ee034e78a32f3fe9b085e07b", "tabbable": null, "tooltip": null, "value": 250.0}}, "e21902aee6e04a4c9efd1ce5a7b152c7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_33e6c823b1384cedbe6f93f84f35e552", "placeholder": "\u200b", "style": "IPY_MODEL_25bb4a0c30ce4e33b0a92363ca7b0bf3", "tabbable": null, "tooltip": null, "value": " 45/45 [00:00&lt;00:00, 1193.15it/s]"}}, "ed4fed626c6041808a224b530641a761": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "f2a89c649e29486db220d5cbb5708dbb": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}}, "version_major": 2, "version_minor": 0}
+</script></section>
 </section>
 
 

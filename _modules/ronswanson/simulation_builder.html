@@ -92,351 +92,85 @@
            <div itemprop="articleBody">
              
   <h1>Source code for ronswanson.simulation_builder</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">OmegaConf</span><span class="p">,</span> <span class="n">MISSING</span>
 
-<span class="kn">from</span> <span class="nn">.script_generator</span> <span class="kn">import</span> <span class="n">PythonGenerator</span><span class="p">,</span> <span class="n">SLURMGenerator</span>
-<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
-
-<span class="c1"># from .utils.hdf5_utils import recursively_save_dict_contents_to_group</span>
+<span class="kn">from</span> <span class="nn">.grids</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
+<span class="kn">from</span> <span class="nn">.script_generator</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PythonGatherGenerator</span><span class="p">,</span>
+    <span class="n">PythonGenerator</span><span class="p">,</span>
+    <span class="n">SLURMGatherGenerator</span><span class="p">,</span>
+    <span class="n">SLURMGenerator</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.utils.logging</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="EnergyGrid"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.EnergyGrid">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">EnergyGrid</span><span class="p">:</span>
+<div class="viewcode-block" id="SLURMTime"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SLURMTime">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SLURMTime</span><span class="p">:</span>
+    <span class="n">hrs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">sec</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
 
-    <span class="n">vmin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">vmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">scale</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">n_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">custom</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="JobConfig"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.JobConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">JobConfig</span><span class="p">:</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">SLURMTime</span>
+    <span class="n">n_cores_per_node</span><span class="p">:</span> <span class="nb">int</span></div>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">:</span>
 
-            <span class="c1"># we will build a grid</span>
+<div class="viewcode-block" id="GatherConfig"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.GatherConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">GatherConfig</span><span class="p">(</span><span class="n">JobConfig</span><span class="p">):</span>
+    <span class="n">n_gather_per_core</span><span class="p">:</span> <span class="nb">int</span></div>
 
-            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
 
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;non-custom grids must include vmin and vmax&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="SimulationConfig"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SimulationConfig</span><span class="p">(</span><span class="n">JobConfig</span><span class="p">):</span>
+    <span class="n">n_mp_jobs</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">run_per_node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">use_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">max_nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="c1">## structure for file</span>
 
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="s2">&quot;non-custom grids must include scale &#39;log&#39; or &#39;linear&#39;&quot;</span>
-                <span class="p">)</span>
 
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
+<div class="viewcode-block" id="JobConfigStructure"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.JobConfigStructure">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">JobConfigStructure</span><span class="p">:</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SLURMTime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">n_cores_per_node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-            <span class="k">else</span><span class="p">:</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">]:</span>
+<div class="viewcode-block" id="GatherConfigStructure"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.GatherConfigStructure">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">GatherConfigStructure</span><span class="p">(</span><span class="n">JobConfigStructure</span><span class="p">):</span>
+    <span class="n">n_gather_per_core</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MISSING</span></div>
 
-                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                        <span class="s2">&quot;non-custom grids must include scale &#39;log&#39; or &#39;linear&#39;&quot;</span>
-                    <span class="p">)</span>
 
-                    <span class="k">raise</span> <span class="ne">AssertionError</span>
+<div class="viewcode-block" id="SimulationConfigStructure"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationConfigStructure">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SimulationConfigStructure</span><span class="p">(</span><span class="n">JobConfigStructure</span><span class="p">):</span>
+    <span class="n">n_mp_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MISSING</span>
+    <span class="n">run_per_node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">use_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">max_nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;non-custom grids must include n_points&quot;</span><span class="p">)</span>
-
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;custom grids must include values&quot;</span><span class="p">)</span>
-
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">:</span>
-
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
-
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span><span class="p">)</span>
-
-<div class="viewcode-block" id="EnergyGrid.from_dict"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.EnergyGrid.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Parameter&quot;</span><span class="p">:</span>
-
-        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]:</span>
-
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">])</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;vmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;vmin&quot;</span><span class="p">]</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;vmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;vmax&quot;</span><span class="p">]</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;n_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;n_points&quot;</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="EnergyGrid.to_dict"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.EnergyGrid.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-
-        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">custom</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">:</span>
-
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;vmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span>
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;vmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span>
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;n_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span>
-
-        <span class="k">return</span> <span class="n">out</span></div></div>
-
-
-<div class="viewcode-block" id="Parameter"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Parameter">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">Parameter</span><span class="p">:</span>
-
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">vmin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">vmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">scale</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">n_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">custom</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="c1">#   grid: np.ndarray = field(init=False)</span>
-
-    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">:</span>
-
-            <span class="c1"># we will build a grid</span>
-
-            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;non-custom grids must include vmin and vmax&quot;</span><span class="p">)</span>
-
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="s2">&quot;non-custom grids must include scale &#39;log&#39; or &#39;linear&#39;&quot;</span>
-                <span class="p">)</span>
-
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-            <span class="k">else</span><span class="p">:</span>
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">]:</span>
-
-                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                        <span class="s2">&quot;non-custom grids must include scale &#39;log&#39; or &#39;linear&#39;&quot;</span>
-                    <span class="p">)</span>
-
-                    <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;non-custom grids must include n_points&quot;</span><span class="p">)</span>
-
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;custom grids must include values&quot;</span><span class="p">)</span>
-
-                <span class="k">raise</span> <span class="ne">AssertionError</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">:</span>
-
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
-
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Parameter.from_dict"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Parameter.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Parameter&quot;</span><span class="p">:</span>
-
-        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;custom&quot;</span><span class="p">]:</span>
-
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">])</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;vmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;vmin&quot;</span><span class="p">]</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;vmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;vmax&quot;</span><span class="p">]</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span>
-            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;n_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;n_points&quot;</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Parameter.to_dict"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Parameter.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-
-        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">custom</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">:</span>
-
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;vmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span>
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;vmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span>
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
-            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;n_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_points</span>
-
-        <span class="k">return</span> <span class="n">out</span></div></div>
-
-
-<div class="viewcode-block" id="ParameterGrid"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">ParameterGrid</span><span class="p">:</span>
-
-    <span class="n">parameter_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]</span>
-    <span class="n">energy_grid</span><span class="p">:</span> <span class="n">EnergyGrid</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-
-        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">:</span>
-
-            <span class="n">n</span> <span class="o">*=</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">n</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ParameterGrid.from_dict"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="s2">&quot;ParameterGrid&quot;</span><span class="p">:</span>
-
-        <span class="c1"># make sure to sort so that we always have the same parameter</span>
-        <span class="c1"># ordering</span>
-
-        <span class="n">energy_grid</span> <span class="o">=</span> <span class="n">EnergyGrid</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;energy_grid&quot;</span><span class="p">))</span>
-
-        <span class="n">pars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-        <span class="n">pars</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-
-        <span class="n">par_list</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">Parameter</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="n">par_name</span><span class="p">])</span> <span class="k">for</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="n">pars</span>
-        <span class="p">]</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">par_list</span><span class="p">,</span> <span class="n">energy_grid</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="ParameterGrid.from_yaml"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid.from_yaml">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ParameterGrid&quot;</span><span class="p">:</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span></div>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">parameter_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-
-        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">]</span>
-
-<div class="viewcode-block" id="ParameterGrid.to_dict"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-
-        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">:</span>
-
-            <span class="n">out</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-
-        <span class="n">out</span><span class="p">[</span><span class="s1">&#39;energy_grid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_grid</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">out</span></div>
-
-<div class="viewcode-block" id="ParameterGrid.write"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-
-            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-                <span class="n">stream</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
-                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-                <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">Dumper</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="p">,</span>
-            <span class="p">)</span></div>
-
-    <span class="c1"># def to_hdf5_group(self, f: h5py.File) -&gt; None:</span>
-
-    <span class="c1">#     recursively_save_dict_contents_to_group(</span>
-    <span class="c1">#         f, &quot;parameter_grid&quot;, self.to_dict()</span>
-    <span class="c1">#     )</span>
-
-<div class="viewcode-block" id="ParameterGrid.at_index"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid.at_index">[docs]</a>    <span class="k">def</span> <span class="nf">at_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        return the ith set of parameters</span>
-
-<span class="sd">        :param i:</span>
-<span class="sd">        :type i: int</span>
-<span class="sd">        :returns:</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
-
-        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">grid</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">]):</span>
-
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">idx</span><span class="p">:</span>
-
-                <span class="n">d</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-
-                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-
-                    <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-
-                <span class="k">return</span> <span class="n">d</span>
-
-            <span class="k">else</span><span class="p">:</span>
-
-                <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span></div></div>
+<div class="viewcode-block" id="YAMLStructure"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.YAMLStructure">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">YAMLStructure</span><span class="p">:</span>
+    <span class="n">import_line</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">MISSING</span>
+    <span class="n">parameter_grid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">MISSING</span>
+    <span class="n">out_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">MISSING</span>
+    <span class="n">simulation</span><span class="p">:</span> <span class="n">SimulationConfigStructure</span> <span class="o">=</span> <span class="n">SimulationConfigStructure</span><span class="p">()</span>
+    <span class="n">gather</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfigStructure</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="SimulationBuilder"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationBuilder">[docs]</a><span class="k">class</span> <span class="nc">SimulationBuilder</span><span class="p">:</span>
@@ -451,31 +185,25 @@
         <span class="n">parameter_grid</span><span class="p">:</span> <span class="n">ParameterGrid</span><span class="p">,</span>
         <span class="n">out_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">import_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">n_cores</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">use_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">hrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="nb">min</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">sec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">simulation_config</span><span class="p">:</span> <span class="n">SimulationConfig</span><span class="p">,</span>
+        <span class="n">gather_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_import_line</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">import_line</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_n_cores</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">n_cores</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="p">:</span> <span class="n">SimulationConfig</span> <span class="o">=</span> <span class="n">simulation_config</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_use_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">use_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">gather_config</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">out_file</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_file</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">linear_execution</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">hrs</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">sec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_meta_parameters</span>
 
         <span class="c1"># write out the parameter file</span>
 
@@ -483,13 +211,25 @@
 
         <span class="n">parameter_grid</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_file</span><span class="p">))</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameter_grid</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">clean</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">parameter_grid</span><span class="o">.</span><span class="n">n_points</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_database</span><span class="p">()</span>
 
         <span class="c1"># if we are using nodes</span>
         <span class="c1"># we need to see how many</span>
         <span class="c1"># we need</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_nodes</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;there are [bold bright_red]</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="si">}</span><span class="s2"> iterations [/bold bright_red]&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">use_nodes</span><span class="p">:</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_chunks</span><span class="p">()</span>
 
@@ -497,40 +237,368 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_generate_python_script</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">use_nodes</span><span class="p">:</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_slurm_script</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_slurm_script</span><span class="p">()</span>
+
+            <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="s2">&quot;output&quot;</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+
+                <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;created the output directory&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationBuilder.from_yaml"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationBuilder.from_yaml">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SimulationBuilder&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a simulation setup from a yaml file. The file</span>
+<span class="sd">        structure should follow:</span>
+
+<span class="sd">        ----</span>
+
+<span class="sd">        import_line: &quot;from my_pkg import MySimulation as Simulation&quot;</span>
+<span class="sd">        parameter_grid: my_grid.yml</span>
+<span class="sd">        out_file: my_database.h5</span>
+
+<span class="sd">        simulation:</span>
+<span class="sd">          n_mp_jobs: 9</span>
+<span class="sd">          n_cores_per_node: 72</span>
+<span class="sd">          use_nodes: yes</span>
+
+<span class="sd">          time:</span>
+<span class="sd">            hrs: 1</span>
+<span class="sd">            min: 15</span>
+<span class="sd">            sec: 0</span>
+
+<span class="sd">        # if running on a cluster</span>
+
+<span class="sd">        gather:</span>
+<span class="sd">          n_gather_per_core: 2</span>
+<span class="sd">          n_cores_per_node: 50</span>
+
+<span class="sd">          time:</span>
+<span class="sd">            hrs: 0</span>
+<span class="sd">            min: 10</span>
+<span class="sd">            sec: 0</span>
+
+<span class="sd">        ----</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check the file structure</span>
+
+        <span class="n">structure</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">structured</span><span class="p">(</span><span class="n">YAMLStructure</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">test_structure</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+            <span class="n">merged</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">test_structure</span><span class="p">)</span>
+
+            <span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_container</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">throw_on_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;reading setup inputs:&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">parameter_grid</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;parameter_grid&quot;</span><span class="p">))</span>
+
+        <span class="n">simulation_input</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;simulation&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;time&quot;</span> <span class="ow">in</span> <span class="n">simulation_input</span><span class="p">:</span>
+
+            <span class="n">sim_time</span> <span class="o">=</span> <span class="n">SLURMTime</span><span class="p">(</span><span class="o">**</span><span class="n">simulation_input</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">sim_time</span> <span class="o">=</span> <span class="n">SLURMTime</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">&quot;n_cores_per_node&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">simulation_input</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="s2">&quot;use_nodes&quot;</span> <span class="ow">in</span> <span class="n">simulation_input</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">simulation_input</span><span class="p">[</span><span class="s2">&quot;use_nodes&quot;</span><span class="p">]:</span>
+
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;you are using nodes but did not specify the number of n_cores_per_node&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;the number of cores will be set to the number of multi-process jobs&quot;</span>
+                    <span class="p">)</span>
+
+            <span class="n">simulation_input</span><span class="p">[</span><span class="s2">&quot;n_cores_per_node&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">simulation_input</span><span class="p">[</span><span class="s2">&quot;n_mp_jobs&quot;</span><span class="p">]</span>
+
+        <span class="n">simulation_config</span> <span class="o">=</span> <span class="n">SimulationConfig</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">sim_time</span><span class="p">,</span> <span class="o">**</span><span class="n">simulation_input</span><span class="p">)</span>
+
+        <span class="n">gather_config</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="s2">&quot;gather&quot;</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+
+            <span class="n">gather_inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;gather&quot;</span><span class="p">)</span>
+
+            <span class="n">gather_time</span> <span class="o">=</span> <span class="n">SLURMTime</span><span class="p">(</span><span class="o">**</span><span class="n">gather_inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">))</span>
+
+            <span class="n">gather_config</span> <span class="o">=</span> <span class="n">GatherConfig</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">gather_time</span><span class="p">,</span> <span class="o">**</span><span class="n">gather_inputs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">parameter_grid</span><span class="o">=</span><span class="n">parameter_grid</span><span class="p">,</span>
+            <span class="n">simulation_config</span><span class="o">=</span><span class="n">simulation_config</span><span class="p">,</span>
+            <span class="n">gather_config</span><span class="o">=</span><span class="n">gather_config</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">inputs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_initialize_database</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">pg</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_file</span><span class="p">)</span>
+
+                <span class="c1"># store the parameter names</span>
+
+                <span class="n">p_name_group</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;parameter_names&quot;</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">):</span>
+
+                    <span class="n">p_name_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;par</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+
+                <span class="c1"># store the energy grids</span>
+
+                <span class="n">ene_grp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;energy_grid&quot;</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">grid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">):</span>
+
+                    <span class="n">ene_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;energy_grid_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">data</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                        <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># create an empty group for the parameters</span>
+
+                <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                    <span class="s2">&quot;parameters&quot;</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="c1">#    compression=&quot;gzip&quot;,</span>
+                <span class="p">)</span>
+
+                <span class="n">val_grp</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;values&quot;</span><span class="p">)</span>
+
+                <span class="c1"># create an empty data set for the values</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">)):</span>
+
+                    <span class="n">val_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,)</span> <span class="o">+</span> <span class="n">pg</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                        <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">+</span> <span class="n">pg</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                        <span class="c1"># compression=&quot;gzip&quot;,</span>
+                    <span class="p">)</span>
+
+                <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                    <span class="s2">&quot;run_time&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,),</span> <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                    <span class="n">meta_grp</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span>
+
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;detected meta parameters&quot;</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">):</span>
+
+                        <span class="n">meta_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,),</span> <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+                        <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="c1"># we need to resize the dataset</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;There was already a database: [red]</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="si">}</span><span class="s2">[/red]&quot;</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_completed</span><span class="p">()</span>
+
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">pg</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_file</span><span class="p">)</span>
+
+                <span class="n">dataset</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The existing data base had </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="si">}</span><span class="s2"> entries&quot;</span>
+                <span class="p">)</span>
+
+                <span class="n">dataset</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span> <span class="o">+</span> <span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,)</span>
+                    <span class="o">+</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="p">)</span>
+
+                <span class="n">val_grp</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">)):</span>
+
+                    <span class="n">dataset</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">=</span> <span class="n">val_grp</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;output_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span>
+                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span> <span class="o">+</span> <span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,)</span>
+                        <span class="o">+</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="p">)</span>
+
+                <span class="n">dataset</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;run_time&quot;</span><span class="p">]</span>
+
+                <span class="n">dataset</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span> <span class="o">+</span> <span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,))</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;detected meta parameters&quot;</span><span class="p">)</span>
+
+                    <span class="n">meta_grp</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span>
+
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">):</span>
+
+                        <span class="n">dataset</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">=</span> <span class="n">meta_grp</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;meta_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+                        <span class="n">dataset</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span> <span class="o">+</span> <span class="n">pg</span><span class="o">.</span><span class="n">n_points</span><span class="p">,)</span>
+                        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">energy_grid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">params</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][()]</span>
+
+            <span class="n">out_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="s2">&quot;completed_parameters.json&quot;</span>
+
+            <span class="k">with</span> <span class="n">out_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">f</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_compute_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_cores</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">run_per_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_nodes</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Each node will only execute the number of mp jobs&quot;</span><span class="p">)</span>
+
+            <span class="n">runs_per_node</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="n">generator</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span><span class="p">)</span>
+
+            <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">runs_per_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">run_per_node</span>
+
+            <span class="n">generator</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">runs_per_node</span><span class="p">)</span>
+
+            <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">/</span> <span class="n">runs_per_node</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">use_nodes</span><span class="p">:</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">)</span>
 
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;we will be using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;we will be using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="si">}</span><span class="s2"> nodes for the simulation&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># now generate the key files</span>
         <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">key_out</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">):</span>
+
             <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_cores</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">generator</span><span class="p">:</span>
 
-                <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">:</span>
 
-                    <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                    <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;key_file</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">key_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
 
-                <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="s2">&quot;key_file.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">key_out</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
-            <span class="n">k</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_cores</span>
+        <span class="c1"># now collect the gather information</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">use_nodes</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span>
+                    <span class="o">/</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span>
+                        <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_gather_per_core</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">rank_list</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the gather task will use: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;total_ranks: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;number iterations: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span>
+            <span class="p">):</span>
+
+                <span class="n">core_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_gather_per_core</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">:</span>
+
+                        <span class="n">core_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+                        <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="n">rank_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">core_list</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="s2">&quot;gather_file.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">rank_list</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_generate_python_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
@@ -540,25 +608,129 @@
             <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_file</span><span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_import_line</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_n_cores</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_linear_execution</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">linear_execution</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">py_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_generate_slurm_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
-        <span class="n">slurm_gen</span><span class="p">:</span> <span class="n">SLURMGenerator</span> <span class="o">=</span> <span class="n">SLURMGenerator</span><span class="p">(</span>
-            <span class="s2">&quot;run_simulation.sh&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_n_cores</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_hrs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sec</span><span class="p">,</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;[bold green blink]generated:[/bold green blink] run_simulation.py&quot;</span>
         <span class="p">)</span>
 
-        <span class="n">slurm_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="nf">_generate_slurm_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">multi_script</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">max_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">max_nodes</span><span class="p">:</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;The number of reuested nodes is too large.&quot;</span><span class="p">)</span>
+
+                <span class="n">multi_script</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="n">n_files</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">max_nodes</span><span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="n">start</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">current_number</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_files</span><span class="p">):</span>
+
+                    <span class="n">start</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_number</span><span class="p">)</span>
+
+                    <span class="n">next_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">max_nodes</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">next_number</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">:</span>
+
+                        <span class="n">stop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_number</span><span class="p">)</span>
+
+                        <span class="n">current_number</span> <span class="o">=</span> <span class="n">next_number</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+
+                        <span class="n">stop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">)</span>
+
+                        <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">multi_script</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)):</span>
+
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;run_simulation_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.sh&quot;</span>
+
+                <span class="n">slurm_gen</span><span class="p">:</span> <span class="n">SLURMGenerator</span> <span class="o">=</span> <span class="n">SLURMGenerator</span><span class="p">(</span>
+                    <span class="n">file_name</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="p">,</span>
+                    <span class="n">b</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hrs</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">sec</span><span class="p">,</span>
+                    <span class="n">node_start</span><span class="o">=</span><span class="n">a</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">slurm_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;[bold green blink]generated:[/bold green blink] </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">slurm_gen</span><span class="p">:</span> <span class="n">SLURMGenerator</span> <span class="o">=</span> <span class="n">SLURMGenerator</span><span class="p">(</span>
+                <span class="s2">&quot;run_simulation.sh&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hrs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">sec</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">slurm_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;[bold green blink]generated:[/bold green blink] run_simulations.sh&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">slurm_gen</span><span class="p">:</span> <span class="n">SLURMGatherGenerator</span> <span class="o">=</span> <span class="n">SLURMGatherGenerator</span><span class="p">(</span>
+            <span class="s2">&quot;gather_results.sh&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hrs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">sec</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">slurm_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;[bold green blink]generated:[/bold green blink] gather_results.sh&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">python_gather_gen</span><span class="p">:</span> <span class="n">PythonGatherGenerator</span> <span class="o">=</span> <span class="n">PythonGatherGenerator</span><span class="p">(</span>
+            <span class="s2">&quot;gather_results.py&quot;</span><span class="p">,</span>
+            <span class="n">database_file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span>
+            <span class="n">current_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">,</span>
+            <span class="n">n_outputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">,</span>
+            <span class="n">clean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">,</span>
+            <span class="n">num_meta_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">python_gather_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;[bold green blink]generated:[/bold green blink] gather_results.py&quot;</span>
+        <span class="p">)</span></div>
 </pre></div>
 
            </div>
