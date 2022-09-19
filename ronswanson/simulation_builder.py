@@ -6,6 +6,7 @@ from typing import Optional
 import h5py
 import numpy as np
 import yaml
+from omegaconf import OmegaConf, MISSING
 
 from .grids import ParameterGrid
 from .script_generator import (
@@ -19,7 +20,7 @@ from .utils.logging import setup_logger
 log = setup_logger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass
 class SLURMTime:
     hrs: int = 0
     min: int = 10
@@ -44,6 +45,38 @@ class SimulationConfig(JobConfig):
     use_nodes: bool = False
     max_nodes: Optional[int] = None
     linear_execution: bool = False
+
+
+## structure for file
+
+
+@dataclass
+class JobConfigStructure:
+    time: Optional[SLURMTime] = None
+    n_cores_per_node: Optional[int] = None
+
+
+@dataclass
+class GatherConfigStructure(JobConfigStructure):
+    n_gather_per_core: int = MISSING
+
+
+@dataclass
+class SimulationConfigStructure(JobConfigStructure):
+    n_mp_jobs: int = MISSING
+    run_per_node: Optional[int] = None
+    use_nodes: bool = False
+    max_nodes: Optional[int] = None
+    linear_execution: bool = False
+
+
+@dataclass
+class YAMLStructure:
+    import_line: str = MISSING
+    parameter_grid: str = MISSING
+    out_file: str = MISSING
+    simulation: SimulationConfigStructure = SimulationConfigStructure()
+    gather: Optional[GatherConfigStructure] = None
 
 
 class SimulationBuilder:
@@ -163,6 +196,25 @@ class SimulationBuilder:
 
 
         """
+
+        # check the file structure
+
+        structure = OmegaConf.structured(YAMLStructure)
+
+        try:
+
+            test_structure = OmegaConf.load(file_name)
+
+            merged =OmegaConf.merge(structure, test_structure)
+
+            OmegaConf.to_container(merged, throw_on_missing=True)
+
+
+        except Exception as e:
+
+            log.error(e)
+
+            raise e
 
         with Path(file_name).open("r") as f:
 

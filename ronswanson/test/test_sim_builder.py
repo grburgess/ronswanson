@@ -11,8 +11,27 @@ from ronswanson.grids import Parameter, ParameterGrid
 from ronswanson.simulation_builder import SimulationBuilder
 from ronswanson.utils.logging import update_logging_level
 from ronswanson.utils.package_data import get_path_of_data_file
+from omegaconf.errors import MissingMandatoryValue
+
 
 update_logging_level("DEBUG")
+
+
+def test_bad_sim_build():
+
+    file_name = get_path_of_data_file("bad_sim_build.yaml")
+
+    with pytest.raises(MissingMandatoryValue):
+
+        SimulationBuilder.from_yaml(file_name=str(file_name))
+
+    file_name = get_path_of_data_file("bad_slurm_build.yaml")
+
+    with pytest.raises(MissingMandatoryValue):
+
+        SimulationBuilder.from_yaml(file_name=str(file_name))
+
+
 
 
 def test_script_gen_nodes(node_script):

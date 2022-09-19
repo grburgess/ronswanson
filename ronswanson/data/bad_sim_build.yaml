@@ -1,0 +1,15 @@
+# the import line to get our simulation
+# we ALWAYS import as Simulation
+import_line: "from ronswanson.band_simulation import BandSimulation as Simulation"
+
+# the parameter grid
+parameter_grid: "test_params.yml"
+
+# name of our database
+out_file: database.h5
+
+simulation:
+
+  
+  # number of cpus to request per node (leave room for threads)
+  n_cores_per_node: 72
