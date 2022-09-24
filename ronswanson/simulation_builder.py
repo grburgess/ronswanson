@@ -75,6 +75,7 @@ class YAMLStructure:
     import_line: str = MISSING
     parameter_grid: str = MISSING
     out_file: str = MISSING
+    clean: bool = True
     simulation: SimulationConfigStructure = SimulationConfigStructure()
     gather: Optional[GatherConfigStructure] = None
 
