@@ -66,6 +66,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
+    "sphinx_rtd_dark_mode"
     #    'rtds_action'
 ]
 
@@ -74,6 +75,8 @@ napoleon_google_docstring = True
 napoleon_use_param = True
 napoleon_include_private_with_doc = True
 napoleon_include_init_with_doc = True
+default_dark_mode = True
+
 
 autodoc_default_options = {
     "members": "var1, var2",
@@ -84,25 +87,6 @@ autodoc_default_options = {
 }
 
 
-# # The name of your GitHub repository
-# rtds_action_github_repo = "grburgess/ronswanson"
-
-# # The path where the artifact should be extracted
-# # Note: this is relative to the conf.py file!
-# rtds_action_path = "notebooks"
-
-# # The "prefix" used in the `upload-artifact` step of the action
-# rtds_action_artifact_prefix = "notebooks-for-"
-
-# # A GitHub personal access token is required, more info below
-# rtds_action_github_token = os.environ["GITHUB_TOKEN"]
-
-
-# rtds_action_error_if_missing = True
-
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -118,22 +102,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = 'sphinx_rtd_dark_mode'
 
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-
-html_static_path = ["_static"]
-
-# These paths are either relative to html_static_path
-# or fully qualified paths (eg. https://...)
-# html_css_files = [
-#     'css/custom.css',
-# ]
-
-# html_js_files = [
-#     'css/custom.js',
-# ]
 
 html_show_sourcelink = False
 html_favicon = "media/favicon.ico"
@@ -154,18 +124,6 @@ nbsphinx_execute_arguments = [
 ]
 
 
-from pygments.formatters import HtmlFormatter  # noqa: E402
-from pygments.styles import get_all_styles  # noqa: E402
-
-path = os.path.join("_static", "pygments")
-if not os.path.isdir(path):
-    os.mkdir(path)
-for style in get_all_styles():
-    path = os.path.join("_static", "pygments", style + ".css")
-    if os.path.isfile(path):
-        continue
-    with open(path, "w") as f:
-        f.write(HtmlFormatter(style=style).get_style_defs(".highlight"))
 
 html_theme_options = {
     "logo_only": False,
