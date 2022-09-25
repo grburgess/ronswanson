@@ -6,8 +6,6 @@ Subpackages
 
 .. toctree::
 
-    ronswanson.data
-    ronswanson.io
     ronswanson.utils
 
 Submodules

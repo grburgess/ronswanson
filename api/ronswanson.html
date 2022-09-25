@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
@@ -8,6 +7,8 @@
   <title>ronswanson package &mdash; ronswanson  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -19,15 +20,13 @@
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="ronswanson.utils package" href="ronswanson.utils.html" />
-    <link rel="prev" title="API" href="API.html" />
-  <link rel="stylesheet" href="../_static/pygments/default.css" type="text/css" id="pygments-style">
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css">
-   
-
+    <link rel="prev" title="API" href="API.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,7 +49,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/ronswanson.html">Intro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="API.html">API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="API.html#astromodels">astromodels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API.html#ronswanson">ronswanson</a></li>
 </ul>
 
         </div>
@@ -64,34 +63,17 @@
 
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-<div role="navigation" aria-label="Page navigation">
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-  <!--
-  <div class="admonition note">
-    <p><a href="https://github.com/lukelbd">ProPlot author here</a>: Due to my day job as a graduate student, certain <a href="https://github.com/lukelbd/proplot/pulls?q=is%3Aopen+is%3Apr">feature additions</a> may be delayed to the summer of 2020. In the meantime, if you are interested in contributing to ProPlot, please see the <a href="https://proplot.readthedocs.io/en/latest/contributions.html">contribution guide</a>. Any amount of help is welcome!
-    </p>
-  </div>
-  -->
-  <li id="lightdark-li">
-    <label for="lightdark-checkbox" id="lightdark-label">
-      <input type="checkbox" id="lightdark-checkbox"/>
-      <div class="btn-neutral"></div>
-    </label>
-  </li>
-  
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="API.html">API</a> &raquo;</li>
       <li>ronswanson package</li>
-
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-  <script type="text/javascript" src=../_static/custom.js></script>
-  
            <div itemprop="articleBody">
              
   
@@ -266,40 +248,29 @@ needed for building the table model database</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ronswanson.SimulationBuilder.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.grids.ParameterGrid" title="ronswanson.grids.ParameterGrid"><span class="pre">ParameterGrid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">import_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.simulation_builder.SimulationConfig" title="ronswanson.simulation_builder.SimulationConfig"><span class="pre">SimulationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gather_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.simulation_builder.GatherConfig" title="ronswanson.simulation_builder.GatherConfig"><span class="pre">GatherConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_meta_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/simulation_builder.html#SimulationBuilder.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.SimulationBuilder.__init__" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>TODO describe function</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_grid</strong> (<a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.ParameterGrid" title="ronswanson.ParameterGrid"><em>ParameterGrid</em></a>) – </p></li>
+<li><p><strong>out_file</strong> (<em>str</em>) – </p></li>
+<li><p><strong>import_line</strong> (<em>str</em>) – </p></li>
+<li><p><strong>simulation_config</strong> (<a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.simulation_builder.SimulationConfig" title="ronswanson.simulation_builder.SimulationConfig"><em>SimulationConfig</em></a>) – </p></li>
+<li><p><strong>gather_config</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.simulation_builder.GatherConfig" title="ronswanson.simulation_builder.GatherConfig"><em>GatherConfig</em></a><em>]</em>) – </p></li>
+<li><p><strong>num_meta_parameters</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>clean</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ronswanson.SimulationBuilder.from_yaml">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.simulation_builder.SimulationBuilder" title="ronswanson.simulation_builder.SimulationBuilder"><span class="pre">SimulationBuilder</span></a></span></span><a class="reference internal" href="../_modules/ronswanson/simulation_builder.html#SimulationBuilder.from_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.SimulationBuilder.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Create a simulation setup from a yaml file. The file
-structure should follow:</p>
-<p>import_line: “from my_pkg import MySimulation as Simulation”
-parameter_grid: my_grid.yml
-out_file: my_database.h5</p>
-<dl>
-<dt>simulation:</dt><dd><p>n_mp_jobs: 9
-n_cores_per_node: 72
-use_nodes: yes</p>
-<dl class="simple">
-<dt>time:</dt><dd><p>hrs: 1
-min: 15
-sec: 0</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p># if running on a cluster</p>
-<dl>
-<dt>gather:</dt><dd><p>n_gather_per_core: 2
-n_cores_per_node: 50</p>
-<dl class="simple">
-<dt>time:</dt><dd><p>hrs: 0
-min: 10
-sec: 0</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dd><p>Create a simulation setup from a yaml file.</p>
 </dd></dl>
 
 </dd></dl>
@@ -417,7 +388,6 @@ dictionaries:</p>
 
            </div>
           </div>
-
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="API.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="ronswanson.utils.html" class="btn btn-neutral float-right" title="ronswanson.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>

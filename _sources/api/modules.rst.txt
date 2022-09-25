@@ -1,5 +1,5 @@
-astromodels
-===========
+ronswanson
+==========
 
 .. toctree::
    :maxdepth: 4

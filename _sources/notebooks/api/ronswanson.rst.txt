@@ -7,8 +7,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   ronswanson.data
-   ronswanson.io
    ronswanson.utils
 
 Submodules
