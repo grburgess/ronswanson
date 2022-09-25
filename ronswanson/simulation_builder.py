@@ -98,6 +98,25 @@ class SimulationBuilder:
         clean: bool = True,
     ):
 
+        """TODO describe function
+
+        :param parameter_grid:
+        :type parameter_grid: ParameterGrid
+        :param out_file:
+        :type out_file: str
+        :param import_line:
+        :type import_line: str
+        :param simulation_config:
+        :type simulation_config: SimulationConfig
+        :param gather_config:
+        :type gather_config: Optional[GatherConfig]
+        :param num_meta_parameters:
+        :type num_meta_parameters: Optional[int]
+        :param clean:
+        :type clean: bool
+        :returns:
+
+        """
         self._has_complete_params: bool = False
 
         self._import_line: str = import_line
@@ -163,38 +182,7 @@ class SimulationBuilder:
     @classmethod
     def from_yaml(cls, file_name: str) -> "SimulationBuilder":
         """
-        Create a simulation setup from a yaml file. The file
-        structure should follow:
-
-        ----
-
-        import_line: "from my_pkg import MySimulation as Simulation"
-        parameter_grid: my_grid.yml
-        out_file: my_database.h5
-
-        simulation:
-          n_mp_jobs: 9
-          n_cores_per_node: 72
-          use_nodes: yes
-
-          time:
-            hrs: 1
-            min: 15
-            sec: 0
-
-        # if running on a cluster
-
-        gather:
-          n_gather_per_core: 2
-          n_cores_per_node: 50
-
-          time:
-            hrs: 0
-            min: 10
-            sec: 0
-
-        ----
-
+        Create a simulation setup from a yaml file.
 
         """
 
