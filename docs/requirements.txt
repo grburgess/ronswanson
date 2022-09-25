@@ -1,3 +1,4 @@
+ipython
 better_apidoc
 recommonmark
 mock
