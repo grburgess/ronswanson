@@ -87,7 +87,6 @@ autodoc_default_options = {
 }
 
 
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
@@ -122,7 +121,6 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.figure_formats={'svg', 'pdf'}",
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
-
 
 
 html_theme_options = {
@@ -191,5 +189,5 @@ texinfo_documents = [
 ]
 
 
-def setup(app):
-    app.connect("builder-inited", run_apidoc)
+# def setup(app):
+#     app.connect("builder-inited", run_apidoc)

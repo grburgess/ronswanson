@@ -85,8 +85,7 @@ jobs:
           pip3 install mock recommonmark
           pip3 install sphinx-rtd-dark-mode
           pip3 install -U sphinx nbsphinx sphinx-gallery
-          
-          
+
           sphinx-apidoc -f -o docs/api/ ronswanson ronswanson/data
 
 

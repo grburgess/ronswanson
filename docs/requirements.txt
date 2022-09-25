@@ -1,4 +1,3 @@
-rtds_action
 better_apidoc
 sphinx_rtd_theme
 sphinx-gallery
