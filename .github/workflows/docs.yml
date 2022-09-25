@@ -149,6 +149,8 @@ jobs:
         uses: sphinx-notes/pages@master
         with:
           documentation_path: docs
+          sphinx_version: 5.1.1
+          requirements_path: docs/requirements.txt
         
       - name: Push changes
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
