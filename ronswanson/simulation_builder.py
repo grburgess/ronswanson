@@ -81,6 +81,7 @@ class YAMLStructure:
     gather: Optional[GatherConfigStructure] = None
     num_meta_parameters: Optional[int] = None
 
+
 class SimulationBuilder:
     """
     The simulation builder class constructs the scripts
