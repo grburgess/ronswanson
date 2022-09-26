@@ -45,6 +45,7 @@ class SimulationConfig(JobConfig):
     use_nodes: bool = False
     max_nodes: Optional[int] = None
     linear_execution: bool = False
+    num_meta_parameters: Optional[int] = None
 
 
 ## structure for file
@@ -78,7 +79,7 @@ class YAMLStructure:
     clean: bool = True
     simulation: SimulationConfigStructure = SimulationConfigStructure()
     gather: Optional[GatherConfigStructure] = None
-
+    num_meta_parameters: Optional[int] = None
 
 class SimulationBuilder:
     """
