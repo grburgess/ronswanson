@@ -207,6 +207,8 @@ class PythonGatherGenerator(ScriptGenerator):
         self._add_line(
             'database = h5py.File(str(p), "a", driver="mpio", comm=MPI.COMM_WORLD)'
         )
+
+        self._add_line('database.attrs["has_been_touched"] = True')
         self._end_line()
         self._end_line()
         self._end_line()

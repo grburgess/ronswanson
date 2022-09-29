@@ -94,8 +94,8 @@ class EnergyGrid:
 
         else:
 
-            inputs["vmin"] = d["vmin"]
-            inputs["vmax"] = d["vmax"]
+            inputs["vmin"] = float(d["vmin"])
+            inputs["vmax"] = float(d["vmax"])
             inputs["scale"] = d["scale"]
             inputs["n_points"] = d["n_points"]
 

@@ -1,4 +1,5 @@
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -6,7 +7,7 @@ from typing import Optional
 import h5py
 import numpy as np
 import yaml
-from omegaconf import OmegaConf, MISSING
+from omegaconf import MISSING, OmegaConf
 
 from .grids import ParameterGrid
 from .script_generator import (
@@ -268,6 +269,8 @@ class SimulationBuilder:
 
             with h5py.File(self._out_file, "w") as f:
 
+                f.attrs["has_been_touched"] = False
+
                 pg = ParameterGrid.from_yaml(self._parameter_file)
 
                 # store the parameter names
@@ -335,6 +338,23 @@ class SimulationBuilder:
             log.warning(
                 f"There was already a database: [red]{self._out_file}[/red]"
             )
+
+            with h5py.File(self._out_file, "r") as f:
+
+                has_been_touched = f.attrs["has_been_touched"]
+
+            if not has_been_touched:
+
+                log.warning("the database has not been gathered")
+                log.warning("erasing and starting over")
+
+                Path(self._out_file).unlink()
+
+                time.sleep(2)
+
+                self._initialize_database()
+
+
 
             self._check_completed()
 

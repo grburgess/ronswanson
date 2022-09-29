@@ -129,6 +129,8 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
     with h5py.File(file_name, "a") as database_file:
 
+        database_file.attrs['has_been_touched'] = True
+
         for store in files:
 
             log.debug(f"reading: {store}")
