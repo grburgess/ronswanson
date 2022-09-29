@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 import h5py
 import numpy as np
+import plotly.graph_objects as go
 from astromodels import TemplateModel, TemplateModelFactory
 from astromodels.utils.logging import silence_console_log
 from tqdm.auto import tqdm
@@ -86,7 +87,7 @@ class Database:
         return self._parameter_ranges
 
     @property
-    def paramerter_names(self) -> List[str]:
+    def parameter_names(self) -> List[str]:
         return self._parameter_names
 
     @property
@@ -372,6 +373,89 @@ class Database:
                 )
 
                 new_parameter_grid.write("missing_parameter_grid.yml")
+
+    def _parallel_coord_plot(
+        self,
+        parameter: np.ndarray,
+        colorscale: str = "viridis",
+        as_log: bool = False,
+    ) -> None:
+
+        dims = [
+            dict(label=p, values=v)
+            for p, v in zip(self._parameter_names, self._grid_points.T)
+        ]
+
+        if as_log:
+
+            parameter = np.log10(parameter)
+
+        fig = go.Figure(
+            data=go.Parcoords(
+                line=dict(
+                    color=parameter,
+                    colorscale=colorscale,
+                    showscale=True,
+                    cmin=parameter.min(),
+                    cmax=parameter.max(),
+                ),
+                dimensions=dims,
+                unselected=dict(line=dict(color='white', opacity=0.01)),
+            )
+        )
+
+        fig.show()
+
+    def plot_runtime(self, colorscale: str = "plasma"):
+
+        """
+        show a parallel plot of the run time
+
+        :param colorscale:
+        :type colorscale:
+        :returns:
+
+        """
+        self._parallel_coord_plot(
+            self._run_time, colorscale=colorscale, as_log=True
+        )
+
+    def plot_meta_data(
+        self,
+        meta_number: int = 0,
+        colorscale: str = "plasma",
+        as_log: bool = False,
+    ):
+
+        """
+
+        parallel plot of the meta data
+
+        :param meta_number:
+        :type meta_number: int
+        :param colorscale:
+        :type colorscale: str
+        :param as_log:
+        :type as_log: bool
+        :returns:
+
+        """
+
+        if self._meta_data is not None:
+
+            self._parallel_coord_plot(
+                self._meta_data[f"meta_{meta_number}"],
+                colorscale=colorscale,
+                as_log=as_log,
+            )
+
+        else:
+
+            msg = "This database has no meta data"
+
+            log.error(msg)
+
+            raise RuntimeError(msg)
 
 
 def merge_databases(
