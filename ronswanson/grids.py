@@ -1,7 +1,7 @@
 import itertools
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import yaml
@@ -339,7 +339,9 @@ class ParameterGrid:
                 Dumper=yaml.SafeDumper,
             )
 
-    def at_index(self, i: int) -> Dict[str, float]:
+    def at_index(
+        self, i: int, as_array: bool = False
+    ) -> Union[Dict[str, float], np.ndarray]:
         """
         return the ith set of parameters
 
@@ -354,14 +356,22 @@ class ParameterGrid:
 
             if i == idx:
 
-                d = OrderedDict()
+                if not as_array:
 
-                for k, v in zip(self.parameter_names, result):
+                    d = OrderedDict()
 
-                    d[k] = v
+                    for k, v in zip(self.parameter_names, result):
 
-                return d
+                        d[k] = v
+
+                    return d
+
+                else:
+
+                    return np.array(result)
 
             else:
 
                 idx += 1
+
+        log.error("This index does not exist!")

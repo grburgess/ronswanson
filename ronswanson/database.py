@@ -8,6 +8,8 @@ from astromodels import TemplateModel, TemplateModelFactory
 from astromodels.utils.logging import silence_console_log
 from tqdm.auto import tqdm
 
+from ronswanson.grids import Parameter, ParameterGrid
+
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -302,6 +304,74 @@ class Database:
             tmf.save_data(overwrite=overwrite)
 
         return TemplateModel(name)
+
+    def check_for_missing_parameters(
+        self, parameter_grid: ParameterGrid, create_new_grid: bool = False
+    ) -> None:
+
+        """Search a parameter grid for missing values
+
+        :param parameter_grid:
+        :type parameter_grid: ParameterGrid
+        :param create_new_grid:
+        :type create_new_grid: bool
+        :returns:
+
+        """
+        missing_parameters = []
+
+        for i in tqdm(
+            range(parameter_grid.n_points), desc="Search through parameter grid"
+        ):
+
+            these_parameters = np.atleast_2d(
+                parameter_grid.at_index(i, as_array=True)
+            )
+
+            # see if these parmeters exist!
+
+            if (
+                np.isclose(self._grid_points, these_parameters).all(-1).sum()
+                == 0
+            ):
+
+                log.debug(f"MISSING:{these_parameters[0]}")
+
+                missing_parameters.append(these_parameters[0].tolist())
+
+        if len(missing_parameters) == 0:
+
+            log.info("There are no missing parameters!")
+
+        else:
+
+            log.warning(
+                f"There were {len(missing_parameters)} missing parameters!"
+            )
+
+            if create_new_grid:
+
+                missing_parameters = np.array(missing_parameters)
+
+                log.info("Creating a new grid")
+
+                parameter_list = []
+
+                for i, par_name in enumerate(parameter_grid.parameter_names):
+
+                    par = Parameter(
+                        name=par_name,
+                        custom=True,
+                        values=missing_parameters[:, i],
+                    )
+
+                    parameter_list.append(par)
+
+                new_parameter_grid = ParameterGrid(
+                    parameter_list, parameter_grid.energy_grid
+                )
+
+                new_parameter_grid.write("missing_parameter_grid.yml")
 
 
 def merge_databases(
