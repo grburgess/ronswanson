@@ -119,6 +119,8 @@ class EnergyGrid:
         return out
 
 
+_invalid_parameter_names = ("redshift","x","y", "z","K","scale")
+
 @dataclass(frozen=True)
 class Parameter:
 
@@ -132,6 +134,14 @@ class Parameter:
     #   grid: np.ndarray = field(init=False)
 
     def __post_init__(self):
+
+        if self.name.lower() in _invalid_parameter_names:
+
+            msg = f"the parameter name: {self.name} is protected and cannot be used"
+
+            log.error(f"the parameter name: {self.name} is protected and cannot be used")
+
+            raise RuntimeError(msg)
 
         if not self.custom:
 

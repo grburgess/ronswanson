@@ -160,6 +160,14 @@ import ronswanson
 sb = ronswanson.SimulationBuilder.from_yaml("sim_build.yml")
 ```
 
+However, you can easily do this from the command line:
+
+```bash
+> simulation_build sim_build.yml
+```
+
+
+
 Now a python file will be written to the disk which you can run to create your
 simulation runs. we can have a look at the file.
 
@@ -269,6 +277,7 @@ from ronswanson import Database
 ```python
 db = Database.from_file(get_path_of_data_file("test_database.h5"))
 db.parameter_ranges
+db.plot_runtime()
 ```
 
 Now we can use the database to construct and save a table model for `3ML`
