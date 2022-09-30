@@ -162,7 +162,7 @@ sb = ronswanson.SimulationBuilder.from_yaml("sim_build.yml")
 
 However, you can easily do this from the command line:
 
-```bash
+```sh
 > simulation_build sim_build.yml
 ```
 
