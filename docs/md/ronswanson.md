@@ -65,8 +65,8 @@ specify their ranges and let it be done for us.
 
 It is possible that a simulation outputs more than one type of array (photons,
 electrons, neutrinos, etc.). In this case, each output may have its own energy
-grid. These can be specified as ```energy_grid_0```,
-```energy_grid_1```...```energy_grid_n```. More on how to grab the output from
+grid. These can be specified as `energy_grid_0`,
+`energy_grid_1`...`energy_grid_n`. More on how to grab the output from
 these below.
 
 
@@ -79,8 +79,8 @@ Now we need to make a class for the simulation. We will inherit from the
 simulation class and specify a `_run_call` function that tells the program how
 to run the simulation for a given set of parameters. This function **must**
 return a dictionary of arrays of photon / particle fluxes for the given
-energies. The keys of the dictionary should be ```output_0```,
-```output_1```...```output_n``` for each type of output corresponding to the
+energies. The keys of the dictionary should be `output_0`,
+`output_1`...`output_n` for each type of output corresponding to the
 energy grids above.
 
 
@@ -162,7 +162,7 @@ sb = ronswanson.SimulationBuilder.from_yaml("sim_build.yml")
 
 However, you can easily do this from the command line:
 
-```sh
+```
 > simulation_build sim_build.yml
 ```
 
@@ -196,7 +196,7 @@ be generated.
 <!-- #region -->
 #### SLURM and advanced options
 
-Configuring for SLURM and SBATCH systems is similar, but there are a few more options. ```ronswanson``` will set up bash scripts that will submit jobs to complete the simulations and then gather them into a database.
+Configuring for SLURM and SBATCH systems is similar, but there are a few more options. `ronswanson` will set up bash scripts that will submit jobs to complete the simulations and then gather them into a database.
 
 Here is an example script:
 
@@ -258,7 +258,7 @@ gather:
 ```
 
 
-Additional configuration of SLURM jobs can be handle with the ```ronswanson``` configuration.
+Additional configuration of SLURM jobs can be handle with the `ronswanson` configuration.
 <!-- #endregion -->
 
 ### The Database
@@ -350,7 +350,7 @@ Awesome! Now go enjoy your weekend.
 
 ## User configuration
 
-A simple YAML configuration is stored in ```~/.config/ronswanson/ronswanson_config.yml```. It allows for configuring the log as well as putting default SLURM configuration parameters.
+A simple YAML configuration is stored in `~/.config/ronswanson/ronswanson_config.yml`. It allows for configuring the log as well as putting default SLURM configuration parameters.
 
 An example:
 
