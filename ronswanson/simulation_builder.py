@@ -358,10 +358,9 @@ class SimulationBuilder:
 
                 self._initialize_database()
 
-            copy_file_name: str = f"{Path(self._out_file).parent}{Path(self._out_file).stem}_copy{Path(self._out_file).suffix}"
+            copy_file_name: str = f"{Path(self._out_file).parent}/{Path(self._out_file).stem}_copy{Path(self._out_file).suffix}"
 
             log.warning(f"a copy will be made to [blue]{copy_file_name}[\blue]")
-
 
             shutil.copy(self._out_file, copy_file_name)
 
