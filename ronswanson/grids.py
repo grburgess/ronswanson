@@ -119,7 +119,8 @@ class EnergyGrid:
         return out
 
 
-_invalid_parameter_names = ("redshift","x","y", "z","K","scale")
+_invalid_parameter_names = ("redshift", "x", "y", "z", "K", "scale")
+
 
 @dataclass(frozen=True)
 class Parameter:
@@ -139,7 +140,9 @@ class Parameter:
 
             msg = f"the parameter name: {self.name} is protected and cannot be used"
 
-            log.error(f"the parameter name: {self.name} is protected and cannot be used")
+            log.error(
+                f"the parameter name: {self.name} is protected and cannot be used"
+            )
 
             raise RuntimeError(msg)
 

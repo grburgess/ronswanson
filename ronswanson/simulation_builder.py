@@ -354,8 +354,6 @@ class SimulationBuilder:
 
                 self._initialize_database()
 
-
-
             self._check_completed()
 
             with h5py.File(self._out_file, "a") as f:
