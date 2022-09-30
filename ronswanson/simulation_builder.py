@@ -1,4 +1,5 @@
 import json
+import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,9 @@ import h5py
 import numpy as np
 import yaml
 from omegaconf import MISSING, OmegaConf
+from tqdm.auto import tqdm
+
+from ronswanson.utils.color import Colors
 
 from .grids import ParameterGrid
 from .script_generator import (
@@ -354,6 +358,13 @@ class SimulationBuilder:
 
                 self._initialize_database()
 
+            copy_file_name: str = f"{Path(self._out_file).parent}{Path(self._out_file).stem}_copy{Path(self._out_file).suffix}"
+
+            log.warning(f"a copy will be made to [blue]{copy_file_name}[\blue]")
+
+
+            shutil.copy(self._out_file, copy_file_name)
+
             self._check_completed()
 
             with h5py.File(self._out_file, "a") as f:
@@ -455,7 +466,11 @@ class SimulationBuilder:
 
         key_out = {}
 
-        for i in range(self._n_nodes):
+        for i in tqdm(
+            range(self._n_nodes),
+            desc="computing node layout",
+            colour=Colors.RED,
+        ):
 
             output = []
 
@@ -495,8 +510,12 @@ class SimulationBuilder:
             )
             log.debug(f"number iterations: {self._n_iterations}")
 
-            for i in range(
-                self._n_gather_nodes * self._gather_config.n_cores_per_node
+            for i in tqdm(
+                range(
+                    self._n_gather_nodes * self._gather_config.n_cores_per_node
+                ),
+                desc="computing nodes for gather operation",
+                colour=Colors.GREEN,
             ):
 
                 core_list = []
@@ -528,6 +547,7 @@ class SimulationBuilder:
             self._simulation_config.linear_execution,
             self._has_complete_params,
             self._current_database_size,
+            clean=self._clean,
         )
 
         py_gen.write(str(self._base_dir))

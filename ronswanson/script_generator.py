@@ -24,6 +24,7 @@ class PythonGenerator(ScriptGenerator):
         linear_exceution: bool = False,
         has_complete_params: bool = False,
         current_size: int = 0,
+        clean: bool = True,
     ) -> None:
 
         """
@@ -58,6 +59,7 @@ class PythonGenerator(ScriptGenerator):
         self._linear_execution: bool = linear_exceution
         self._has_complete_params: bool = has_complete_params
         self._current_size: int = current_size
+        self._clean: bool = clean
 
         super().__init__(file_name)
 
@@ -70,6 +72,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
         self._add_line("from ronswanson.utils.logging import setup_logger")
+        self._add_line("from ronswanson.utils import Colors")
         self._add_line("from ronswanson.simulation import gather")
 
         if self._n_nodes is not None:
@@ -151,11 +154,11 @@ class PythonGenerator(ScriptGenerator):
             else:
 
                 self._add_line(
-                    f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration, colour='#FC0A5A'))"
+                    f"Parallel(n_jobs={self._n_procs})(delayed(func)(i) for i in tqdm(iteration, colour=Colors.RED, desc='simulating function'))"
                 )
 
                 self._add_line(
-                    f"gather('{self._database_file}', {self._current_size}, clean=True)"
+                    f"gather('{self._database_file}', {self._current_size}, clean={self._clean})"
                 )
 
 

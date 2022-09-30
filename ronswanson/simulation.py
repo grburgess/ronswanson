@@ -9,6 +9,7 @@ import numpy as np
 from tqdm.auto import tqdm
 
 import ronswanson.grids as grids
+from ronswanson.utils.color import Colors
 from ronswanson.utils.configuration import ronswanson_config
 
 from .utils.file_open import open_component_file
@@ -132,7 +133,7 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
         database_file.attrs['has_been_touched'] = True
 
-        for store in tqdm(files):
+        for store in tqdm(files, desc="Gathering simulations", colour=Colors.GREEN):
 
             log.debug(f"reading: {store}")
 

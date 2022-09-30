@@ -10,6 +10,7 @@ from astromodels.utils.logging import silence_console_log
 from tqdm.auto import tqdm
 
 from ronswanson.grids import Parameter, ParameterGrid
+from ronswanson.utils.color import Colors
 
 from .utils.logging import setup_logger
 
@@ -291,7 +292,11 @@ class Database:
 
         with silence_console_log():
 
-            for i in tqdm(range(len(sub_values))):
+            for i in tqdm(
+                range(len(sub_values)),
+                desc="building table model",
+                colour=Colors.YELLOW,
+            ):
 
                 ### DO NOT SORT
 
@@ -322,7 +327,9 @@ class Database:
         missing_parameters = []
 
         for i in tqdm(
-            range(parameter_grid.n_points), desc="Search through parameter grid"
+            range(parameter_grid.n_points),
+            desc="search through parameter grid",
+            colour=Colors.BLUE,
         ):
 
             these_parameters = np.atleast_2d(
