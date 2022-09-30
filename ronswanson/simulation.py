@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 
 import h5py
 import numpy as np
+from tqdm.auto import tqdm
 
 import ronswanson.grids as grids
 from ronswanson.utils.configuration import ronswanson_config
@@ -131,7 +132,7 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
         database_file.attrs['has_been_touched'] = True
 
-        for store in files:
+        for store in tqdm(files):
 
             log.debug(f"reading: {store}")
 
