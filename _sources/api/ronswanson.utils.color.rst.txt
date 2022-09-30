@@ -1,0 +1,7 @@
+ronswanson.utils.color module
+=============================
+
+.. automodule:: ronswanson.utils.color
+    :members:
+    :undoc-members:
+    :show-inheritance:

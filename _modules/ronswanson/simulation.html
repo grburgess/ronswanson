@@ -82,8 +82,10 @@
 
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">import</span> <span class="nn">ronswanson.grids</span> <span class="k">as</span> <span class="nn">grids</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.color</span> <span class="kn">import</span> <span class="n">Colors</span>
 <span class="kn">from</span> <span class="nn">ronswanson.utils.configuration</span> <span class="kn">import</span> <span class="n">ronswanson_config</span>
 
 <span class="kn">from</span> <span class="nn">.utils.file_open</span> <span class="kn">import</span> <span class="n">open_component_file</span>
@@ -205,7 +207,9 @@
 
     <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">database_file</span><span class="p">:</span>
 
-        <span class="k">for</span> <span class="n">store</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="n">database_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;has_been_touched&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">store</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Gathering simulations&quot;</span><span class="p">,</span> <span class="n">colour</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">GREEN</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
 
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;reading: </span><span class="si">{</span><span class="n">store</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 

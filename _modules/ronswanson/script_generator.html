@@ -100,6 +100,7 @@
         <span class="n">linear_exceution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">has_complete_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">current_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
         <span class="sd">&quot;&quot;&quot;</span>
@@ -134,6 +135,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">linear_exceution</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">has_complete_params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">current_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">clean</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span></div>
 
@@ -146,6 +148,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from tqdm.auto import tqdm&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson import ParameterGrid&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson.utils.logging import setup_logger&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson.utils import Colors&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s2">&quot;from ronswanson.simulation import gather&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -227,11 +230,11 @@
             <span class="k">else</span><span class="p">:</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in tqdm(iteration, colour=&#39;#FC0A5A&#39;))&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parallel(n_jobs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_procs</span><span class="si">}</span><span class="s2">)(delayed(func)(i) for i in tqdm(iteration, colour=Colors.RED.value, desc=&#39;simulating function&#39;))&quot;</span>
                 <span class="p">)</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;gather(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="si">}</span><span class="s2">&#39;, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="si">}</span><span class="s2">, clean=True)&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;gather(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_database_file</span><span class="si">}</span><span class="s2">&#39;, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_size</span><span class="si">}</span><span class="s2">, clean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="si">}</span><span class="s2">)&quot;</span>
                 <span class="p">)</span></div>
 
 
@@ -283,6 +286,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span>
             <span class="s1">&#39;database = h5py.File(str(p), &quot;a&quot;, driver=&quot;mpio&quot;, comm=MPI.COMM_WORLD)&#39;</span>
         <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_line</span><span class="p">(</span><span class="s1">&#39;database.attrs[&quot;has_been_touched&quot;] = True&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_end_line</span><span class="p">()</span>

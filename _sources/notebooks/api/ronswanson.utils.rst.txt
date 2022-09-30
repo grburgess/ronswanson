@@ -4,6 +4,14 @@ ronswanson.utils package
 Submodules
 ----------
 
+ronswanson.utils.color module
+-----------------------------
+
+.. automodule:: ronswanson.utils.color
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 ronswanson.utils.configuration module
 -------------------------------------
 

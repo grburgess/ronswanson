@@ -6,6 +6,7 @@ Submodules
 
 .. toctree::
 
+   ronswanson.utils.color
    ronswanson.utils.configuration
    ronswanson.utils.file_open
    ronswanson.utils.hdf5_utils

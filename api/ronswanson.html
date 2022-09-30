@@ -108,6 +108,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.html">ronswanson.utils package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ronswanson.utils.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ronswanson.utils.color.html">ronswanson.utils.color module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ronswanson.utils.configuration.html">ronswanson.utils.configuration module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ronswanson.utils.file_open.html">ronswanson.utils.file_open module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ronswanson.utils.hdf5_utils.html">ronswanson.utils.hdf5_utils module</a></li>
@@ -220,7 +221,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ronswanson.ParameterGrid.at_index">
-<span class="sig-name descname"><span class="pre">at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ronswanson/grids.html#ParameterGrid.at_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.ParameterGrid.at_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ronswanson/grids.html#ParameterGrid.at_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.ParameterGrid.at_index" title="Permalink to this definition"></a></dt>
 <dd><p>return the ith set of parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -314,8 +315,8 @@ needed for building the table model database</p>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="ronswanson.Database.paramerter_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">paramerter_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ronswanson.Database.paramerter_names" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="ronswanson.Database.parameter_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameter_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ronswanson.Database.parameter_names" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -362,6 +363,55 @@ dictionaries:</p>
 <li><p><strong>name</strong> (<em>str</em>) – </p></li>
 <li><p><strong>desc</strong> (<em>str</em>) – </p></li>
 <li><p><strong>overwrite</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ronswanson.Database.check_for_missing_parameters">
+<span class="sig-name descname"><span class="pre">check_for_missing_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.grids.ParameterGrid" title="ronswanson.grids.ParameterGrid"><span class="pre">ParameterGrid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_new_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ronswanson/database.html#Database.check_for_missing_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.Database.check_for_missing_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Search a parameter grid for missing values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_grid</strong> (<a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.ParameterGrid" title="ronswanson.ParameterGrid"><em>ParameterGrid</em></a>) – </p></li>
+<li><p><strong>create_new_grid</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ronswanson.Database.plot_runtime">
+<span class="sig-name descname"><span class="pre">plot_runtime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">colorscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'plasma'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/database.html#Database.plot_runtime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.Database.plot_runtime" title="Permalink to this definition"></a></dt>
+<dd><p>show a parallel plot of the run time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>colorscale</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ronswanson.Database.plot_meta_data">
+<span class="sig-name descname"><span class="pre">plot_meta_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'plasma'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/database.html#Database.plot_meta_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.Database.plot_meta_data" title="Permalink to this definition"></a></dt>
+<dd><p>parallel plot of the meta data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meta_number</strong> (<em>int</em>) – </p></li>
+<li><p><strong>colorscale</strong> (<em>str</em>) – </p></li>
+<li><p><strong>as_log</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

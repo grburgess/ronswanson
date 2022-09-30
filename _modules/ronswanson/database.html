@@ -80,9 +80,13 @@
 
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
 <span class="kn">from</span> <span class="nn">astromodels</span> <span class="kn">import</span> <span class="n">TemplateModel</span><span class="p">,</span> <span class="n">TemplateModelFactory</span>
 <span class="kn">from</span> <span class="nn">astromodels.utils.logging</span> <span class="kn">import</span> <span class="n">silence_console_log</span>
 <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">ronswanson.grids</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">ParameterGrid</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.color</span> <span class="kn">import</span> <span class="n">Colors</span>
 
 <span class="kn">from</span> <span class="nn">.utils.logging</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 
@@ -160,7 +164,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_ranges</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">paramerter_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">parameter_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span>
 
     <span class="nd">@property</span>
@@ -364,7 +368,11 @@
 
         <span class="k">with</span> <span class="n">silence_console_log</span><span class="p">():</span>
 
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sub_values</span><span class="p">))):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sub_values</span><span class="p">)),</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;building table model&quot;</span><span class="p">,</span>
+                <span class="n">colour</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">YELLOW</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">):</span>
 
                 <span class="c1">### DO NOT SORT</span>
 
@@ -377,7 +385,160 @@
 
             <span class="n">tmf</span><span class="o">.</span><span class="n">save_data</span><span class="p">(</span><span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">TemplateModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">TemplateModel</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.check_for_missing_parameters"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Database.check_for_missing_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">check_for_missing_parameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">parameter_grid</span><span class="p">:</span> <span class="n">ParameterGrid</span><span class="p">,</span> <span class="n">create_new_grid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="sd">&quot;&quot;&quot;Search a parameter grid for missing values</span>
+
+<span class="sd">        :param parameter_grid:</span>
+<span class="sd">        :type parameter_grid: ParameterGrid</span>
+<span class="sd">        :param create_new_grid:</span>
+<span class="sd">        :type create_new_grid: bool</span>
+<span class="sd">        :returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">missing_parameters</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+            <span class="nb">range</span><span class="p">(</span><span class="n">parameter_grid</span><span class="o">.</span><span class="n">n_points</span><span class="p">),</span>
+            <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;search through parameter grid&quot;</span><span class="p">,</span>
+            <span class="n">colour</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">BLUE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">):</span>
+
+            <span class="n">these_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span>
+                <span class="n">parameter_grid</span><span class="o">.</span><span class="n">at_index</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">as_array</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># see if these parmeters exist!</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_grid_points</span><span class="p">,</span> <span class="n">these_parameters</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="o">==</span> <span class="mi">0</span>
+            <span class="p">):</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MISSING:</span><span class="si">{</span><span class="n">these_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">missing_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">these_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;There are no missing parameters!&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;There were </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2"> missing parameters!&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">create_new_grid</span><span class="p">:</span>
+
+                <span class="n">missing_parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">missing_parameters</span><span class="p">)</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating a new grid&quot;</span><span class="p">)</span>
+
+                <span class="n">parameter_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parameter_grid</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">):</span>
+
+                    <span class="n">par</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">par_name</span><span class="p">,</span>
+                        <span class="n">custom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">values</span><span class="o">=</span><span class="n">missing_parameters</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span>
+                    <span class="p">)</span>
+
+                    <span class="n">parameter_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
+
+                <span class="n">new_parameter_grid</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="p">(</span>
+                    <span class="n">parameter_list</span><span class="p">,</span> <span class="n">parameter_grid</span><span class="o">.</span><span class="n">energy_grid</span>
+                <span class="p">)</span>
+
+                <span class="n">new_parameter_grid</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;missing_parameter_grid.yml&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_parallel_coord_plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">parameter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">colorscale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+        <span class="n">as_log</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_points</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">as_log</span><span class="p">:</span>
+
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">go</span><span class="o">.</span><span class="n">Parcoords</span><span class="p">(</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">parameter</span><span class="p">,</span>
+                    <span class="n">colorscale</span><span class="o">=</span><span class="n">colorscale</span><span class="p">,</span>
+                    <span class="n">showscale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">cmin</span><span class="o">=</span><span class="n">parameter</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                    <span class="n">cmax</span><span class="o">=</span><span class="n">parameter</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                <span class="p">),</span>
+                <span class="n">dimensions</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span>
+                <span class="n">unselected</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Database.plot_runtime"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Database.plot_runtime">[docs]</a>    <span class="k">def</span> <span class="nf">plot_runtime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colorscale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plasma&quot;</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        show a parallel plot of the run time</span>
+
+<span class="sd">        :param colorscale:</span>
+<span class="sd">        :type colorscale:</span>
+<span class="sd">        :returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parallel_coord_plot</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_time</span><span class="p">,</span> <span class="n">colorscale</span><span class="o">=</span><span class="n">colorscale</span><span class="p">,</span> <span class="n">as_log</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.plot_meta_data"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Database.plot_meta_data">[docs]</a>    <span class="k">def</span> <span class="nf">plot_meta_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">meta_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">colorscale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;plasma&quot;</span><span class="p">,</span>
+        <span class="n">as_log</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        parallel plot of the meta data</span>
+
+<span class="sd">        :param meta_number:</span>
+<span class="sd">        :type meta_number: int</span>
+<span class="sd">        :param colorscale:</span>
+<span class="sd">        :type colorscale: str</span>
+<span class="sd">        :param as_log:</span>
+<span class="sd">        :type as_log: bool</span>
+<span class="sd">        :returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parallel_coord_plot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta_data</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;meta_</span><span class="si">{</span><span class="n">meta_number</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+                <span class="n">colorscale</span><span class="o">=</span><span class="n">colorscale</span><span class="p">,</span>
+                <span class="n">as_log</span><span class="o">=</span><span class="n">as_log</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;This database has no meta data&quot;</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">merge_databases</span><span class="p">(</span>

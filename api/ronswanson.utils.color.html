@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ronswanson.utils package &mdash; ronswanson  documentation</title>
+  <title>ronswanson.utils.color module &mdash; ronswanson  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ronswanson.utils.color module" href="ronswanson.utils.color.html" />
-    <link rel="prev" title="ronswanson package" href="ronswanson.html" /> 
+    <link rel="next" title="ronswanson.utils.configuration module" href="ronswanson.utils.configuration.html" />
+    <link rel="prev" title="ronswanson.utils package" href="ronswanson.utils.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -68,7 +68,8 @@
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="API.html">API</a> &raquo;</li>
           <li><a href="ronswanson.html">ronswanson package</a> &raquo;</li>
-      <li>ronswanson.utils package</li>
+          <li><a href="ronswanson.utils.html">ronswanson.utils package</a> &raquo;</li>
+      <li>ronswanson.utils.color module</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -101,32 +102,43 @@
     text-align: unset;
 }
 </style>
-<section id="ronswanson-utils-package">
-<h1>ronswanson.utils package<a class="headerlink" href="#ronswanson-utils-package" title="Permalink to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.color.html">ronswanson.utils.color module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.configuration.html">ronswanson.utils.configuration module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.file_open.html">ronswanson.utils.file_open module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.hdf5_utils.html">ronswanson.utils.hdf5_utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.logging.html">ronswanson.utils.logging module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ronswanson.utils.package_data.html">ronswanson.utils.package_data module</a></li>
-</ul>
-</div>
-</section>
-<section id="module-ronswanson.utils">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ronswanson.utils" title="Permalink to this heading"></a></h2>
-</section>
+<section id="module-ronswanson.utils.color">
+<span id="ronswanson-utils-color-module"></span><h1>ronswanson.utils.color module<a class="headerlink" href="#module-ronswanson.utils.color" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ronswanson.utils.color.Colors">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ronswanson.utils.color.</span></span><span class="sig-name descname"><span class="pre">Colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/utils/color.html#Colors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.utils.color.Colors" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ronswanson.utils.color.Colors.RED">
+<span class="sig-name descname"><span class="pre">RED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'#FC0A5A'</span></em><a class="headerlink" href="#ronswanson.utils.color.Colors.RED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ronswanson.utils.color.Colors.BLUE">
+<span class="sig-name descname"><span class="pre">BLUE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'#1B71FD'</span></em><a class="headerlink" href="#ronswanson.utils.color.Colors.BLUE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ronswanson.utils.color.Colors.GREEN">
+<span class="sig-name descname"><span class="pre">GREEN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'#1BFDA7'</span></em><a class="headerlink" href="#ronswanson.utils.color.Colors.GREEN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ronswanson.utils.color.Colors.YELLOW">
+<span class="sig-name descname"><span class="pre">YELLOW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'#ECD518'</span></em><a class="headerlink" href="#ronswanson.utils.color.Colors.YELLOW" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="ronswanson.html" class="btn btn-neutral float-left" title="ronswanson package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ronswanson.utils.color.html" class="btn btn-neutral float-right" title="ronswanson.utils.color module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ronswanson.utils.html" class="btn btn-neutral float-left" title="ronswanson.utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ronswanson.utils.configuration.html" class="btn btn-neutral float-right" title="ronswanson.utils.configuration module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -75,6 +75,8 @@
              
   <h1>Source code for ronswanson.simulation_builder</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
@@ -82,7 +84,10 @@
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">OmegaConf</span><span class="p">,</span> <span class="n">MISSING</span>
+<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">MISSING</span><span class="p">,</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">ronswanson.utils.color</span> <span class="kn">import</span> <span class="n">Colors</span>
 
 <span class="kn">from</span> <span class="nn">.grids</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
 <span class="kn">from</span> <span class="nn">.script_generator</span> <span class="kn">import</span> <span class="p">(</span>
@@ -120,7 +125,8 @@
     <span class="n">run_per_node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">use_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">max_nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+    <span class="n">linear_execution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <span class="c1">## structure for file</span>
@@ -153,7 +159,8 @@
     <span class="n">out_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">MISSING</span>
     <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">simulation</span><span class="p">:</span> <span class="n">SimulationConfigStructure</span> <span class="o">=</span> <span class="n">SimulationConfigStructure</span><span class="p">()</span>
-    <span class="n">gather</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfigStructure</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">gather</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfigStructure</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="SimulationBuilder"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationBuilder">[docs]</a><span class="k">class</span> <span class="nc">SimulationBuilder</span><span class="p">:</span>
@@ -342,6 +349,8 @@
 
             <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 
+                <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;has_been_touched&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
                 <span class="n">pg</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameter_file</span><span class="p">)</span>
 
                 <span class="c1"># store the parameter names</span>
@@ -409,6 +418,27 @@
             <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;There was already a database: [red]</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="si">}</span><span class="s2">[/red]&quot;</span>
             <span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                <span class="n">has_been_touched</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;has_been_touched&quot;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">has_been_touched</span><span class="p">:</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;the database has not been gathered&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;erasing and starting over&quot;</span><span class="p">)</span>
+
+                <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_database</span><span class="p">()</span>
+
+            <span class="n">copy_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_copy</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;a copy will be made to [blue]</span><span class="si">{</span><span class="n">copy_file_name</span><span class="si">}</span><span class="s2">[</span><span class="se">\b</span><span class="s2">lue]&quot;</span><span class="p">)</span>
+
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span> <span class="n">copy_file_name</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_completed</span><span class="p">()</span>
 
@@ -511,7 +541,11 @@
 
         <span class="n">key_out</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+            <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_nodes</span><span class="p">),</span>
+            <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;computing node layout&quot;</span><span class="p">,</span>
+            <span class="n">colour</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">RED</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">):</span>
 
             <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -551,8 +585,12 @@
             <span class="p">)</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;number iterations: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="nb">range</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span>
+                <span class="p">),</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;computing nodes for gather operation&quot;</span><span class="p">,</span>
+                <span class="n">colour</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">GREEN</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="p">):</span>
 
                 <span class="n">core_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -584,6 +622,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">linear_execution</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">,</span>
+            <span class="n">clean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">py_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
