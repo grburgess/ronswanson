@@ -295,7 +295,7 @@ class Database:
             for i in tqdm(
                 range(len(sub_values)),
                 desc="building table model",
-                colour=Colors.YELLOW,
+                colour=Colors.YELLOW.value,
             ):
 
                 ### DO NOT SORT
@@ -329,7 +329,7 @@ class Database:
         for i in tqdm(
             range(parameter_grid.n_points),
             desc="search through parameter grid",
-            colour=Colors.BLUE,
+            colour=Colors.BLUE.value,
         ):
 
             these_parameters = np.atleast_2d(

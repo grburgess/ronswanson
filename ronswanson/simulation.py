@@ -133,7 +133,7 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
         database_file.attrs['has_been_touched'] = True
 
-        for store in tqdm(files, desc="Gathering simulations", colour=Colors.GREEN):
+        for store in tqdm(files, desc="Gathering simulations", colour=Colors.GREEN.value):
 
             log.debug(f"reading: {store}")
 

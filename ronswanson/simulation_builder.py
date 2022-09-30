@@ -468,7 +468,7 @@ class SimulationBuilder:
         for i in tqdm(
             range(self._n_nodes),
             desc="computing node layout",
-            colour=Colors.RED,
+            colour=Colors.RED.value,
         ):
 
             output = []
@@ -514,7 +514,7 @@ class SimulationBuilder:
                     self._n_gather_nodes * self._gather_config.n_cores_per_node
                 ),
                 desc="computing nodes for gather operation",
-                colour=Colors.GREEN,
+                colour=Colors.GREEN.value,
             ):
 
                 core_list = []
