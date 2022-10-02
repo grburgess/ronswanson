@@ -1,20 +1,24 @@
 import itertools
-
 import re
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
+import matplotlib.colors as mcolors
 import numpy as np
 import plotille
 from tqdm.auto import tqdm
 
 from ronswanson.grids import ParameterGrid
 from ronswanson.utils.color import Colors
+from ronswanson.utils.colormap_generator import get_continuous_cmap
 from ronswanson.utils.logging import setup_logger
 
 from .configuration import ronswanson_config
 
 log = setup_logger(__name__)
+
+
+_cmap = get_continuous_cmap(['#FE093A', '#FFFF53', '#2DFF96'])
 
 
 def check_complete_ids(database_file_name: str) -> List[int]:
@@ -85,8 +89,6 @@ def make_fig(
 
     print(fig.show())
 
-    return " "
-
 
 def examine_parameter(
     database_file_name: str,
@@ -113,7 +115,8 @@ def examine_parameter(
     fig_width = int(np.ceil(100.0 / (pg.n_parameters - 1)))
     fig_width = 40
 
-    plt_idx = 0
+    n_points = pg.n_points
+
     for jdx, other_name in enumerate(pg.parameter_names):
 
         # do not check against yourself
@@ -124,9 +127,9 @@ def examine_parameter(
 
             k = 0
 
-            for result in itertools.product(
-                *[p.grid for p in pg.parameter_list]
-            ):
+            for i in range(n_points):
+
+                result = pg.full_grid[i]
 
                 this_param = result[idx]
                 other_param = result[jdx]
@@ -154,6 +157,123 @@ def examine_parameter(
 
             lines.append(line)
 
-        # for line in lines:
 
-        #     print(' '.join(line))
+def make_fig_detailed(
+    this_name: str,
+    other_name: str,
+    this_param_values: np.ndarray,
+    other_param_values: np.ndarray,
+    count_dict: Dict[str, Dict[str, int]],
+    n_points: int,
+    width: int,
+) -> None:
+
+    fig = plotille.Figure()
+
+    fig.register_label_formatter(float, int_formatter)
+    fig.color_mode = 'rgb'
+    fig.width = int(np.ceil(width))
+    fig.height = 10
+    fig.x_label = this_name
+    fig.y_label = other_name
+
+    total_other = n_points / (len(this_param_values) * len(other_name))
+
+    for result in itertools.product(this_param_values, other_param_values):
+
+        a, b = result
+
+        count = 0
+
+        if a in count_dict:
+
+            if b in count_dict[a]:
+
+                count = count_dict[a][b]
+
+        color = mcolors.to_hex(_cmap(float(count / total_other)))[1:]
+
+        fig.scatter(
+            [a],
+            [b],
+            lc=color,
+            marker="o",
+        )
+
+    print(fig.show())
+
+
+def examine_parameter_detailed(
+    database_file_name: str,
+    parameter_grid_file_name: str,
+    parameter_to_check: str,
+) -> None:
+
+    finished_ids = check_complete_ids(database_file_name)
+
+    pg = ParameterGrid.from_yaml(parameter_grid_file_name)
+
+    if parameter_to_check not in pg.parameter_names:
+
+        msg = f"{parameter_to_check} is not a valid parameter name"
+
+        log.error(msg)
+
+        raise RuntimeError(msg)
+
+    idx = pg.parameter_names.index(parameter_to_check)
+
+    lines: List[str] = []
+
+    fig_width = int(np.ceil(100.0 / (pg.n_parameters - 1)))
+    fig_width = 40
+
+    n_points = pg.n_points
+
+    for jdx, other_name in enumerate(pg.parameter_names):
+
+        counts = np.zeros((len(finished_ids), 2))
+
+        # do not check against yourself
+        if idx != jdx:
+
+            finished_values = []
+            unfinished_values = []
+
+            for i, j in enumerate(finished_ids):
+
+                result = pg.full_grid[j]
+
+                this_param = result[idx]
+                other_param = result[jdx]
+
+                counts[i] = np.array([this_param, other_param])
+
+            unique, counts = np.unique(counts, axis=0, return_counts=True)
+
+            count_dict = {}
+
+            for i, u in enumerate(unique):
+
+                if u[0] in count_dict:
+
+                    count_dict[u[0]][u[1]] = counts[i]
+
+                else:
+
+                    inner_dict = {}
+                    inner_dict[u[1]] = counts[i]
+                    count_dict[u[0]] = inner_dict
+
+            finished_values = np.array(finished_values)
+            unfinished_values = np.array(unfinished_values)
+
+            make_fig_detailed(
+                parameter_to_check,
+                other_name=other_name,
+                this_param_values=pg.parameter_list[idx].grid,
+                other_param_values=pg.parameter_list[jdx].grid,
+                count_dict=count_dict,
+                n_points=n_points,
+                width=fig_width,
+            )

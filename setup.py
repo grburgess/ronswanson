@@ -12,7 +12,8 @@ setup(
     entry_points={
         'console_scripts': [
             'simulation_build = scripts.simulation_build:simulation_build',
-            'examine_simulation = scripts.check:examine_simulation'
+            'examine_simulation = scripts.check:examine_simulation',
+            'examine_simulation_detailed = scripts.check:examine_simulation_detailed'
         ],
     },
     #        package_data={"": extra_files},
