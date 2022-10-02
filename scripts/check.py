@@ -21,8 +21,9 @@ def examine_simulation(
 @click.argument('database', nargs=1)
 @click.argument('parameter_grid', nargs=1)
 @click.argument('parameter', nargs=1)
+@click.option('--colormap', default=None)
 def examine_simulation_detailed(
-    database: str, parameter_grid: str, parameter: str
+        database: str, parameter_grid: str, parameter: str, colormap
 ) -> None:
 
-    examine_parameter_detailed(database, parameter_grid, parameter)
+    examine_parameter_detailed(database, parameter_grid, parameter, colormap)

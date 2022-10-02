@@ -1,9 +1,10 @@
 import itertools
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import matplotlib.colors as mcolors
+import matplotlib
 import numpy as np
 import plotille
 from tqdm.auto import tqdm
@@ -16,9 +17,6 @@ from ronswanson.utils.logging import setup_logger
 from .configuration import ronswanson_config
 
 log = setup_logger(__name__)
-
-
-_cmap = get_continuous_cmap(['#FE093A', '#FFFF53', '#2DFF96'])
 
 
 def check_complete_ids(database_file_name: str) -> List[int]:
@@ -166,6 +164,7 @@ def make_fig_detailed(
     count_dict: Dict[str, Dict[str, int]],
     n_points: int,
     width: int,
+    colormap,
 ) -> None:
 
     fig = plotille.Figure()
@@ -191,7 +190,7 @@ def make_fig_detailed(
 
                 count = count_dict[a][b]
 
-        color = mcolors.to_hex(_cmap(float(count / total_other)))[1:]
+        color = mcolors.to_hex(colormap(float(count / total_other)))[1:]
 
         fig.scatter(
             [a],
@@ -207,7 +206,16 @@ def examine_parameter_detailed(
     database_file_name: str,
     parameter_grid_file_name: str,
     parameter_to_check: str,
+    colormap: Optional[str] = None,
 ) -> None:
+
+    if colormap is None:
+
+        cmap = get_continuous_cmap(['#FE093A', '#FFFF53', '#2DFF96'])
+
+    else:
+
+        cmap = matplotlib.cm.get_cmap(colormap)
 
     finished_ids = check_complete_ids(database_file_name)
 
@@ -276,4 +284,5 @@ def examine_parameter_detailed(
                 count_dict=count_dict,
                 n_points=n_points,
                 width=fig_width,
+                colormap=cmap,
             )
