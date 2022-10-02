@@ -1,11 +1,12 @@
 import itertools
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import yaml
 
+from .utils.cartesian_product import cartesian_jit
 from .utils.logging import setup_logger
 
 log = setup_logger(__name__)
@@ -242,11 +243,20 @@ class Parameter:
         return out
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class ParameterGrid:
 
     parameter_list: List[Parameter]
     energy_grid: List[EnergyGrid]
+    full_grid: Optional[np.ndarray] = field(init=False)
+
+    def __post_init__(self):
+
+        object.__setattr__(
+            self,
+            'full_grid',
+            cartesian_jit([p.grid for p in self.parameter_list]),
+        )
 
     @property
     def n_points(self) -> int:
@@ -363,28 +373,19 @@ class ParameterGrid:
         :returns:
 
         """
-        idx = 0
 
-        for result in itertools.product(*[p.grid for p in self.parameter_list]):
+        result = self.full_grid[i]
 
-            if i == idx:
+        if not as_array:
 
-                if not as_array:
+            d = OrderedDict()
 
-                    d = OrderedDict()
+            for k, v in zip(self.parameter_names, result):
 
-                    for k, v in zip(self.parameter_names, result):
+                d[k] = v
 
-                        d[k] = v
+            return d
 
-                    return d
+        else:
 
-                else:
-
-                    return np.array(result)
-
-            else:
-
-                idx += 1
-
-        log.error("This index does not exist!")
+            return result
