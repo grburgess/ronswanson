@@ -1,0 +1,7 @@
+ronswanson.utils.colormap_generator module
+==========================================
+
+.. automodule:: ronswanson.utils.colormap_generator
+    :members:
+    :undoc-members:
+    :show-inheritance:

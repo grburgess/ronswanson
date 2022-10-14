@@ -6,7 +6,10 @@ Submodules
 
 .. toctree::
 
+   ronswanson.utils.cartesian_product
+   ronswanson.utils.check_complete
    ronswanson.utils.color
+   ronswanson.utils.colormap_generator
    ronswanson.utils.configuration
    ronswanson.utils.file_open
    ronswanson.utils.hdf5_utils

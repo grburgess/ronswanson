@@ -76,12 +76,13 @@
   <h1>Source code for ronswanson.grids</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 
+<span class="kn">from</span> <span class="nn">.utils.cartesian_product</span> <span class="kn">import</span> <span class="n">cartesian_jit</span>
 <span class="kn">from</span> <span class="nn">.utils.logging</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -318,11 +319,20 @@
         <span class="k">return</span> <span class="n">out</span></div></div>
 
 
-<div class="viewcode-block" id="ParameterGrid"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="ParameterGrid"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.ParameterGrid">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ParameterGrid</span><span class="p">:</span>
 
     <span class="n">parameter_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]</span>
     <span class="n">energy_grid</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EnergyGrid</span><span class="p">]</span>
+    <span class="n">full_grid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s1">&#39;full_grid&#39;</span><span class="p">,</span>
+            <span class="n">cartesian_jit</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">grid</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">]),</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">n_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -439,31 +449,22 @@
 <span class="sd">        :returns:</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">grid</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">]):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">idx</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">as_array</span><span class="p">:</span>
 
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">as_array</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
 
-                    <span class="n">d</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
 
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
 
-                        <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">return</span> <span class="n">d</span>
 
-                    <span class="k">return</span> <span class="n">d</span>
+        <span class="k">else</span><span class="p">:</span>
 
-                <span class="k">else</span><span class="p">:</span>
-
-                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-
-                <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;This index does not exist!&quot;</span><span class="p">)</span></div></div>
+            <span class="k">return</span> <span class="n">result</span></div></div>
 </pre></div>
 
            </div>

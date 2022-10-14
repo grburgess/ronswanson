@@ -4,10 +4,34 @@ ronswanson.utils package
 Submodules
 ----------
 
+ronswanson.utils.cartesian\_product module
+------------------------------------------
+
+.. automodule:: ronswanson.utils.cartesian_product
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.utils.check\_complete module
+---------------------------------------
+
+.. automodule:: ronswanson.utils.check_complete
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 ronswanson.utils.color module
 -----------------------------
 
 .. automodule:: ronswanson.utils.color
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ronswanson.utils.colormap\_generator module
+-------------------------------------------
+
+.. automodule:: ronswanson.utils.colormap_generator
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,0 +1,7 @@
+ronswanson.utils.cartesian_product module
+=========================================
+
+.. automodule:: ronswanson.utils.cartesian_product
+    :members:
+    :undoc-members:
+    :show-inheritance:
