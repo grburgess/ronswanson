@@ -49,8 +49,6 @@ abstracted to a templating system that can be user-friendly and reproducible.
 
 # Procedure
 
-![Logo of ronswanson](docs/media/logo.png =100)
-
 Once the user selects a simulation from which they would like to create a table
 model, the first task is to create an interface class that tells `ronswanson`
 how to run the simulation and collect it's output. This is achieved by
