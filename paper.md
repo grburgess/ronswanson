@@ -25,7 +25,7 @@ building table models, the construction of pipelines for models that must be run
 on HPC systems can be cumbersome. `ronswanson` removes this complexity with a
 simple, reproducible templating system. Users can easily prototype their
 pipeline on multi-core workstations and then switch to a multi-node HPC
-system. `ronswanson` auto generates all python and SLURM scripts required for
+system. `ronswanson` auto generates all python and SLURM[@slurm] scripts required for
 the construction of the table model.
 
 
@@ -80,7 +80,7 @@ construction of the table model. If running on a workstation, the user then
 executes the `run_simulation.py` script. If, instead, the simulation is run on
 an HPC cluster, the user runs `sbatch run_simulation.sh`. In the case of running
 on an HPC system, the final step to build the database requires running `sbatch
-gather_results.sh` which uses MPI to gather the individual pieces of the
+gather_results.sh` which uses MPI[@mpi] to gather the individual pieces of the
 simulations into the main database.
 
 The created HDF5 database can be loaded with utilities in `ronswanson` to then
@@ -97,15 +97,7 @@ metadata. More details and examples can be found in the
 
 # Acknowledgments
 
-This project was inspired by conversations with Daniel J. Mortlock
-wherein we tried to calibrate an analysis method we will eventually
-get around to finishing. Inspiration also came from wanting to
-generalize the examples from Will Farr's lecture note
-[@selection]. J. Michael Burgess acknowledges support from the
-Alexander von Humboldt Stiftung. Francesca Capel acknowledges
-financial support from the Excellence Cluster ORIGINS, which is funded
-by the Deutsche Forschungsgemeinschaft (DFG, German Research
-Foundation) under Germany’s Excellence Strategy
-- EXC-2094-390783311.
+This project was inspired by earlier works of Elisa Schoesser and Francesco
+Belato.
 
 # References
