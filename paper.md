@@ -10,6 +10,9 @@ authors:
     orcid: 0000-0003-3345-9515
     affiliation: "1"
 bibliography: paper.bib
+affiliations:
+ - name: Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse, 85748 Garching, Germany
+   index: 1
 date: "13 October 2022"
 ---
 
