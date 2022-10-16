@@ -15,6 +15,19 @@ This tool provides an easy interface to construct 3ML table models from
 computational expensive simulations on HPC systems. Why? Because it is your
 right to do so!
 
+## Installation
+
+```sh
+pip install ronswanson
+```
+or
+
+```sh
+git clone https://github.com/grburgess/ronswanson
+cd ronswanson
+python setup.py install
+```
+
 
 ## Credits
 Inspiration by Elisa Schoesser.

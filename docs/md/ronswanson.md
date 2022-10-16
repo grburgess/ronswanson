@@ -24,6 +24,11 @@ simple as possible for you. Making things complicated is annoying.
 ![alt text](https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/mad.jpg)
 
 
+## Installation
+```sh
+pip install ronswanson
+```
+
 ## Example with a Band function
 
 Let's say we want to make a table model from a Band function.
