@@ -12,6 +12,7 @@ from omegaconf import MISSING, OmegaConf
 from tqdm.auto import tqdm
 
 from ronswanson.utils.color import Colors
+from ronswanson.utils.check_complete import check_complete_ids
 
 from .grids import ParameterGrid
 from .script_generator import (
@@ -103,6 +104,7 @@ class SimulationBuilder:
         gather_config: Optional[GatherConfig] = None,
         num_meta_parameters: Optional[int] = None,
         clean: bool = True,
+        finish_missing: bool = False,
     ):
 
         """TODO describe function
@@ -152,7 +154,11 @@ class SimulationBuilder:
 
         self._current_database_size: int = 0
 
-        self._initialize_database()
+        self._finish_missing: bool = finish_missing
+
+        if not self._finish_missing:
+
+            self._initialize_database()
 
         # if we are using nodes
         # we need to see how many
@@ -430,7 +436,31 @@ class SimulationBuilder:
 
             self._has_complete_params = True
 
+    def _compute_complete_ids(self):
+
+        log.info("seeing how many are missing from the run")
+
+        complete_ids = check_complete_ids(self._out_file)
+
+        number_missing = self._n_iterations - len(complete_ids)
+
+        log.info(f"there were {number_missing} runs")
+
+        return complete_ids
+
     def _compute_chunks(self) -> None:
+
+        if self._finish_missing:
+
+            complete_ids = self._compute_incomplete_ids()
+
+        else:
+
+            complete_ids = []
+
+        # we may only be cleaning up missing runs
+
+        total_iterations: int = self._n_iterations - len(complete_ids)
 
         if self._simulation_config.run_per_node is None:
 
@@ -441,7 +471,7 @@ class SimulationBuilder:
             generator = range(self._simulation_config.n_mp_jobs)
 
             n_nodes = np.ceil(
-                self._n_iterations / self._simulation_config.n_mp_jobs
+                total_iterations / self._simulation_config.n_mp_jobs
             )
 
         else:
@@ -450,7 +480,7 @@ class SimulationBuilder:
 
             generator = range(runs_per_node)
 
-            n_nodes = np.ceil(self._n_iterations / runs_per_node)
+            n_nodes = np.ceil(total_iterations / runs_per_node)
 
         if self._simulation_config.use_nodes:
 
@@ -477,7 +507,12 @@ class SimulationBuilder:
 
                 if k < self._n_iterations:
 
-                    output.append(k)
+                    # don't add this on if we already computed it
+
+                    if k not in complete_ids:
+
+                        output.append(k)
+
                     k += 1
 
             key_out[i] = output
@@ -529,9 +564,11 @@ class SimulationBuilder:
 
                 rank_list[i] = core_list
 
-            with open(self._base_dir / "gather_file.json", "w") as f:
+            if not self._finish_missing:
 
-                json.dump(rank_list, f)
+                with open(self._base_dir / "gather_file.json", "w") as f:
+
+                    json.dump(rank_list, f)
 
     def _generate_python_script(self) -> None:
 
@@ -636,32 +673,34 @@ class SimulationBuilder:
                 "[bold green blink]generated:[/bold green blink] run_simulations.sh"
             )
 
-        slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
-            "gather_results.sh",
-            self._gather_config.n_cores_per_node,
-            self._n_gather_nodes,
-            self._gather_config.time.hrs,
-            self._gather_config.time.min,
-            self._gather_config.time.sec,
-        )
+        if not self._finish_missing:
 
-        slurm_gen.write(str(self._base_dir))
+            slurm_gen: SLURMGatherGenerator = SLURMGatherGenerator(
+                "gather_results.sh",
+                self._gather_config.n_cores_per_node,
+                self._n_gather_nodes,
+                self._gather_config.time.hrs,
+                self._gather_config.time.min,
+                self._gather_config.time.sec,
+            )
 
-        log.info(
-            "[bold green blink]generated:[/bold green blink] gather_results.sh"
-        )
+            slurm_gen.write(str(self._base_dir))
 
-        python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
-            "gather_results.py",
-            database_file_name=self._out_file,
-            current_size=self._current_database_size,
-            n_outputs=self._n_outputs,
-            clean=self._clean,
-            num_meta_parameters=self._num_meta_parameters,
-        )
+            log.info(
+                "[bold green blink]generated:[/bold green blink] gather_results.sh"
+            )
 
-        python_gather_gen.write(str(self._base_dir))
+            python_gather_gen: PythonGatherGenerator = PythonGatherGenerator(
+                "gather_results.py",
+                database_file_name=self._out_file,
+                current_size=self._current_database_size,
+                n_outputs=self._n_outputs,
+                clean=self._clean,
+                num_meta_parameters=self._num_meta_parameters,
+            )
 
-        log.info(
-            "[bold green blink]generated:[/bold green blink] gather_results.py"
-        )
+            python_gather_gen.write(str(self._base_dir))
+
+            log.info(
+                "[bold green blink]generated:[/bold green blink] gather_results.py"
+            )
