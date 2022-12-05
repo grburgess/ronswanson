@@ -86,7 +86,7 @@ class YAMLStructure:
     simulation: SimulationConfigStructure = SimulationConfigStructure()
     gather: Optional[GatherConfigStructure] = None
     num_meta_parameters: Optional[int] = None
-
+    finish_missing: bool = False
 
 class SimulationBuilder:
     """
