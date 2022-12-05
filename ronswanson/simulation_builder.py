@@ -452,7 +452,7 @@ class SimulationBuilder:
 
         if self._finish_missing:
 
-            complete_ids = self._compute_incomplete_ids()
+            complete_ids = self._compute_complete_ids()
 
         else:
 
