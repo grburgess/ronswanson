@@ -7,6 +7,7 @@ from typing import Optional
 
 import h5py
 import numpy as np
+import numba as nb
 import yaml
 from omegaconf import MISSING, OmegaConf
 from tqdm.auto import tqdm
@@ -447,7 +448,7 @@ class SimulationBuilder:
 
         log.info(f"there were {number_missing} runs")
 
-        return complete_ids
+        return np.array(complete_ids)
 
     def _compute_chunks(self) -> None:
 
@@ -455,15 +456,11 @@ class SimulationBuilder:
 
             complete_ids = self._compute_complete_ids()
 
-            incomplete_ids = []
+            full = np.array(range(self._n_iterations))
 
-            for i in tqdm(
-                range(self._n_iterations),
-                desc="finding missing ids",
-                colour=Colors.BLUE.value,
-            ):
-                if i not in complete_ids:
-                    incomplete_ids.append(i)
+            full[complete_ids] = -99
+
+            incomplete_ids = full[full >= 0]
 
         else:
 
