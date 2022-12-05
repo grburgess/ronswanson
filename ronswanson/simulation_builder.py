@@ -457,7 +457,11 @@ class SimulationBuilder:
 
             incomplete_ids = []
 
-            for i in range(self._n_iterations):
+            for i in tqdm(
+                range(self._n_iterations),
+                desc="finding missing ids",
+                colour=Colors.BLUE.value,
+            ):
                 if i not in complete_ids:
                     incomplete_ids.append(i)
 
