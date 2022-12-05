@@ -88,6 +88,7 @@ class YAMLStructure:
     num_meta_parameters: Optional[int] = None
     finish_missing: bool = False
 
+
 class SimulationBuilder:
     """
     The simulation builder class constructs the scripts
@@ -454,6 +455,12 @@ class SimulationBuilder:
 
             complete_ids = self._compute_complete_ids()
 
+            incomplete_ids = []
+
+            for i in range(self._n_iterations):
+                if i not in complete_ids:
+                    incomplete_ids.append(i)
+
         else:
 
             complete_ids = []
@@ -505,15 +512,19 @@ class SimulationBuilder:
 
             for j in generator:
 
-                if k < self._n_iterations:
+                if not self._finish_missing:
 
-                    # don't add this on if we already computed it
-
-                    if k not in complete_ids:
+                    if k < self._n_iterations:
 
                         output.append(k)
 
-                    k += 1
+                else:
+
+                    if k < total_iterations:
+
+                        output.append(incomplete_ids[k])
+
+                k += 1
 
             key_out[i] = output
 
