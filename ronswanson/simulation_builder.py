@@ -523,7 +523,7 @@ class SimulationBuilder:
 
                     if k < total_iterations:
 
-                        output.append(incomplete_ids[k])
+                        output.append(int(incomplete_ids[k]))
 
                 k += 1
 
