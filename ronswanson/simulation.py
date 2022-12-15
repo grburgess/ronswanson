@@ -127,7 +127,7 @@ def gather(file_name: str, current_size: int = 0, clean: bool = True) -> None:
 
     multi_file_dir: Path = parent_dir / Path(f"{p.stem}_store")
 
-    files = multi_file_dir.glob("sim_store_*.h5")
+    files = list(multi_file_dir.glob("sim_store_*.h5"))
 
     with h5py.File(file_name, "a") as database_file:
 
