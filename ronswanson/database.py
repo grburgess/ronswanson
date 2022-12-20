@@ -14,6 +14,8 @@ from ronswanson.utils.color import Colors
 
 from .utils.logging import setup_logger
 
+from joblib import Parallel, delayed
+
 log = setup_logger(__name__)
 
 
@@ -216,6 +218,20 @@ class Database:
             meta_data=meta_data,
         )
 
+    def replace_nan_inf_with(self, value: float = 0.0) -> None:
+
+        """
+        Replace NaN and inf values with a float
+
+        :param value:
+        :type value: float
+        :returns:
+
+        """
+        idx = np.isinf(self._values) & np.isnan(self._values)
+
+        self._values[idx] = value
+
     def to_3ml(
         self,
         name: str,
@@ -289,6 +305,7 @@ class Database:
         for k, v in sub_parameter_ranges.items():
 
             tmf.define_parameter_grid(k, sub_parameter_ranges[k])
+
 
         with silence_console_log():
 
