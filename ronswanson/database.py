@@ -77,6 +77,12 @@ class Database:
 
         self._meta_data: Optional[Dict[str, np.ndarray]] = meta_data
 
+        if np.any(~np.isfinite(self._values)):
+
+                  log.error("The table values contain non-finite values")
+                  log.info("you can replace these by calling the replace_nan_inf_with() member")
+
+
     @property
     def n_entries(self) -> int:
         return self._n_entries
