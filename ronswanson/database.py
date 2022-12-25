@@ -85,10 +85,24 @@ class Database:
 
     @property
     def n_entries(self) -> int:
+        """
+        the number of entries in the database
+
+        :returns:
+
+        """
+
         return self._n_entries
 
     @property
     def n_parameters(self) -> int:
+        """
+        the number of parameters in the database
+
+        :returns:
+
+        """
+
         return self._n_parameters
 
     @property
@@ -97,18 +111,36 @@ class Database:
 
     @property
     def parameter_names(self) -> List[str]:
+        """
+        the names of the parameters
+        """
         return self._parameter_names
 
     @property
     def run_time(self) -> np.ndarray:
+        """
+        an array of runtimes for all points in the grid
+
+        :returns:
+
+        """
+
         return self._run_time
 
     @property
     def energy_grid(self) -> np.ndarray:
+        """
+        The corresponding energy grid of the simulation
+
+        :returns:
+
+        """
+
         return self._energy_grid
 
     @property
     def meta_data(self) -> Optional[Dict[str, np.ndarray]]:
+
         return self._meta_data
 
     def at(self, i: int) -> ValueContainer:
@@ -234,7 +266,7 @@ class Database:
         :returns:
 
         """
-        idx = np.isinf(self._values) & np.isnan(self._values)
+        idx = np.isinf(self._values) | np.isnan(self._values)
 
         self._values[idx] = value
 
