@@ -79,9 +79,10 @@ class Database:
 
         if np.any(~np.isfinite(self._values)):
 
-                  log.error("The table values contain non-finite values")
-                  log.info("you can replace these by calling the replace_nan_inf_with() member")
-
+            log.error("The table values contain non-finite values")
+            log.info(
+                "you can replace these by calling the replace_nan_inf_with() member"
+            )
 
     @property
     def n_entries(self) -> int:
@@ -104,6 +105,14 @@ class Database:
         """
 
         return self._n_parameters
+
+    @property
+    def grid_points(self) -> np.ndarray:
+        return self._grid_points
+
+    @property
+    def values(self) -> np.ndarray:
+        return self._values
 
     @property
     def parameter_ranges(self) -> Dict[str, np.ndarray]:
@@ -343,7 +352,6 @@ class Database:
         for k, v in sub_parameter_ranges.items():
 
             tmf.define_parameter_grid(k, sub_parameter_ranges[k])
-
 
         with silence_console_log():
 
