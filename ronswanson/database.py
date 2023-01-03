@@ -561,7 +561,7 @@ def update_database(
     if create_backup:
 
         backup_file_name = (
-            database_path.parents / f"{database_path.stem}_{bkup}.h5"
+            database_path.parents / f"{database_path.stem}_bkup.h5"
         )
 
         log.info(f"creating a backup as {backup_file_name}")
