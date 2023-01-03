@@ -17,8 +17,6 @@ def first_last_nonzero(arr, axis, invalid_val=-1):
     return first, -last
 
 
-
-
 def check_for_non_contiguous_spectra(database: database.Database) -> np.ndarray:
     """
     find spectra with non-contiguous values (go to zero in between)
