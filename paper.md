@@ -42,7 +42,7 @@ even on HPC systems. To circumvent this issue, one can create a so-called
 template or table model by evaluating the simulation on a grid of its
 parameters, and use interpolation on the output which allows for the simulated
 model to compared with data via the likelihood in a reasonable amount of
-time. Several spectral fitting packages (e.g. `XSPEC`[@xspec], `3ML`[@threeml],
+time. Several spectral fitting packages (e.g. `XSPEC`[@xspec], `3ML`,
 `gammapy`[@gammapy]) implement frameworks that allow for the reading in of these
 template models in various file formats. However, there is no framework that
 assists in uniformly performing the task of generating the data from which these
