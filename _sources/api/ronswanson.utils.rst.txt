@@ -15,6 +15,7 @@ Submodules
    ronswanson.utils.hdf5_utils
    ronswanson.utils.logging
    ronswanson.utils.package_data
+   ronswanson.utils.quailty_checks
 
 Module contents
 ---------------

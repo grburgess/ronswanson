@@ -76,6 +76,14 @@ ronswanson.utils.package\_data module
    :undoc-members:
    :show-inheritance:
 
+ronswanson.utils.quailty\_checks module
+---------------------------------------
+
+.. automodule:: ronswanson.utils.quailty_checks
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

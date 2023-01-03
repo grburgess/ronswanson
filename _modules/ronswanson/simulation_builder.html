@@ -62,9 +62,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>ronswanson.simulation_builder</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ronswanson.simulation_builder</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -83,11 +83,13 @@
 
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">MISSING</span><span class="p">,</span> <span class="n">OmegaConf</span>
 <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span> <span class="nn">ronswanson.utils.color</span> <span class="kn">import</span> <span class="n">Colors</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.check_complete</span> <span class="kn">import</span> <span class="n">check_complete_ids</span>
 
 <span class="kn">from</span> <span class="nn">.grids</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
 <span class="kn">from</span> <span class="nn">.script_generator</span> <span class="kn">import</span> <span class="p">(</span>
@@ -160,11 +162,12 @@
     <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">simulation</span><span class="p">:</span> <span class="n">SimulationConfigStructure</span> <span class="o">=</span> <span class="n">SimulationConfigStructure</span><span class="p">()</span>
     <span class="n">gather</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfigStructure</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">finish_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
 
 <div class="viewcode-block" id="SimulationBuilder"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationBuilder">[docs]</a><span class="k">class</span> <span class="nc">SimulationBuilder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The simulation builder class constructs the scripts</span>
 <span class="sd">    needed for building the table model database</span>
 
@@ -179,9 +182,10 @@
         <span class="n">gather_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GatherConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">finish_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 
-        <span class="sd">&quot;&quot;&quot;TODO describe function</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;TODO describe function</span>
 
 <span class="sd">        :param parameter_grid:</span>
 <span class="sd">        :type parameter_grid: ParameterGrid</span>
@@ -228,7 +232,11 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_database</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_finish_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">finish_missing</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finish_missing</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_database</span><span class="p">()</span>
 
         <span class="c1"># if we are using nodes</span>
         <span class="c1"># we need to see how many</span>
@@ -264,7 +272,7 @@
 
 <div class="viewcode-block" id="SimulationBuilder.from_yaml"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.SimulationBuilder.from_yaml">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SimulationBuilder&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a simulation setup from a yaml file.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -506,7 +514,37 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_has_complete_params</span> <span class="o">=</span> <span class="kc">True</span>
 
+    <span class="k">def</span> <span class="nf">_compute_complete_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;seeing how many are missing from the run&quot;</span><span class="p">)</span>
+
+        <span class="n">complete_ids</span> <span class="o">=</span> <span class="n">check_complete_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">)</span>
+
+        <span class="n">number_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">complete_ids</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;there were </span><span class="si">{</span><span class="n">number_missing</span><span class="si">}</span><span class="s2"> runs&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">complete_ids</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_compute_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finish_missing</span><span class="p">:</span>
+
+            <span class="n">complete_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_complete_ids</span><span class="p">()</span>
+
+            <span class="n">full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">))</span>
+
+            <span class="n">full</span><span class="p">[</span><span class="n">complete_ids</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">99</span>
+
+            <span class="n">incomplete_ids</span> <span class="o">=</span> <span class="n">full</span><span class="p">[</span><span class="n">full</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">complete_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># we may only be cleaning up missing runs</span>
+
+        <span class="n">total_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">complete_ids</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">run_per_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
@@ -517,7 +555,7 @@
             <span class="n">generator</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span><span class="p">)</span>
 
             <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span>
+                <span class="n">total_iterations</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">n_mp_jobs</span>
             <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -526,7 +564,7 @@
 
             <span class="n">generator</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">runs_per_node</span><span class="p">)</span>
 
-            <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span> <span class="o">/</span> <span class="n">runs_per_node</span><span class="p">)</span>
+            <span class="n">n_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_iterations</span> <span class="o">/</span> <span class="n">runs_per_node</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config</span><span class="o">.</span><span class="n">use_nodes</span><span class="p">:</span>
 
@@ -551,10 +589,19 @@
 
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">generator</span><span class="p">:</span>
 
-                <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finish_missing</span><span class="p">:</span>
 
-                    <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-                    <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="p">:</span>
+
+                        <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">total_iterations</span><span class="p">:</span>
+
+                        <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">incomplete_ids</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+
+                <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="n">key_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
 
@@ -581,7 +628,7 @@
 
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the gather task will use: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;total_ranks: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;total_ranks: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;number iterations: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -605,9 +652,11 @@
 
                 <span class="n">rank_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">core_list</span>
 
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="s2">&quot;gather_file.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finish_missing</span><span class="p">:</span>
 
-                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">rank_list</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">/</span> <span class="s2">&quot;gather_file.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">rank_list</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_generate_python_script</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
@@ -712,35 +761,37 @@
                 <span class="s2">&quot;[bold green blink]generated:[/bold green blink] run_simulations.sh&quot;</span>
             <span class="p">)</span>
 
-        <span class="n">slurm_gen</span><span class="p">:</span> <span class="n">SLURMGatherGenerator</span> <span class="o">=</span> <span class="n">SLURMGatherGenerator</span><span class="p">(</span>
-            <span class="s2">&quot;gather_results.sh&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hrs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">sec</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finish_missing</span><span class="p">:</span>
 
-        <span class="n">slurm_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+            <span class="n">slurm_gen</span><span class="p">:</span> <span class="n">SLURMGatherGenerator</span> <span class="o">=</span> <span class="n">SLURMGatherGenerator</span><span class="p">(</span>
+                <span class="s2">&quot;gather_results.sh&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">n_cores_per_node</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_gather_nodes</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">hrs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gather_config</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">sec</span><span class="p">,</span>
+            <span class="p">)</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;[bold green blink]generated:[/bold green blink] gather_results.sh&quot;</span>
-        <span class="p">)</span>
+            <span class="n">slurm_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
 
-        <span class="n">python_gather_gen</span><span class="p">:</span> <span class="n">PythonGatherGenerator</span> <span class="o">=</span> <span class="n">PythonGatherGenerator</span><span class="p">(</span>
-            <span class="s2">&quot;gather_results.py&quot;</span><span class="p">,</span>
-            <span class="n">database_file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span>
-            <span class="n">current_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">,</span>
-            <span class="n">n_outputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">,</span>
-            <span class="n">clean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">,</span>
-            <span class="n">num_meta_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">,</span>
-        <span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;[bold green blink]generated:[/bold green blink] gather_results.sh&quot;</span>
+            <span class="p">)</span>
 
-        <span class="n">python_gather_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+            <span class="n">python_gather_gen</span><span class="p">:</span> <span class="n">PythonGatherGenerator</span> <span class="o">=</span> <span class="n">PythonGatherGenerator</span><span class="p">(</span>
+                <span class="s2">&quot;gather_results.py&quot;</span><span class="p">,</span>
+                <span class="n">database_file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_out_file</span><span class="p">,</span>
+                <span class="n">current_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_database_size</span><span class="p">,</span>
+                <span class="n">n_outputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_outputs</span><span class="p">,</span>
+                <span class="n">clean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">,</span>
+                <span class="n">num_meta_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_meta_parameters</span><span class="p">,</span>
+            <span class="p">)</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;[bold green blink]generated:[/bold green blink] gather_results.py&quot;</span>
-        <span class="p">)</span></div>
+            <span class="n">python_gather_gen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">))</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;[bold green blink]generated:[/bold green blink] gather_results.py&quot;</span>
+            <span class="p">)</span></div>
 </pre></div>
 
            </div>

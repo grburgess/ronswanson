@@ -62,9 +62,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>ronswanson.utils.logging</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ronswanson.utils.logging</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -81,7 +81,6 @@
 <span class="kn">from</span> <span class="nn">rich.theme</span> <span class="kn">import</span> <span class="n">Theme</span>
 
 <span class="kn">from</span> <span class="nn">.configuration</span> <span class="kn">import</span> <span class="n">ronswanson_config</span>
-<span class="kn">from</span> <span class="nn">.package_data</span> <span class="kn">import</span> <span class="n">get_path_of_data_file</span>
 
 
 <div class="viewcode-block" id="LogFilter"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.LogFilter">[docs]</a><span class="k">class</span> <span class="nc">LogFilter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -98,7 +97,29 @@
 <span class="p">)</span>
 
 
-<span class="n">mytheme</span> <span class="o">=</span> <span class="n">Theme</span><span class="p">()</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">get_path_of_data_file</span><span class="p">(</span><span class="s2">&quot;log_theme.ini&quot;</span><span class="p">))</span>
+<span class="n">_theme</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Banner</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;h1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;deep_sky_blue3&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;status.spinner&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cyan2&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;status.text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;deep_sky_blue4&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;repr.filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;repr.number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;repr.path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;grey37&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;repr.str&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;grey37&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;repr.tag_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;repr.url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;not bold not italic underline grey84&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;log.time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;green1&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;log.message&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bold grey78&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;logging.level.debug&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;blue_violet&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;logging.level.error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;blink bold bright_red&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;logging.level.info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;medium_spring_green&quot;</span>
+<span class="n">_theme</span><span class="p">[</span><span class="s2">&quot;logging.level.warning&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;blink medium_orchid&quot;</span>
+
+
+<span class="n">mytheme</span> <span class="o">=</span> <span class="n">Theme</span><span class="p">(</span><span class="n">_theme</span><span class="p">)</span>
+
+
 <span class="n">console</span> <span class="o">=</span> <span class="n">Console</span><span class="p">(</span><span class="n">theme</span><span class="o">=</span><span class="n">mytheme</span><span class="p">)</span>
 
 <span class="n">ronswanson_console_log_handler</span> <span class="o">=</span> <span class="n">RichHandler</span><span class="p">(</span>
@@ -113,7 +134,7 @@
 
 
 <div class="viewcode-block" id="silence_warnings"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.silence_warnings">[docs]</a><span class="k">def</span> <span class="nf">silence_warnings</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    supress warning messages in console and file usr logs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -121,7 +142,7 @@
 
 
 <div class="viewcode-block" id="activate_warnings"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.activate_warnings">[docs]</a><span class="k">def</span> <span class="nf">activate_warnings</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    supress warning messages in console and file usr logs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 

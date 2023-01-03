@@ -62,9 +62,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>ronswanson.simulation</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ronswanson.simulation</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -95,7 +95,7 @@
 
 
 <div class="viewcode-block" id="Timer"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Timer">[docs]</a><span class="k">class</span> <span class="nc">Timer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A timing context manager</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -118,7 +118,7 @@
         <span class="n">num_meta_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generic simulation class</span>
 
 <span class="sd">        :param simulation_id:</span>
@@ -147,7 +147,7 @@
 
 <div class="viewcode-block" id="Simulation.run"><a class="viewcode-back" href="../../notebooks/api/ronswanson.html#ronswanson.Simulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        run this simulation</span>
 <span class="sd">        :returns:</span>
 
@@ -203,7 +203,7 @@
 
     <span class="n">multi_file_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">parent_dir</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_store&quot;</span><span class="p">)</span>
 
-    <span class="n">files</span> <span class="o">=</span> <span class="n">multi_file_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;sim_store_*.h5&quot;</span><span class="p">)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">multi_file_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;sim_store_*.h5&quot;</span><span class="p">))</span>
 
     <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">database_file</span><span class="p">:</span>
 

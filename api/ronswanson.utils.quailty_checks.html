@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ronswanson.utils.colormap_generator module &mdash; ronswanson  documentation</title>
+  <title>ronswanson.utils.quailty_checks module &mdash; ronswanson  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ronswanson.utils.configuration module" href="ronswanson.utils.configuration.html" />
-    <link rel="prev" title="ronswanson.utils.color module" href="ronswanson.utils.color.html" /> 
+    <link rel="next" title="ronswanson.band_simulation module" href="ronswanson.band_simulation.html" />
+    <link rel="prev" title="ronswanson.utils.package_data module" href="ronswanson.utils.package_data.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -69,7 +69,7 @@
           <li class="breadcrumb-item"><a href="API.html">API</a></li>
           <li class="breadcrumb-item"><a href="ronswanson.html">ronswanson package</a></li>
           <li class="breadcrumb-item"><a href="ronswanson.utils.html">ronswanson.utils package</a></li>
-      <li class="breadcrumb-item active">ronswanson.utils.colormap_generator module</li>
+      <li class="breadcrumb-item active">ronswanson.utils.quailty_checks module</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -102,28 +102,26 @@
     text-align: unset;
 }
 </style>
-<section id="module-ronswanson.utils.colormap_generator">
-<span id="ronswanson-utils-colormap-generator-module"></span><h1>ronswanson.utils.colormap_generator module<a class="headerlink" href="#module-ronswanson.utils.colormap_generator" title="Permalink to this heading"></a></h1>
+<section id="module-ronswanson.utils.quailty_checks">
+<span id="ronswanson-utils-quailty-checks-module"></span><h1>ronswanson.utils.quailty_checks module<a class="headerlink" href="#module-ronswanson.utils.quailty_checks" title="Permalink to this heading"></a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="ronswanson.utils.colormap_generator.hex_to_rgb">
-<span class="sig-prename descclassname"><span class="pre">ronswanson.utils.colormap_generator.</span></span><span class="sig-name descname"><span class="pre">hex_to_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/utils/colormap_generator.html#hex_to_rgb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.utils.colormap_generator.hex_to_rgb" title="Permalink to this definition"></a></dt>
-<dd><p>Converts hex to rgb colours
-value: string of 6 characters representing a hex colour.
-Returns: list length 3 of RGB values</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ronswanson.utils.colormap_generator.rgb_to_dec">
-<span class="sig-prename descclassname"><span class="pre">ronswanson.utils.colormap_generator.</span></span><span class="sig-name descname"><span class="pre">rgb_to_dec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/utils/colormap_generator.html#rgb_to_dec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.utils.colormap_generator.rgb_to_dec" title="Permalink to this definition"></a></dt>
-<dd><p>Converts rgb to decimal colours (i.e. divides each value by 256)
-value: list (length 3) of RGB values
-Returns: list (length 3) of decimal values</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ronswanson.utils.colormap_generator.get_continuous_cmap">
-<span class="sig-prename descclassname"><span class="pre">ronswanson.utils.colormap_generator.</span></span><span class="sig-name descname"><span class="pre">get_continuous_cmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hex_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/utils/colormap_generator.html#get_continuous_cmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.utils.colormap_generator.get_continuous_cmap" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="ronswanson.utils.quailty_checks.first_last_nonzero">
+<span class="sig-prename descclassname"><span class="pre">ronswanson.utils.quailty_checks.</span></span><span class="sig-name descname"><span class="pre">first_last_nonzero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ronswanson/utils/quailty_checks.html#first_last_nonzero"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.utils.quailty_checks.first_last_nonzero" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ronswanson.utils.quailty_checks.check_for_non_contiguous_spectra">
+<span class="sig-prename descclassname"><span class="pre">ronswanson.utils.quailty_checks.</span></span><span class="sig-name descname"><span class="pre">check_for_non_contiguous_spectra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.database.Database" title="ronswanson.database.Database"><span class="pre">Database</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ronswanson/utils/quailty_checks.html#check_for_non_contiguous_spectra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ronswanson.utils.quailty_checks.check_for_non_contiguous_spectra" title="Permalink to this definition"></a></dt>
+<dd><p>find spectra with non-contiguous values (go to zero in between)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>database</strong> (<a class="reference internal" href="../notebooks/api/ronswanson.html#ronswanson.Database" title="ronswanson.Database"><em>Database</em></a>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 
@@ -131,8 +129,8 @@ Returns: list (length 3) of decimal values</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="ronswanson.utils.color.html" class="btn btn-neutral float-left" title="ronswanson.utils.color module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ronswanson.utils.configuration.html" class="btn btn-neutral float-right" title="ronswanson.utils.configuration module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ronswanson.utils.package_data.html" class="btn btn-neutral float-left" title="ronswanson.utils.package_data module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ronswanson.band_simulation.html" class="btn btn-neutral float-right" title="ronswanson.band_simulation module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

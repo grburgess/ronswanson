@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ronswanson.utils.check_complete &mdash; ronswanson  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/dark_mode_css/dark.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../../../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> ronswanson
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/ronswanson.html">Intro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/API.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/API.html#ronswanson">ronswanson</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ronswanson</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ronswanson.utils.check_complete</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ronswanson.utils.check_complete</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">plotille</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">ronswanson.grids</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.color</span> <span class="kn">import</span> <span class="n">Colors</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.colormap_generator</span> <span class="kn">import</span> <span class="n">get_continuous_cmap</span>
+<span class="kn">from</span> <span class="nn">ronswanson.utils.logging</span> <span class="kn">import</span> <span class="n">setup_logger</span>
+
+<span class="kn">from</span> <span class="nn">.configuration</span> <span class="kn">import</span> <span class="n">ronswanson_config</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="check_complete_ids"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.utils.check_complete.check_complete_ids">[docs]</a><span class="k">def</span> <span class="nf">check_complete_ids</span><span class="p">(</span><span class="n">database_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">database_file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">store_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ronswanson_config</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">store_dir</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+
+    <span class="n">multi_file_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">parent_dir</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_store&quot;</span><span class="p">)</span>
+
+    <span class="n">finished_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">multi_file_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;sim_store_*.h5&quot;</span><span class="p">)),</span>
+        <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;checking existing files&quot;</span><span class="p">,</span>
+        <span class="n">colour</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">GREEN</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="n">sim_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;sim_store_(\d*).h5&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fname</span><span class="p">))</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">finished_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_id</span><span class="p">)</span>
+
+    <span class="n">finished_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">finished_ids</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">finished_ids</span></div>
+
+
+<div class="viewcode-block" id="int_formatter"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.utils.check_complete.int_formatter">[docs]</a><span class="k">def</span> <span class="nf">int_formatter</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">chars</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">left</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;{:</span><span class="si">{}{}</span><span class="s1">}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="s1">&#39;&lt;&#39;</span> <span class="k">if</span> <span class="n">left</span> <span class="k">else</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="n">chars</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_fig"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.utils.check_complete.make_fig">[docs]</a><span class="k">def</span> <span class="nf">make_fig</span><span class="p">(</span>
+    <span class="n">this_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">other_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">finished_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">unfinished_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plotille</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">register_label_formatter</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">int_formatter</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">color_mode</span> <span class="o">=</span> <span class="s1">&#39;rgb&#39;</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">width</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">x_label</span> <span class="o">=</span> <span class="n">this_name</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">y_label</span> <span class="o">=</span> <span class="n">other_name</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">unfinished_values</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">unfinished_values</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">lc</span><span class="o">=</span><span class="s2">&quot;FE093A&quot;</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">finished_values</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">finished_values</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">lc</span><span class="o">=</span><span class="s2">&quot;2DFF96&quot;</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="examine_parameter"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.utils.check_complete.examine_parameter">[docs]</a><span class="k">def</span> <span class="nf">examine_parameter</span><span class="p">(</span>
+    <span class="n">database_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameter_grid_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameter_to_check</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">finished_ids</span> <span class="o">=</span> <span class="n">check_complete_ids</span><span class="p">(</span><span class="n">database_file_name</span><span class="p">)</span>
+
+    <span class="n">pg</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">parameter_grid_file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parameter_to_check</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">:</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_to_check</span><span class="si">}</span><span class="s2"> is not a valid parameter name&quot;</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">parameter_to_check</span><span class="p">)</span>
+
+    <span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">fig_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">100.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">n_parameters</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">fig_width</span> <span class="o">=</span> <span class="mi">40</span>
+
+    <span class="n">n_points</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">n_points</span>
+
+    <span class="k">for</span> <span class="n">jdx</span><span class="p">,</span> <span class="n">other_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">):</span>
+
+        <span class="c1"># do not check against yourself</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="n">jdx</span><span class="p">:</span>
+
+            <span class="n">finished_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">unfinished_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_points</span><span class="p">):</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">full_grid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="n">this_param</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">other_param</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">jdx</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">finished_ids</span><span class="p">:</span>
+
+                    <span class="n">finished_values</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">this_param</span><span class="p">,</span> <span class="n">other_param</span><span class="p">])</span>
+
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="n">unfinished_values</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">this_param</span><span class="p">,</span> <span class="n">other_param</span><span class="p">])</span>
+
+                <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">finished_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">finished_values</span><span class="p">)</span>
+            <span class="n">unfinished_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unfinished_values</span><span class="p">)</span>
+
+            <span class="n">line</span> <span class="o">=</span> <span class="n">make_fig</span><span class="p">(</span>
+                <span class="n">parameter_to_check</span><span class="p">,</span>
+                <span class="n">other_name</span><span class="o">=</span><span class="n">other_name</span><span class="p">,</span>
+                <span class="n">finished_values</span><span class="o">=</span><span class="n">finished_values</span><span class="p">,</span>
+                <span class="n">unfinished_values</span><span class="o">=</span><span class="n">unfinished_values</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">fig_width</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_fig_detailed"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.utils.check_complete.make_fig_detailed">[docs]</a><span class="k">def</span> <span class="nf">make_fig_detailed</span><span class="p">(</span>
+    <span class="n">this_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">other_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">this_param_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">other_param_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">count_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="n">n_points</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">colormap</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plotille</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">register_label_formatter</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">int_formatter</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">color_mode</span> <span class="o">=</span> <span class="s1">&#39;rgb&#39;</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">width</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">x_label</span> <span class="o">=</span> <span class="n">this_name</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">y_label</span> <span class="o">=</span> <span class="n">other_name</span>
+
+    <span class="n">total_other</span> <span class="o">=</span> <span class="n">n_points</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">this_param_values</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_name</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">this_param_values</span><span class="p">,</span> <span class="n">other_param_values</span><span class="p">):</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">result</span>
+
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">count_dict</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">count_dict</span><span class="p">[</span><span class="n">a</span><span class="p">]:</span>
+
+                <span class="n">count</span> <span class="o">=</span> <span class="n">count_dict</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span>
+
+        <span class="n">color</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">colormap</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="n">total_other</span><span class="p">)))[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">a</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">b</span><span class="p">],</span>
+            <span class="n">lc</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="examine_parameter_detailed"><a class="viewcode-back" href="../../../notebooks/api/ronswanson.utils.html#ronswanson.utils.check_complete.examine_parameter_detailed">[docs]</a><span class="k">def</span> <span class="nf">examine_parameter_detailed</span><span class="p">(</span>
+    <span class="n">database_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameter_grid_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameter_to_check</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">colormap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">colormap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">get_continuous_cmap</span><span class="p">([</span><span class="s1">&#39;#FE093A&#39;</span><span class="p">,</span> <span class="s1">&#39;#FFFF53&#39;</span><span class="p">,</span> <span class="s1">&#39;#2DFF96&#39;</span><span class="p">])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">colormap</span><span class="p">)</span>
+
+    <span class="n">finished_ids</span> <span class="o">=</span> <span class="n">check_complete_ids</span><span class="p">(</span><span class="n">database_file_name</span><span class="p">)</span>
+
+    <span class="n">pg</span> <span class="o">=</span> <span class="n">ParameterGrid</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">parameter_grid_file_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parameter_to_check</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">:</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_to_check</span><span class="si">}</span><span class="s2"> is not a valid parameter name&quot;</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">parameter_to_check</span><span class="p">)</span>
+
+    <span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">fig_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">100.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">n_parameters</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">fig_width</span> <span class="o">=</span> <span class="mi">40</span>
+
+    <span class="n">n_points</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">n_points</span>
+
+    <span class="k">for</span> <span class="n">jdx</span><span class="p">,</span> <span class="n">other_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">):</span>
+
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">finished_ids</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="c1"># do not check against yourself</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="n">jdx</span><span class="p">:</span>
+
+            <span class="n">finished_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">unfinished_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">finished_ids</span><span class="p">):</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">full_grid</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="n">this_param</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">other_param</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">jdx</span><span class="p">]</span>
+
+                <span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">this_param</span><span class="p">,</span> <span class="n">other_param</span><span class="p">])</span>
+
+            <span class="n">unique</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">count_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">count_dict</span><span class="p">:</span>
+
+                    <span class="n">count_dict</span><span class="p">[</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="n">inner_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="n">inner_dict</span><span class="p">[</span><span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">count_dict</span><span class="p">[</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">inner_dict</span>
+
+            <span class="n">finished_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">finished_values</span><span class="p">)</span>
+            <span class="n">unfinished_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unfinished_values</span><span class="p">)</span>
+
+            <span class="n">make_fig_detailed</span><span class="p">(</span>
+                <span class="n">parameter_to_check</span><span class="p">,</span>
+                <span class="n">other_name</span><span class="o">=</span><span class="n">other_name</span><span class="p">,</span>
+                <span class="n">this_param_values</span><span class="o">=</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                <span class="n">other_param_values</span><span class="o">=</span><span class="n">pg</span><span class="o">.</span><span class="n">parameter_list</span><span class="p">[</span><span class="n">jdx</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                <span class="n">count_dict</span><span class="o">=</span><span class="n">count_dict</span><span class="p">,</span>
+                <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">fig_width</span><span class="p">,</span>
+                <span class="n">colormap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+            <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, J. Michael Burgess.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
