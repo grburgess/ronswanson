@@ -9,6 +9,7 @@ from setuptools import setup
 setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
+    py_modules=['scripts'],
     entry_points={
         'console_scripts': [
             'simulation_build = scripts.simulation_build:simulation_build',
