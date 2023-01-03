@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+from pathlib import Path
+
 
 import h5py
 import numpy as np
@@ -526,6 +528,74 @@ class Database:
             log.error(msg)
 
             raise RuntimeError(msg)
+
+
+def update_database(
+    database_filename: str,
+    sim_number_to_replace: np.ndarray,
+    sim_locations: str,
+    create_backup: bool = True,
+) -> None:
+
+    """
+    will replace the simulations (value arrays) of the indices supplied
+    from the folder indicated. This is useful when certain runs of a
+    simulation failed and one wants to replace those.
+
+    Note: this requires that the sim ids of the replacement runs match those
+    in the database!
+
+    :param database_filename:
+    :type database_filename: str
+    :param sim_number_to_replace:
+    :type sim_number_to_replace: np.ndarray
+    :param sim_locations:
+    :type sim_locations: str
+    :returns:
+
+    """
+    import shutil
+
+    database_path: Path = Path(database_filename).absolute()
+
+    if create_backup:
+
+        backup_file_name = (
+            database_path.parents / f"{database_path.stem}_{bkup}.h5"
+        )
+
+        log.info(f"creating a backup as {backup_file_name}")
+
+        shutil.copy(database_path, backup_file_name)
+
+    with open(database_path.as_posix(), "r+") as f:
+
+        n_output = 0
+        for key in list(f.keys()):
+
+            if "output_" in key:
+                n_output += 1
+
+        n_meta = 0
+        for key in list(f.attrs.keys()):
+            if "meta_" in key:
+                n_meta += 1
+
+        for idx in tqdm(sim_number_to_replace, desc="replaceing values"):
+
+            with open(
+                Path(sim_locations).absolute() / f"sim_store_{idx}.h5", "r"
+            ) as r:
+
+                for i in range(n_output):
+
+                    f[f"values/output_{i}"][idx, :] = r[f"output_{i}"][()]
+
+                for i in range(n_meta):
+
+                    f[f"meta/meta_{i}"][idx, :] = r.attrs[f"meta_{i}"]
+
+                f["runtime"][idx] = r.attrs["runtime"]
 
 
 def merge_databases(

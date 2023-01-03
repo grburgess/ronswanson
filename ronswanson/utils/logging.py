@@ -5,7 +5,6 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 from .configuration import ronswanson_config
-from .package_data import get_path_of_data_file
 
 
 class LogFilter(object):
@@ -22,7 +21,29 @@ _console_formatter = logging.Formatter(
 )
 
 
-mytheme = Theme().read(get_path_of_data_file("log_theme.ini"))
+_theme = {}
+
+# Banner
+_theme["h1"] = "deep_sky_blue3"
+_theme["status.spinner"] = "cyan2"
+_theme["status.text"] = "deep_sky_blue4"
+_theme["repr.filename"] = "blue"
+_theme["repr.number"] = "white"
+_theme["repr.path"] = "grey37"
+_theme["repr.str"] = "grey37"
+_theme["repr.tag_name"] = "white"
+_theme["repr.url"] = "not bold not italic underline grey84"
+_theme["log.time"] = "green1"
+_theme["log.message"] = "bold grey78"
+_theme["logging.level.debug"] = "blue_violet"
+_theme["logging.level.error"] = "blink bold bright_red"
+_theme["logging.level.info"] = "medium_spring_green"
+_theme["logging.level.warning"] = "blink medium_orchid"
+
+
+mytheme = Theme(_theme)
+
+
 console = Console(theme=mytheme)
 
 ronswanson_console_log_handler = RichHandler(
