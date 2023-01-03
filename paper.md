@@ -42,10 +42,15 @@ even on HPC systems. To circumvent this issue, one can create a so-called
 template or table model by evaluating the simulation on a grid of its
 parameters, and use interpolation on the output which allows for the simulated
 model to compared with data via the likelihood in a reasonable amount of
-time. `ronswanson` builds table models for `astromodels`, the modeling language
-of the multi-messenger data analysis framework `3ML`. `astromodels` stores its
-table models as HDF5[@hdf5] files. While `astromodels` provides user friendly factories
-for constructing table models, the workflow for using these factories on desktop
+time. Several spectral fitting packages (e.g. `XSPEC`[@xspec], `3ML`[@threeml],
+`gammapy`[@gammapy]) implement frameworks that allow for the reading in of these
+template models in various file formats. However, there is no framework that
+assists in uniformly performing the task of generating the data from which these
+templates are built. `ronswanson` builds table models for `astromodels`, the
+modeling language of the multi-messenger data analysis framework `3ML` in an
+attempt to solve this problem. `astromodels` stores its table models as
+HDF5[@hdf5] files. While `astromodels` provides user friendly factories for
+constructing table models, the workflow for using these factories on desktop
 workstations or HPC systems can be complex. However, these workflows are easily
 abstracted to a templating system that can be user-friendly and reproducible.
 
