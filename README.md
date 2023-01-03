@@ -29,5 +29,34 @@ python setup.py install
 ```
 
 
+## Contributing
+
+Contributions to `ronswanson` are always welcome. They can come in the form of:
+
+### Bug reports
+
+Please use the [Github issue tracking system for any
+bugs](https://github.com/grburgess/ronswanson/issues), for questions,
+and or feature requests.
+
+### Code
+
+Additional features you have the impetus to add are always welcome. Please
+follow the PEP8 python standards and format your code with
+[black](https://github.com/psf/black)
+
+
+
+### Documentation
+
+Additions or examples, tutorials, or better explanations are always
+welcome. To ensure that the documentation builds with the current
+version of the software, I am using
+[jupytext](https://jupytext.readthedocs.io/en/latest/) to write the
+documentation in Markdown. These are automatically converted to and
+executed as jupyter notebooks when changes are pushed to Github.
+
+
+
 ## Credits
 Inspiration by Elisa Schoesser.
