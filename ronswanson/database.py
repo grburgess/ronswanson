@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from pathlib import Path
 
 
@@ -25,6 +25,14 @@ log = setup_logger(__name__)
 class ValueContainer:
     params: np.ndarray
     values: np.ndarray
+
+
+@dataclass(frozen=True)
+class SelectionContainer:
+    sub_grid: np.ndarray
+    sub_values: np.ndarray
+    sub_range: Dict[str, np.ndarray]
+    selection: np.ndarray
 
 
 class Database:
@@ -267,6 +275,7 @@ class Database:
             meta_data=meta_data,
         )
 
+
     def replace_nan_inf_with(self, value: float = 0.0) -> None:
 
         """
@@ -281,30 +290,10 @@ class Database:
 
         self._values[idx] = value
 
-    def to_3ml(
-        self,
-        name: str,
-        desc: str,
-        overwrite: bool = False,
-        **kwargs,
-    ) -> TemplateModel:
+    def _get_sub_selection(
+        self, selections_dict: Dict[str, Dict[str, float]]
+    ) -> SelectionContainer:
 
-        """
-        construct a table model from the database.
-        parameter sub-selections are passed as kwargs of
-        dictionaries:
-
-        selections = dict(param1=dict(vmin=1, vmax=2))
-
-        :param name:
-        :type name: str
-        :param desc:
-        :type desc: str
-        :param overwrite:
-        :type overwrite: bool
-        :returns:
-
-        """
         selection = np.ones(self._n_entries, dtype=bool)
 
         parameter_selection = {}
@@ -347,18 +336,61 @@ class Database:
                 parameter_selection[k]
             ]
 
+        return SelectionContainer(
+            sub_grid=sub_grid,
+            sub_values=sub_values,
+            sub_range=sub_parameter_ranges,
+            selection=selection
+        )
+
+    # @classmethod
+    # def create_sub_selected_database(self, **selection) -> "Database":
+
+    #     sub_selection = self._get_sub_selection(selection)
+
+    #     return Database()
+
+
+
+    def to_3ml(
+        self,
+        name: str,
+        desc: str,
+        overwrite: bool = False,
+        **kwargs,
+    ) -> TemplateModel:
+
+        """
+        construct a table model from the database.
+        parameter sub-selections are passed as kwargs of
+        dictionaries:
+
+        selections = dict(param1=dict(vmin=1, vmax=2))
+
+        :param name:
+        :type name: str
+        :param desc:
+        :type desc: str
+        :param overwrite:
+        :type overwrite: bool
+        :returns:
+
+        """
+
+        sub_selection = self._get_sub_selection(kwargs)
+
         tmf = TemplateModelFactory(
             name, desc, self._energy_grid, self._parameter_names
         )
 
-        for k, v in sub_parameter_ranges.items():
+        for k, v in sub_selection.sub_range.items():
 
-            tmf.define_parameter_grid(k, sub_parameter_ranges[k])
+            tmf.define_parameter_grid(k, v)
 
         with silence_console_log():
 
             for i in tqdm(
-                range(len(sub_values)),
+                range(len(sub_selection.sub_values)),
                 desc="building table model",
                 colour=Colors.YELLOW.value,
             ):
@@ -366,9 +398,12 @@ class Database:
                 ### DO NOT SORT
 
                 tmf.add_interpolation_data(
-                    sub_values[i],
+                    sub_selection.sub_values[i],
                     **{
-                        k: v for k, v in zip(self._parameter_names, sub_grid[i])
+                        k: v
+                        for k, v in zip(
+                            self._parameter_names, sub_selection.sub_grid[i]
+                        )
                     },
                 )
 
@@ -561,14 +596,14 @@ def update_database(
     if create_backup:
 
         backup_file_name = (
-            database_path.parents / f"{database_path.stem}_bkup.h5"
+            database_path.parent / f"{database_path.stem}_bkup.h5"
         )
 
         log.info(f"creating a backup as {backup_file_name}")
 
         shutil.copy(database_path, backup_file_name)
 
-    with open(database_path.as_posix(), "r+") as f:
+    with h5py.File(database_path.as_posix(), "r+") as f:
 
         n_output = 0
         for key in list(f.keys()):
@@ -583,7 +618,7 @@ def update_database(
 
         for idx in tqdm(sim_number_to_replace, desc="replaceing values"):
 
-            with open(
+            with h5py.File(
                 Path(sim_locations).absolute() / f"sim_store_{idx}.h5", "r"
             ) as r:
 
@@ -595,7 +630,7 @@ def update_database(
 
                     f[f"meta/meta_{i}"][idx, :] = r.attrs[f"meta_{i}"]
 
-                f["runtime"][idx] = r.attrs["runtime"]
+                    f["run_time"][idx] = r.attrs["run_time"]
 
 
 def merge_databases(
