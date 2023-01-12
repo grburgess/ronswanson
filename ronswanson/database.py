@@ -2,16 +2,19 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 from pathlib import Path
-
+import collections
 
 import h5py
 import numpy as np
 import plotly.graph_objects as go
 from astromodels import TemplateModel, TemplateModelFactory
+from astromodels.functions.template_model import TemplateFile
 from astromodels.utils.logging import silence_console_log
+from astromodels.utils import get_user_data_path
 from tqdm.auto import tqdm
 
 from ronswanson.grids import Parameter, ParameterGrid
+from ronswanson.utils.cartesian_product import cartesian_jit
 from ronswanson.utils.color import Colors
 
 from .utils.logging import setup_logger
@@ -65,6 +68,12 @@ class Database:
         self._n_parameters: int = len(parameter_names)
 
         self._parameter_names: List[str] = parameter_names
+
+        for i, name in enumerate(self._parameter_names):
+
+            if not isinstance(name, str):
+
+                self._parameter_names[i] = name.decode()
 
         self._energy_grid: np.ndarray = energy_grid
 
@@ -275,6 +284,47 @@ class Database:
             meta_data=meta_data,
         )
 
+    def to_hdf5(
+        self, file_name: Union[str, Path], overwrite: bool = False
+    ) -> None:
+
+        path = Path(file_name).absolute()
+
+        if path.exists() and (not overwrite):
+
+            msg = f"{path} exists!"
+
+            log.error(msg)
+
+            raise RuntimeError(msg)
+
+        with h5py.File(path.as_posix(), "w") as f:
+
+            energy_grp: h5py.Group = f.create_group("energy_grid")
+
+            energy_grp.create_dataset("energy_grid_0", data=self._energy_grid)
+
+            values_grp = f.create_group("values")
+
+            values_grp.create_dataset("output_0", data=self._values)
+
+            par_name_grp = f.create_group("parameter_names")
+
+            for i, name in enumerate(self._parameter_names):
+
+                par_name_grp.attrs[f"par{i}"] = name
+
+            f.create_dataset("parameters", data=self._grid_points)
+
+            f.create_dataset("run_time", data=self._run_time)
+
+            if self._meta_data is not None:
+
+                meta_grp = f.create_group("meta")
+
+                for k, v in self._meta_data.items():
+
+                    meta_grp.create_dataset(k, data=v)
 
     def replace_nan_inf_with(self, value: float = 0.0) -> None:
 
@@ -302,7 +352,7 @@ class Database:
 
             parameter_selection[k] = np.ones(len(v), dtype=bool)
 
-        for k, v in kwargs.items():
+        for k, v in selections_dict.items():
 
             if k in self._parameter_names:
 
@@ -340,7 +390,7 @@ class Database:
             sub_grid=sub_grid,
             sub_values=sub_values,
             sub_range=sub_parameter_ranges,
-            selection=selection
+            selection=selection,
         )
 
     # @classmethod
@@ -349,8 +399,6 @@ class Database:
     #     sub_selection = self._get_sub_selection(selection)
 
     #     return Database()
-
-
 
     def to_3ml(
         self,
@@ -410,6 +458,86 @@ class Database:
             tmf.save_data(overwrite=overwrite)
 
         return TemplateModel(name)
+
+    @classmethod
+    def from_astromodels(cls, model_name: str) -> "Database":
+        # Get the data directory
+
+        data_dir_path: Path = get_user_data_path()
+
+        # Sanitize the data file
+
+        filename_sanitized = data_dir_path.absolute() / f"{model_name}.h5"
+
+        if not filename_sanitized.exists():
+
+            msg = f"The data file {filename_sanitized} does not exists. Did you use the TemplateFactory?"
+
+            log.error(msg)
+
+            raise RuntimeError(msg)
+
+        # Open the template definition and read from it
+
+        data_file: Path = filename_sanitized
+
+        # use the file shadow to read
+
+        template_file: TemplateFile = TemplateFile.from_file(
+            filename_sanitized.as_posix()
+        )
+
+        parameters_grids = []
+
+        for key in template_file.parameter_order:
+
+            try:
+
+                # sometimes this is
+                # stored binary
+
+                k = key.decode()
+
+            except (AttributeError):
+
+                # if not, then we
+                # load as a normal str
+
+                k = key
+
+            parameters_grids.append(np.array(template_file.parameters[key]))
+
+        parameter_grid_cart = cartesian_jit(parameters_grids)
+
+        energies = template_file.energies
+
+        shape = 1
+        for dim in template_file.grid.shape[:-1]:
+            shape *= dim
+
+        values = template_file.grid.reshape(shape, template_file.grid.shape[-1])
+
+        return cls(
+            grid_points=parameter_grid_cart,
+            parameter_names=template_file.parameter_order,
+            energy_grid=energies,
+            run_time=np.zeros(parameter_grid_cart.shape[0]),
+            values=values,
+        )
+
+    def new_from_selections(self, **selections) -> "Database":
+
+        selection_container: SelectionContainer = self._get_sub_selection(
+            selections
+        )
+
+        return Database(
+            selection_container.sub_grid,
+            self.parameter_names,
+            self.energy_grid,
+            self._run_time[selection_container.selection],
+            selection_container.sub_values,
+        )
 
     def check_for_missing_parameters(
         self, parameter_grid: ParameterGrid, create_new_grid: bool = False
