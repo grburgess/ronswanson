@@ -169,6 +169,7 @@ class SimulationBuilder:
         if self._lhs_sampling:
 
             self._n_iterations: int = self._n_lhs_points
+            self._compute_lhs_sampling()
 
         else:
 
