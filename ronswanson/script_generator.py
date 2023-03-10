@@ -109,7 +109,7 @@ class PythonGenerator(ScriptGenerator):
 
         if self._lhs_sampling:
 
-            self._add_line("params = lhs_params[i]", indent_level=1)
+            self._add_line("params = {k:v for k,v in zip(pg.parameter_names,lhs_params[i])}", indent_level=1)
 
         else:
             self._add_line("params = pg.at_index(i)", indent_level=1)
