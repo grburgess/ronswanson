@@ -72,6 +72,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line(self._import_line)
         self._add_line("from joblib import Parallel, delayed")
         self._add_line("import json")
+        self._add_line("import h5py")
         self._add_line("import numpy as np")
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
