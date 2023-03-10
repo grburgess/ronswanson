@@ -25,6 +25,8 @@ class PythonGenerator(ScriptGenerator):
         has_complete_params: bool = False,
         current_size: int = 0,
         clean: bool = True,
+        lhs_sampling: bool = False,
+        lhs_points_file: Optional[str] = None,
     ) -> None:
 
         """
@@ -60,6 +62,8 @@ class PythonGenerator(ScriptGenerator):
         self._has_complete_params: bool = has_complete_params
         self._current_size: int = current_size
         self._clean: bool = clean
+        self._lhs_sampling: bool = lhs_sampling
+        self._lhs_points_file: Optional[str] = lhs_points_file
 
         super().__init__(file_name)
 
@@ -93,8 +97,21 @@ class PythonGenerator(ScriptGenerator):
             f"pg = ParameterGrid.from_yaml('{self._parameter_file}')"
         )
 
+        if self._lhs_sampling:
+
+            self._add_line(
+                f"with h5py.File('{self._lhs_points_file}', 'r') as f:"
+            )
+            self._add_line("lhs_params = f['lhs_points'][()]", indent_level=1)
+
         self._add_line("def func(i):")
-        self._add_line("params = pg.at_index(i)", indent_level=1)
+
+        if self._lhs_sampling:
+
+            self._add_line("params = lhs_params[i]", indent_level=1)
+
+        else:
+            self._add_line("params = pg.at_index(i)", indent_level=1)
 
         if self._has_complete_params:
 

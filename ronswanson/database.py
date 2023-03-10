@@ -393,6 +393,22 @@ class Database:
             selection=selection,
         )
 
+    def _get_sub_selection_via_index(
+        self, selection_index: np.ndarray
+    ) -> SelectionContainer:
+
+        sub_grid = self._grid_points[selection_index, ...]
+        sub_values = self._values[selection_index, ...]
+
+        sub_parameter_ranges = {}
+
+        return SelectionContainer(
+            sub_grid=sub_grid,
+            sub_values=sub_values,
+            sub_range=sub_parameter_ranges,
+            selection=selection_index,
+        )
+
     # @classmethod
     # def create_sub_selected_database(self, **selection) -> "Database":
 
@@ -525,11 +541,21 @@ class Database:
             values=values,
         )
 
-    def new_from_selections(self, **selections) -> "Database":
+    def new_from_selections(
+        self, selection_index: Optional[np.ndarray] = None, **selections
+    ) -> "Database":
 
-        selection_container: SelectionContainer = self._get_sub_selection(
-            selections
-        )
+        if selection_index is None:
+
+            selection_container: SelectionContainer = self._get_sub_selection(
+                selections
+            )
+
+        else:
+
+            selection_container: SelectionContainer = (
+                self._get_sub_selection_via_index(selection_index)
+            )
 
         return Database(
             selection_container.sub_grid,
@@ -759,6 +785,47 @@ def update_database(
                     f[f"meta/meta_{i}"][idx, :] = r.attrs[f"meta_{i}"]
 
                     f["run_time"][idx] = r.attrs["run_time"]
+
+
+def merge_outputs(
+    *files_names: List[Union[str, Path]], out_file_name: Union[str, Path]
+) -> None:
+
+    with h5py.File(out_file_name, "w") as out_file:
+
+        energy_grp: h5py.Group = out_file.create_group("energy_grid")
+        values_grp = out_file.create_group("values")
+        par_name_grp = out_file.create_group("parameter_names")
+
+        for n_output, file_name in enumerate(files_names):
+
+            with h5py.File(file_name, "r") as f:
+
+                if n_output == 0:
+
+                    for k, v in f["parameter_names"].attrs.items():
+
+                        par_name_grp.attrs[k] = v
+
+                    if "meta" in f.keys():
+
+                        meta_grp = out_file.create_group("meta")
+
+                        for key in list(f["meta"].keys()):
+
+                            meta_grp.create_dataset(key, data=f[f"meta/{key}"])
+
+                    out_file.create_dataset("run_time", data=f["run_time"])
+
+                    out_file.create_dataset("parameters", data=f["parameters"])
+
+                energy_grp.create_dataset(
+                    f"energy_grid_{n_output}",
+                    data=f["energy_grid/energy_grid_0"],
+                )
+                values_grp.create_dataset(
+                    f"output_{n_output}", data=f["values/output_0"]
+                )
 
 
 def merge_databases(

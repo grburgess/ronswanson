@@ -11,6 +11,8 @@ import numba as nb
 import yaml
 from omegaconf import MISSING, OmegaConf
 from tqdm.auto import tqdm
+from smt.sampling_methods import LHS
+
 
 from ronswanson.utils.color import Colors
 from ronswanson.utils.check_complete import check_complete_ids
@@ -88,6 +90,8 @@ class YAMLStructure:
     gather: Optional[GatherConfigStructure] = None
     num_meta_parameters: Optional[int] = None
     finish_missing: bool = False
+    lhs_sampling: bool = False
+    n_lhs_points: int = 10
 
 
 class SimulationBuilder:
@@ -107,6 +111,8 @@ class SimulationBuilder:
         num_meta_parameters: Optional[int] = None,
         clean: bool = True,
         finish_missing: bool = False,
+        lhs_sampling: bool = False,
+        n_lhs_points: int = 10,
     ):
 
         """TODO describe function
@@ -152,11 +158,21 @@ class SimulationBuilder:
 
         self._clean: bool = clean
 
-        self._n_iterations: int = parameter_grid.n_points
-
         self._current_database_size: int = 0
 
         self._finish_missing: bool = finish_missing
+
+        self._lhs_sampling: bool = lhs_sampling
+
+        self._n_lhs_points: int = n_lhs_points
+
+        if self._lhs_sampling:
+
+            self._n_iterations: int = self._n_lhs_points
+
+        else:
+
+            self._n_iterations = parameter_grid.n_points
 
         if not self._finish_missing:
 
@@ -275,15 +291,38 @@ class SimulationBuilder:
             **inputs,
         )
 
+    def _compute_lhs_sampling(self):
+
+        pg = ParameterGrid.from_yaml(self._parameter_file)
+
+        sampling = LHS(xlimits=pg.min_max_values, criterion="maximin")
+
+        points = sampling(self._n_lhs_points)
+
+        with h5py.File("lhs_points.h5", "w") as f:
+
+            f.create_dataset("lhs_points", data = points, compression="gzip")
+
+
+
+    
     def _initialize_database(self) -> None:
+
+        pg = ParameterGrid.from_yaml(self._parameter_file)
+
+        if self._lhs_sampling:
+
+            n_points = self._n_lhs_points
+
+        else:
+
+            n_points = pg.n_points
 
         if not Path(self._out_file).exists():
 
             with h5py.File(self._out_file, "w") as f:
 
                 f.attrs["has_been_touched"] = False
-
-                pg = ParameterGrid.from_yaml(self._parameter_file)
 
                 # store the parameter names
 
@@ -309,7 +348,7 @@ class SimulationBuilder:
 
                 f.create_dataset(
                     "parameters",
-                    shape=(pg.n_points,) + np.array(pg.parameter_names).shape,
+                    shape=(n_points,) + np.array(pg.parameter_names).shape,
                     maxshape=(None,) + np.array(pg.parameter_names).shape,
                     #    compression="gzip",
                 )
@@ -322,13 +361,13 @@ class SimulationBuilder:
 
                     val_grp.create_dataset(
                         f"output_{i}",
-                        shape=(pg.n_points,) + pg.energy_grid[i].grid.shape,
+                        shape=(n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
                         # compression="gzip",
                     )
 
                 f.create_dataset(
-                    "run_time", shape=(pg.n_points,), maxshape=(None,)
+                    "run_time", shape=(n_points,), maxshape=(None,)
                 )
 
                 if self._num_meta_parameters is not None:
@@ -340,7 +379,7 @@ class SimulationBuilder:
                     for i in range(self._num_meta_parameters):
 
                         meta_grp.create_dataset(
-                            f"meta_{i}", shape=(pg.n_points,), maxshape=(None,)
+                            f"meta_{i}", shape=(n_points,), maxshape=(None,)
                         )
 
         else:
@@ -375,8 +414,6 @@ class SimulationBuilder:
             self._check_completed()
 
             with h5py.File(self._out_file, "a") as f:
-
-                pg = ParameterGrid.from_yaml(self._parameter_file)
 
                 dataset: h5py.Dataset = f["parameters"]
 
@@ -596,6 +633,8 @@ class SimulationBuilder:
             self._has_complete_params,
             self._current_database_size,
             clean=self._clean,
+            lhs_sampling=self._lhs_sampling,
+            lhs_points_file=str(self._base_dir / "lhs_points.h5")
         )
 
         py_gen.write(str(self._base_dir))

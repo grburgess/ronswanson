@@ -259,6 +259,17 @@ class ParameterGrid:
         )
 
     @property
+    def min_max_values(self) -> np.ndarray:
+
+        out = []
+
+        for p in self.parameter_list:
+
+            out.append([min(p.grid), max(p.grid)])
+
+        return np.array(out)
+
+    @property
     def n_points(self) -> int:
 
         n = 1
