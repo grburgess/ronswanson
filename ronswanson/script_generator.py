@@ -105,6 +105,14 @@ class PythonGenerator(ScriptGenerator):
             )
             self._add_line("lhs_params = f['lhs_points'][()]", indent_level=1)
 
+
+            self._add_line("n_points = len(lhs_params)")
+
+        else:
+
+            self._add_line("n_points = pg.n_points")
+
+
         self._add_line("def func(i):")
 
         if self._lhs_sampling:
