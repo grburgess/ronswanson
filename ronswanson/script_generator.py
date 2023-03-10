@@ -142,7 +142,7 @@ class PythonGenerator(ScriptGenerator):
 
         if self._n_nodes is None:
 
-            self._add_line("iteration = [i for i in range(0, pg.n_points)]")
+            self._add_line("iteration = [i for i in range(0, n_points)]")
 
         else:
 
