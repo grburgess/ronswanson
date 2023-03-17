@@ -92,6 +92,7 @@ class YAMLStructure:
     finish_missing: bool = False
     lhs_sampling: bool = False
     n_lhs_points: int = 10
+    n_lhs_split: Optional[int] = None
 
 
 class SimulationBuilder:
