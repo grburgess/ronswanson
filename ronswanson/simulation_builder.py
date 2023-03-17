@@ -113,6 +113,7 @@ class SimulationBuilder:
         finish_missing: bool = False,
         lhs_sampling: bool = False,
         n_lhs_points: int = 10,
+        n_lhs_split: Optional[int] = None,
     ):
 
         """TODO describe function
@@ -165,6 +166,8 @@ class SimulationBuilder:
         self._lhs_sampling: bool = lhs_sampling
 
         self._n_lhs_points: int = n_lhs_points
+
+        self._n_lhs_split: Optional[int] = n_lhs_split
 
         if self._lhs_sampling:
 
@@ -298,15 +301,30 @@ class SimulationBuilder:
 
         sampling = LHS(xlimits=pg.min_max_values, criterion="maximin")
 
-        points = sampling(self._n_lhs_points)
+        if self._n_lhs_split is None:
+
+            points = sampling(self._n_lhs_points)
+
+        else:
+
+            total_points: int = self._n_lhs_points
+
+            points_per_split: int = self._n_lhs_points // self._n_lhs_split
+
+            current_n_points: int = points_per_split
+
+            points = sampling(points_per_split)
+
+            while current_n_points < total_points:
+
+                points = sampling.expand_lhs(points, points_per_split)
+
+                current_n_points += points_per_split
 
         with h5py.File("lhs_points.h5", "w") as f:
 
-            f.create_dataset("lhs_points", data = points, compression="gzip")
+            f.create_dataset("lhs_points", data=points, compression="gzip")
 
-
-
-    
     def _initialize_database(self) -> None:
 
         pg = ParameterGrid.from_yaml(self._parameter_file)
@@ -635,7 +653,7 @@ class SimulationBuilder:
             self._current_database_size,
             clean=self._clean,
             lhs_sampling=self._lhs_sampling,
-            lhs_points_file=str(self._base_dir / "lhs_points.h5")
+            lhs_points_file=str(self._base_dir / "lhs_points.h5"),
         )
 
         py_gen.write(str(self._base_dir))
