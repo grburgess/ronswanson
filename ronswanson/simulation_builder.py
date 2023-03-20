@@ -11,7 +11,7 @@ import numba as nb
 import yaml
 from omegaconf import MISSING, OmegaConf
 from tqdm.auto import tqdm
-from smt.sampling_methods import LHS
+from scipy.stats import qmc
 
 
 from ronswanson.utils.color import Colors
@@ -300,27 +300,39 @@ class SimulationBuilder:
 
         pg = ParameterGrid.from_yaml(self._parameter_file)
 
-        sampling = LHS(xlimits=pg.min_max_values, criterion="maximin")
+        sampling = qmc.LatinHypercube(
+            d=pg.n_parameters, optimization="random-cd"
+        )
 
-        if self._n_lhs_split is None:
+        l_bounds = pg.min_max_values[:, 0]
 
-            points = sampling(self._n_lhs_points)
+        u_bounds = pg.min_max_values[:, 1]
 
-        else:
+        samples = qmc.random(n=self._n_lhs_points)
 
-            total_points: int = self._n_lhs_points
+        points = qmc.scale(samples, l_bounds, u_bounds)
 
-            points_per_split: int = self._n_lhs_points // self._n_lhs_split
+        # sampling = LHS(xlimits=pg.min_max_values, criterion="maximin")
 
-            current_n_points: int = points_per_split
+        #  if self._n_lhs_split is None:
 
-            points = sampling(points_per_split)
+        #      points = sampling(self._n_lhs_points)
 
-            while current_n_points < total_points:
+        #  else:
 
-                points = sampling.expand_lhs(points, points_per_split)
+        #      total_points: int = self._n_lhs_points
 
-                current_n_points += points_per_split
+        #      points_per_split: int = self._n_lhs_points // self._n_lhs_split
+
+        #      current_n_points: int = points_per_split
+
+        #      points = sampling(points_per_split)
+
+        #      while current_n_points < total_points:
+
+        #          points = sampling.expand_lhs(points, points_per_split)
+
+        #          current_n_points += points_per_split
 
         with h5py.File("lhs_points.h5", "w") as f:
 
