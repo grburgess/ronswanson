@@ -301,7 +301,8 @@ class SimulationBuilder:
         pg = ParameterGrid.from_yaml(self._parameter_file)
 
         sampling = qmc.LatinHypercube(
-            d=pg.n_parameters, optimization="random-cd"
+            d=pg.n_parameters,
+            #optimization="random-cd"
         )
 
         l_bounds = pg.min_max_values[:, 0]
