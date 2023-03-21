@@ -309,7 +309,7 @@ class SimulationBuilder:
 
         u_bounds = pg.min_max_values[:, 1]
 
-        samples = qmc.random(n=self._n_lhs_points)
+        samples = sampling.random(n=self._n_lhs_points)
 
         points = qmc.scale(samples, l_bounds, u_bounds)
 
