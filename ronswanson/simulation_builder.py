@@ -302,7 +302,7 @@ class SimulationBuilder:
 
         sampling = qmc.LatinHypercube(
             d=pg.n_parameters,
-            #optimization="random-cd"
+            optimization="random-cd"
         )
 
         l_bounds = pg.min_max_values[:, 0]
