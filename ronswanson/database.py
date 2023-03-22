@@ -301,7 +301,7 @@ class Database:
 
             parameter_selection[k] = np.ones(len(v), dtype=bool)
 
-        for k, v in kwargs.items():
+        for k, v in selections_dict.items():
 
             if k in self._parameter_names:
 
