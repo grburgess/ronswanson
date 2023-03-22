@@ -92,16 +92,19 @@ gather_results.sh` which uses MPI[@mpi] to gather the individual pieces of the
 simulations into the main database.
 
 The created HDF5 database can be loaded with utilities in `ronswanson` to then
-construct an table model in the `astromodels` format. This intermediate step
-allows the user to select subsets of the parameters from which to construct the
-table model. This is useful as large interpolation tables can consume a lot of
-computer memory and it is possible that certain fits may only need a limited
-parameter range. Additionally, utilities are provided that allow adding
-parameter sets onto the primary database to extend the interpolation
+construct an table model in the `astromodels` format ([see here for
+details](https://threeml.readthedocs.io/en/stable/notebooks/spectral_models.html#Template-(Table)-Models)). This
+intermediate step allows the user to select subsets of the parameters from which
+to construct the table model. This is useful as large interpolation tables can
+consume a lot of computer memory and it is possible that certain fits may only
+need a limited parameter range. Additionally, utilities are provided that allow
+adding parameter sets onto the primary database to extend the interpolation
 range. Moreover, the database stores information such as the runtime of each
 grid point of the simulation. Utilities are provided to view these
-metadata. More details and examples can be found in the
-[documentation](http://jmichaelburgess.com/ronswanson/index.html)
+metadata. With future interfacing of `3ML` and `gammapy`, these table models can
+even be used to fit data from optical to very high energy gamma-rays. More
+details and examples can be found in the
+[documentation](http://jmichaelburgess.com/ronswanson/index.html).
 
 # Acknowledgments
 
