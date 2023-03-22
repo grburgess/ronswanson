@@ -275,7 +275,6 @@ class Database:
             meta_data=meta_data,
         )
 
-
     def replace_nan_inf_with(self, value: float = 0.0) -> None:
 
         """
@@ -340,7 +339,7 @@ class Database:
             sub_grid=sub_grid,
             sub_values=sub_values,
             sub_range=sub_parameter_ranges,
-            selection=selection
+            selection=selection,
         )
 
     # @classmethod
@@ -349,8 +348,6 @@ class Database:
     #     sub_selection = self._get_sub_selection(selection)
 
     #     return Database()
-
-
 
     def to_3ml(
         self,
