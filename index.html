@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to ronswanson’s documentation! &mdash; ronswanson  documentation</title>
@@ -25,7 +25,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Intro" href="notebooks/ronswanson.html" /> 
+    <link rel="next" title="Introduction and demonstration" href="notebooks/ronswanson.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,12 +33,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> ronswanson
-            <img src="_static/logo.png" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="#" class="icon icon-home">
+            ronswanson
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -46,7 +50,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/ronswanson.html">Intro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/ronswanson.html">Introduction and demonstration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/API.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/API.html#ronswanson">ronswanson</a></li>
 </ul>
@@ -64,7 +68,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a></li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Welcome to ronswanson’s documentation!</li>
       <li class="wy-breadcrumbs-aside">
       </li>
@@ -74,42 +78,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<section id="welcome-to-ronswanson-s-documentation">
+  <section id="welcome-to-ronswanson-s-documentation">
 <h1>Welcome to ronswanson’s documentation!<a class="headerlink" href="#welcome-to-ronswanson-s-documentation" title="Permalink to this heading"></a></h1>
 <p>Ron Swanson builds tables for 3ML.</p>
-<p>This tool provides an easy interface to construct 3ML table models from
+<p>This tool provides an easy interface to construct 3ML table/ template models from
 computational expensive simulations on HPC systems. Why? Because it is your
 right to do so!</p>
+<p>Table/template models are models built from compuationally expensive functions
+or simulations of astrophysical spectra by evaluating them on a grid in their
+parameter space. The output is then interpolated on this grid for evaluation in
+e.g. a fit to astrophysical spectral data. These models can be used in <a class="reference external" href="https://threeml.readthedocs.io/en/stable/notebooks/spectral_models.html#Template-(Table)-Models">3ML as
+described here</a></p>
+<img alt="ronswanson" src="https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/mad.jpg" />
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>$ pip install ronswanson</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/ronswanson.html">Intro</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="notebooks/ronswanson.html#Installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="notebooks/ronswanson.html#Example-with-a-Band-function">Example with a Band function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/ronswanson.html">Introduction and demonstration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/ronswanson.html#Example">Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/ronswanson.html#User-configuration">User configuration</a></li>
 </ul>
 </li>
@@ -121,12 +109,13 @@ right to do so!</p>
 </ul>
 </div>
 </section>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="notebooks/ronswanson.html" class="btn btn-neutral float-right" title="Intro" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="notebooks/ronswanson.html" class="btn btn-neutral float-right" title="Introduction and demonstration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
