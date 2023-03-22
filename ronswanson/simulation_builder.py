@@ -92,7 +92,7 @@ class YAMLStructure:
     finish_missing: bool = False
     lhs_sampling: bool = False
     n_lhs_points: int = 10
-    n_lhs_split: Optional[int] = None
+    skip_lhs_generator: bool = False
 
 
 class SimulationBuilder:
@@ -114,7 +114,7 @@ class SimulationBuilder:
         finish_missing: bool = False,
         lhs_sampling: bool = False,
         n_lhs_points: int = 10,
-        n_lhs_split: Optional[int] = None,
+        skip_lhs_generator: bool = False,
     ):
 
         """TODO describe function
@@ -168,12 +168,15 @@ class SimulationBuilder:
 
         self._n_lhs_points: int = n_lhs_points
 
-        self._n_lhs_split: Optional[int] = n_lhs_split
+        self._skip_lhs_generator: bool = skip_lhs_generator
 
         if self._lhs_sampling:
 
             self._n_iterations: int = self._n_lhs_points
-            self._compute_lhs_sampling()
+
+            if not self._skip_lhs_generator:
+
+                self._compute_lhs_sampling()
 
         else:
 
@@ -301,8 +304,7 @@ class SimulationBuilder:
         pg = ParameterGrid.from_yaml(self._parameter_file)
 
         sampling = qmc.LatinHypercube(
-            d=pg.n_parameters,
-            optimization="random-cd"
+            d=pg.n_parameters, optimization="random-cd"
         )
 
         l_bounds = pg.min_max_values[:, 0]
