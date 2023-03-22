@@ -327,16 +327,22 @@ ax.legend()
 
 ```
 
-<!-- #region -->
 Great! That was way easier than programming everything yourself.
 
 ![alt text](https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/happy.jpeg)
 
 
+
+
+
+When you are ready to fit your model to data, one can follow the normal procedure implemented in [3ML](https://threeml.readthedocs.io/en/stable/notebooks/Quickstart.html).
+
+
+### Sub-selections
+
 Suppose we did not want to use all the values in the parameter ranges we have simulated. Bigger interpolation tables take up memory when fitting. 
 
 We can select a subset of the parameter ranges when building the table
-<!-- #endregion -->
 
 ```python
 selection  = {}
