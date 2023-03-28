@@ -18,25 +18,27 @@ date: "13 October 2022"
 
 # Summary
 
-`ronswanson` provides a simple to use framework for building so-called table or
+`ronswanson` provides a simple-to-use framework for building so-called table or
 template models for `astromodels`[@astromodels] the modeling package for
-multi-messenger astrophysical data analysis framework, `3ML`[@threeml]. This
-allows for the construction of fast evaluating interpolation table of expensive
-computer simulations of physical models which can then be fitted to data in a
-reasonable amount of time. While `3ML` and `astromodels` provide factories for
-building table models, the construction of pipelines for models that must be run
-on HPC systems can be cumbersome. `ronswanson` removes this complexity with a
-simple, reproducible templating system. Users can easily prototype their
-pipeline on multi-core workstations and then switch to a multi-node HPC
-system. `ronswanson` auto generates all python and SLURM[@slurm] scripts required for
-the construction of the table model.
+multi-messenger astrophysical data-analysis framework, `3ML`[@threeml]. With
+astromodels and 3ML one can build the interpolation table of a physical model
+result of an expensive computer simulation. This then allow to fastly
+re-evaluate the model several times, for example while fitting it to a
+dataset. While `3ML` and `astromodels` provide factories for building table
+models, the construction of pipelines for models that must be run on
+high-performance computing (HPC) systems can be cumbersome. `ronswanson` removes
+this complexity with a simple, reproducible templating system. Users can easily
+prototype their pipeline on multi-core workstations and then switch to a
+multi-node HPC system. `ronswanson` ronswanson automatically generates all
+python and SLURM scripts to scale the execution of 3ML with the astromodel's
+table models on a HPC system.
 
 
 
 # Statement of need
 
-Spatio-spectral fitting of astrophysical data many times requires using complex
-physical models whose output is that of an computationally expensive
+Spatio-spectral fitting of astrophysical data might require the iterative
+evaluation of a complex physical model obtained from a computationally expensive
 simulation. In these situations, the evaluation of the likelihood is intractable
 even on HPC systems. To circumvent this issue, one can create a so-called
 template or table model by evaluating the simulation on a grid of its
@@ -59,15 +61,15 @@ abstracted to a templating system that can be user-friendly and reproducible.
 
 Once the user selects a simulation from which they would like to create a table
 model, the first task is to create an interface class that tells `ronswanson`
-how to run the simulation and collect it's output. This is achieved by
-inheriting a class from the package called `Simulation` and defining it's
-virtual `run` member function. With this function, the user specifies how the
-model parameters for each point in the simulation grid are fed to the simulation
-software. The possibly multiple outputs from the simulation are passed to a
-dictionary where each key separates the different outputs from each
-other. Finally, this dictionary is returned from the `run` function. This is all
-the programming that is required as `ronswanson` uses this subclass to run the
-simulation on the user's specified architecture.
+how to run the simulation and collect its output. This is achieved by inheriting
+a class from the package called `Simulation` and defining its virtual `run`
+member function. With this function, the user specifies how the model parameters
+for each point in the simulation grid are fed to the simulation software. The
+possibly multiple outputs from the simulation are passed to a dictionary where
+each key separates the different outputs from each other. Finally, this
+dictionary is returned from the `run` function. This is all the programming that
+is required as `ronswanson` uses this subclass to run the simulation on the
+user's specified architecture.
 
 With the interface to the simulation defined, the user must specify the grid of
 parameters on which to compute the output of the simulation. This is achieved by
