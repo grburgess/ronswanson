@@ -7,7 +7,7 @@ from typing import Optional
 
 import h5py
 import numpy as np
-import numba as nb
+
 import yaml
 from omegaconf import MISSING, OmegaConf
 from tqdm.auto import tqdm
