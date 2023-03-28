@@ -45,7 +45,7 @@ template or table model by evaluating the simulation on a grid of its
 parameters, and use interpolation on the output which allows for the simulated
 model to compared with data via the likelihood in a reasonable amount of
 time. Several spectral fitting packages (e.g. `XSPEC`[@xspec], `3ML`,
-`gammapy`[@gammapy, @acero_fabio_2023_7734804]) implement frameworks that allow for the reading in of these
+`gammapy`[@gammapy;@acero]) implement frameworks that allow for the reading in of these
 template models in various file formats. However, there is no framework that
 assists in uniformly performing the task of generating the data from which these
 templates are built. `ronswanson` builds table models for `astromodels`, the
