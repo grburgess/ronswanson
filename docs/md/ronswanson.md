@@ -6,14 +6,14 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.14.1
+      jupytext_version: 1.14.4
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-# Intro
+# Introduction and demonstration
 
 So you need to build a table model? 3ML via astromodels provides you with nice
 facilities to accomplish this task. But often, we need to interface with
@@ -23,15 +23,11 @@ simple as possible for you. Making things complicated is annoying.
 
 ![alt text](https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/mad.jpg)
 
+<!-- #region -->
+## Example
 
-## Installation
-```sh
-pip install ronswanson
-```
+Let's say we some simulation of an astrophysical spectral model that takes a very long time to compute for a given parameter set. We would like to fit this spectral model to some spectral data from an observatory, but each evaluation of the likelihood would be very costly. Instead, we can compute the simulation on some fixed grid of parameter values, and then interpolate between this grid when we need to perform our fit. This can dramatically decrease the evaluation time needed during the computation of the likelihood. To demonstrate, we will use a Band function (a type of smoothly broken power law) instead of an actual simulation, but the principle is the same as in the end a simualtion is a numerica function with input parameters and an outpu spectrum
 
-## Example with a Band function
-
-Let's say we want to make a table model from a Band function.
 
 We pick a parameter grid and a grid of energies for our simulation. We can enter
 these in a YAML file:
@@ -76,7 +72,7 @@ these below.
 
 
 
-
+<!-- #endregion -->
 
 ### The Simulation class
 
@@ -86,7 +82,7 @@ to run the simulation for a given set of parameters. This function **must**
 return a dictionary of arrays of photon / particle fluxes for the given
 energies. The keys of the dictionary should be `output_0`,
 `output_1`...`output_n` for each type of output corresponding to the
-energy grids above.
+energy grids above. If this were a call to compilcated numerical simualtion, our call to the Band function would be replaced with that. 
 
 
 
@@ -109,6 +105,9 @@ class BandSimulation(dukesilver.Simulation):
         super().__init__(simulation_id, parameter_set, energy_grid, out_file)
 
     def _run_call(self) -> np.ndarray:
+        
+        # how parameters are translated into 
+        # spectral output
 
         b = Band(
             K=1,
@@ -328,16 +327,22 @@ ax.legend()
 
 ```
 
-<!-- #region -->
 Great! That was way easier than programming everything yourself.
 
 ![alt text](https://raw.githubusercontent.com/grburgess/ronswanson/master/docs/media/happy.jpeg)
 
 
+
+
+
+When you are ready to fit your model to data, one can follow the normal procedure implemented in [3ML](https://threeml.readthedocs.io/en/stable/notebooks/Quickstart.html).
+
+
+### Sub-selections
+
 Suppose we did not want to use all the values in the parameter ranges we have simulated. Bigger interpolation tables take up memory when fitting. 
 
 We can select a subset of the parameter ranges when building the table
-<!-- #endregion -->
 
 ```python
 selection  = {}
