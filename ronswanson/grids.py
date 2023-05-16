@@ -209,6 +209,9 @@ class Parameter:
     @classmethod
     def from_dict(cls, name: str, d: Dict[str, Any]) -> "Parameter":
 
+        log.debug(f"read parameter: {name}")
+        log.debug(f"inputs: {d}")
+
         inputs = {}
         inputs["custom"] = d["custom"]
 
@@ -319,6 +322,8 @@ class ParameterGrid:
                 EnergyGrid.from_dict(d.pop(f"energy_grid_{i}"))
                 for i in range(n_energy_grids)
             ]
+
+        log.debug("now reading parameters")
 
         pars = list(d.keys())
 
