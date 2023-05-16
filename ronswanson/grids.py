@@ -255,11 +255,13 @@ class ParameterGrid:
 
     def __post_init__(self):
 
-        object.__setattr__(
-            self,
-            'full_grid',
-            cartesian_jit([p.grid for p in self.parameter_list]),
-        )
+        # object.__setattr__(
+        #     self,
+        #     'full_grid',
+        #     cartesian_jit([p.grid for p in self.parameter_list]),
+        # )
+
+        pass
 
     @property
     def min_max_values(self) -> np.ndarray:
@@ -332,6 +334,8 @@ class ParameterGrid:
         par_list = [
             Parameter.from_dict(par_name, d[par_name]) for par_name in pars
         ]
+
+        log.debug("parameters have been read in")
 
         return cls(par_list, energy_grid)
 
