@@ -307,6 +307,8 @@ class ParameterGrid:
 
                     is_multi_output = True
 
+        log.debug(f"found {n_energy_grids} energy grids")
+
         if not is_multi_output:
 
             energy_grid = [EnergyGrid.from_dict(d.pop("energy_grid"))]
@@ -330,6 +332,8 @@ class ParameterGrid:
 
     @classmethod
     def from_yaml(cls, file_name: str) -> "ParameterGrid":
+
+        log.debug(f"reading: {file_name}")
 
         with open(file_name, 'r') as f:
 

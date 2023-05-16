@@ -257,7 +257,6 @@ class SimulationBuilder:
 
         log.debug("read parameter grid")
 
-
         simulation_input = inputs.pop("simulation")
 
         if "time" in simulation_input:
