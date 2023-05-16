@@ -255,6 +255,9 @@ class SimulationBuilder:
 
         parameter_grid = ParameterGrid.from_yaml(inputs.pop("parameter_grid"))
 
+        log.debug("read parameter grid")
+
+
         simulation_input = inputs.pop("simulation")
 
         if "time" in simulation_input:
