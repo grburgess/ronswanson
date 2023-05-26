@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
@@ -36,8 +36,8 @@ class SLURM:
 @dataclass
 class RonSwansonConfig:
 
-    logging: Logging = Logging()
-    slurm: SLURM = SLURM()
+    logging: Logging = field(default_factory = Logging)
+    slurm: SLURM = field(default_factory = SLURM)
 
 
 # Read the default config

@@ -1,7 +1,7 @@
 import json
 import shutil
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -86,13 +86,16 @@ class YAMLStructure:
     parameter_grid: str = MISSING
     out_file: str = MISSING
     clean: bool = True
-    simulation: SimulationConfigStructure = SimulationConfigStructure()
+    simulation: SimulationConfigStructure = field(
+        default_factory=SimulationConfigStructure
+    )
     gather: Optional[GatherConfigStructure] = None
     num_meta_parameters: Optional[int] = None
     finish_missing: bool = False
     lhs_sampling: bool = False
     n_lhs_points: int = 10
     skip_lhs_generator: bool = False
+    lhs_unit_file: Optional[str] = None
 
 
 class SimulationBuilder:
@@ -115,6 +118,7 @@ class SimulationBuilder:
         lhs_sampling: bool = False,
         n_lhs_points: int = 10,
         skip_lhs_generator: bool = False,
+        lhs_unit_file: Optional[str] = None,
     ):
 
         """TODO describe function
@@ -169,6 +173,8 @@ class SimulationBuilder:
         self._n_lhs_points: int = n_lhs_points
 
         self._skip_lhs_generator: bool = skip_lhs_generator
+
+        self._lhs_unit_file: Optional[str] = lhs_unit_file
 
         if self._lhs_sampling:
 
@@ -305,39 +311,29 @@ class SimulationBuilder:
 
         pg = ParameterGrid.from_yaml(self._parameter_file)
 
-        sampling = qmc.LatinHypercube(
-            d=pg.n_parameters, optimization="random-cd"
-        )
-
         l_bounds = pg.min_max_values[:, 0]
 
         u_bounds = pg.min_max_values[:, 1]
 
-        samples = sampling.random(n=self._n_lhs_points)
+        if self._lhs_unit_file is None:
+
+            log.info("Sampling LHS points")
+
+            sampling = qmc.LatinHypercube(
+                d=pg.n_parameters, optimization="random-cd"
+            )
+
+            samples = sampling.random(n=self._n_lhs_points)
+
+        else:
+
+            log.info(f"reading LHS points from {self._lhs_unit_file}")
+
+            with h5py.File(self._lhs_unit_file, "r") as f:
+
+                samples = f["lhs_points"][()]
 
         points = qmc.scale(samples, l_bounds, u_bounds)
-
-        # sampling = LHS(xlimits=pg.min_max_values, criterion="maximin")
-
-        #  if self._n_lhs_split is None:
-
-        #      points = sampling(self._n_lhs_points)
-
-        #  else:
-
-        #      total_points: int = self._n_lhs_points
-
-        #      points_per_split: int = self._n_lhs_points // self._n_lhs_split
-
-        #      current_n_points: int = points_per_split
-
-        #      points = sampling(points_per_split)
-
-        #      while current_n_points < total_points:
-
-        #          points = sampling.expand_lhs(points, points_per_split)
-
-        #          current_n_points += points_per_split
 
         with h5py.File("lhs_points.h5", "w") as f:
 
