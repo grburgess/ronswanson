@@ -283,7 +283,7 @@ class PythonGatherGenerator(ScriptGenerator):
 
         self._end_line()
         self._end_line()
-        self._add_line('for sim_id in sim_ids:')
+        self._add_line('for sim_id in tqdm(sim_ids):')
         self._end_line()
         self._add_line(
             'this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"',
