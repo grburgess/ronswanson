@@ -396,6 +396,7 @@ class SimulationBuilder:
                         f"output_{i}",
                         shape=(n_points,) + pg.energy_grid[i].grid.shape,
                         maxshape=(None,) + pg.energy_grid[i].grid.shape,
+                        dtype="float64"
                         # compression="gzip",
                     )
 
