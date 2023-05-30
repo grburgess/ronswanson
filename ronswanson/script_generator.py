@@ -218,6 +218,7 @@ class PythonGatherGenerator(ScriptGenerator):
         self._add_line('import h5py')
         self._add_line('import sys')
         self._add_line('from pathlib import Path')
+        self._add_line('from tqdm.auto import tqdm')
         self._end_line()
         self._end_line()
         self._add_line('rank = MPI.COMM_WORLD.rank')
@@ -323,7 +324,7 @@ class PythonGatherGenerator(ScriptGenerator):
         self._end_line()
         self._end_line()
         self._end_line()
-        self._add_line('f.close()')
+        self._add_line('database.close()')
 
 
 class SLURMGenerator(ScriptGenerator):
