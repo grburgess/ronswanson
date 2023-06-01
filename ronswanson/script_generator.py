@@ -113,7 +113,7 @@ class PythonGenerator(ScriptGenerator):
             self._add_line("n_points = pg.n_points")
 
 
-        self._add_line("def func(i):")
+        self._add_line("def func(i, silent: bool=True):")
 
         if self._lhs_sampling:
 
@@ -121,6 +121,9 @@ class PythonGenerator(ScriptGenerator):
 
         else:
             self._add_line("params = pg.at_index(i)", indent_level=1)
+            self._add_line("if not silent:", indent_level=1)
+            self._add_line("log.info(f'{params}')", indent_level=2)
+
 
         if self._has_complete_params:
 
@@ -161,7 +164,7 @@ class PythonGenerator(ScriptGenerator):
             # just do a straight for loop
 
             self._add_line("for i in tqdm(iteration):")
-            self._add_line("func(i)", indent_level=1)
+            self._add_line("func(i, silent=False)", indent_level=1)
 
             self._add_line(
                 f"gather('{self._database_file}', {self._current_size}, clean=True)"
