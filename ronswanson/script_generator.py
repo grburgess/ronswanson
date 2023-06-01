@@ -121,8 +121,8 @@ class PythonGenerator(ScriptGenerator):
 
         else:
             self._add_line("params = pg.at_index(i)", indent_level=1)
-            self._add_line("if not silent:", indent_level=1)
-            self._add_line("log.info(f'{params}')", indent_level=2)
+        self._add_line("if not silent:", indent_level=1)
+        self._add_line("log.info(f'{params}')", indent_level=2)
 
 
         if self._has_complete_params:
