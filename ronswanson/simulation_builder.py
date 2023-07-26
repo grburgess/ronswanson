@@ -315,6 +315,9 @@ class SimulationBuilder:
 
         u_bounds = pg.min_max_values[:, 1]
 
+        log.info(f"LHS min values: {l_bounds}")
+        log.info(f"LHS max values: {u_bounds}")
+
         if self._lhs_unit_file is None:
 
             log.info("Sampling LHS points")

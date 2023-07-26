@@ -1,16 +1,18 @@
+import collections
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
 from pathlib import Path
-import collections
+from typing import Dict, List, Optional, Union
 
+import astropy.units as u
 import h5py
 import numpy as np
 import plotly.graph_objects as go
 from astromodels import TemplateModel, TemplateModelFactory
 from astromodels.functions.template_model import TemplateFile
-from astromodels.utils.logging import silence_console_log
 from astromodels.utils import get_user_data_path
+from astromodels.utils.logging import silence_console_log
+from joblib import Parallel, delayed
 from tqdm.auto import tqdm
 
 from ronswanson.grids import Parameter, ParameterGrid
@@ -18,8 +20,6 @@ from ronswanson.utils.cartesian_product import cartesian_jit
 from ronswanson.utils.color import Colors
 
 from .utils.logging import setup_logger
-
-from joblib import Parallel, delayed
 
 log = setup_logger(__name__)
 
@@ -166,6 +166,12 @@ class Database:
 
         return self._energy_grid
 
+    @property
+    def energy_grid_nu(self) -> np.ndarray:
+
+        return (self._energy_grid * u.keV).to("Hz", equivalencies = u.spectral())
+
+    
     @property
     def meta_data(self) -> Optional[Dict[str, np.ndarray]]:
 
