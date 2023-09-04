@@ -25,6 +25,8 @@ class PythonGenerator(ScriptGenerator):
         has_complete_params: bool = False,
         current_size: int = 0,
         clean: bool = True,
+        lhs_sampling: bool = False,
+        lhs_points_file: Optional[str] = None,
     ) -> None:
 
         """
@@ -60,6 +62,8 @@ class PythonGenerator(ScriptGenerator):
         self._has_complete_params: bool = has_complete_params
         self._current_size: int = current_size
         self._clean: bool = clean
+        self._lhs_sampling: bool = lhs_sampling
+        self._lhs_points_file: Optional[str] = lhs_points_file
 
         super().__init__(file_name)
 
@@ -68,6 +72,7 @@ class PythonGenerator(ScriptGenerator):
         self._add_line(self._import_line)
         self._add_line("from joblib import Parallel, delayed")
         self._add_line("import json")
+        self._add_line("import h5py")
         self._add_line("import numpy as np")
         self._add_line("from tqdm.auto import tqdm")
         self._add_line("from ronswanson import ParameterGrid")
@@ -93,8 +98,32 @@ class PythonGenerator(ScriptGenerator):
             f"pg = ParameterGrid.from_yaml('{self._parameter_file}')"
         )
 
-        self._add_line("def func(i):")
-        self._add_line("params = pg.at_index(i)", indent_level=1)
+        if self._lhs_sampling:
+
+            self._add_line(
+                f"with h5py.File('{self._lhs_points_file}', 'r') as f:"
+            )
+            self._add_line("lhs_params = f['lhs_points'][()]", indent_level=1)
+
+
+            self._add_line("n_points = len(lhs_params)")
+
+        else:
+
+            self._add_line("n_points = pg.n_points")
+
+
+        self._add_line("def func(i, silent: bool=True):")
+
+        if self._lhs_sampling:
+
+            self._add_line("params = {k:v for k,v in zip(pg.parameter_names,lhs_params[i])}", indent_level=1)
+
+        else:
+            self._add_line("params = pg.at_index(i)", indent_level=1)
+        self._add_line("if not silent:", indent_level=1)
+        self._add_line("log.info(f'{params}')", indent_level=2)
+
 
         if self._has_complete_params:
 
@@ -116,7 +145,7 @@ class PythonGenerator(ScriptGenerator):
 
         if self._n_nodes is None:
 
-            self._add_line("iteration = [i for i in range(0, pg.n_points)]")
+            self._add_line("iteration = [i for i in range(0, n_points)]")
 
         else:
 
@@ -135,7 +164,7 @@ class PythonGenerator(ScriptGenerator):
             # just do a straight for loop
 
             self._add_line("for i in tqdm(iteration):")
-            self._add_line("func(i)", indent_level=1)
+            self._add_line("func(i, silent=False)", indent_level=1)
 
             self._add_line(
                 f"gather('{self._database_file}', {self._current_size}, clean=True)"
@@ -192,6 +221,7 @@ class PythonGatherGenerator(ScriptGenerator):
         self._add_line('import h5py')
         self._add_line('import sys')
         self._add_line('from pathlib import Path')
+        self._add_line('from tqdm.auto import tqdm')
         self._end_line()
         self._end_line()
         self._add_line('rank = MPI.COMM_WORLD.rank')
@@ -256,7 +286,7 @@ class PythonGatherGenerator(ScriptGenerator):
 
         self._end_line()
         self._end_line()
-        self._add_line('for sim_id in sim_ids:')
+        self._add_line('for sim_id in tqdm(sim_ids):')
         self._end_line()
         self._add_line(
             'this_file: Path = multi_file_dir / f"sim_store_{sim_id}.h5"',
@@ -297,7 +327,7 @@ class PythonGatherGenerator(ScriptGenerator):
         self._end_line()
         self._end_line()
         self._end_line()
-        self._add_line('f.close()')
+        self._add_line('database.close()')
 
 
 class SLURMGenerator(ScriptGenerator):

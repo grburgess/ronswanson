@@ -10,7 +10,7 @@ from .database import Database
 from .simulation import Simulation
 from .simulation_builder import SimulationBuilder
 from .grids import ParameterGrid
-from .utils import ronswanson_config, show_configuration
+from .utils import ronswanson_config, show_configuration, generate_lhs_unit_cube
 from .utils.logging import update_logging_level
 
 __all__ = [

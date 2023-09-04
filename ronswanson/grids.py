@@ -209,6 +209,9 @@ class Parameter:
     @classmethod
     def from_dict(cls, name: str, d: Dict[str, Any]) -> "Parameter":
 
+        log.debug(f"read parameter: {name}")
+        log.debug(f"inputs: {d}")
+
         inputs = {}
         inputs["custom"] = d["custom"]
 
@@ -258,6 +261,19 @@ class ParameterGrid:
             cartesian_jit([p.grid for p in self.parameter_list]),
         )
 
+        pass
+
+    @property
+    def min_max_values(self) -> np.ndarray:
+
+        out = []
+
+        for p in self.parameter_list:
+
+            out.append([min(p.grid), max(p.grid)])
+
+        return np.array(out)
+
     @property
     def n_points(self) -> int:
 
@@ -296,6 +312,8 @@ class ParameterGrid:
 
                     is_multi_output = True
 
+        log.debug(f"found {n_energy_grids} energy grids")
+
         if not is_multi_output:
 
             energy_grid = [EnergyGrid.from_dict(d.pop("energy_grid"))]
@@ -307,6 +325,8 @@ class ParameterGrid:
                 for i in range(n_energy_grids)
             ]
 
+        log.debug("now reading parameters")
+
         pars = list(d.keys())
 
         pars.sort()
@@ -315,10 +335,14 @@ class ParameterGrid:
             Parameter.from_dict(par_name, d[par_name]) for par_name in pars
         ]
 
+        log.debug("parameters have been read in")
+
         return cls(par_list, energy_grid)
 
     @classmethod
     def from_yaml(cls, file_name: str) -> "ParameterGrid":
+
+        log.debug(f"reading: {file_name}")
 
         with open(file_name, 'r') as f:
 
