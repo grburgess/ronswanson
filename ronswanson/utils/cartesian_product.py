@@ -2,7 +2,7 @@ import numba as nb
 import numpy as np
 
 
-@nb.njit(cache=True)
+@nb.njit(cache=False)
 def cartesian_jit(arrays):
 
     n = 1
